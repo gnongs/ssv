@@ -27,6 +27,12 @@ var TestingValidatorPubKey = func() spec.BLSPubKey {
 	copy(blsPK[:], pk)
 	return blsPK
 }()
+var TestingWrongValidatorPubKey = func() spec.BLSPubKey {
+	pk, _ := hex.DecodeString("948fb44582ce25336fdb17122eac64fe5a1afc39174ce92d6013becac116766dc5a778c880dd47de7dfff6a0f86ba42b")
+	blsPK := spec.BLSPubKey{}
+	copy(blsPK[:], pk)
+	return blsPK
+}()
 var TestingAttesterDuty = &beacon.Duty{
 	Type:                    beacon.RoleTypeAttester,
 	PubKey:                  TestingValidatorPubKey,
@@ -52,6 +58,17 @@ var TestingAggregatorDuty = &beacon.Duty{
 var TestingUnknownDutyType = &beacon.Duty{
 	Type:                    100,
 	PubKey:                  TestingValidatorPubKey,
+	Slot:                    12,
+	ValidatorIndex:          1,
+	CommitteeIndex:          22,
+	CommitteesAtSlot:        36,
+	CommitteeLength:         128,
+	ValidatorCommitteeIndex: 11,
+}
+
+var TestingWrongDutyPK = &beacon.Duty{
+	Type:                    beacon.RoleTypeAttester,
+	PubKey:                  TestingWrongValidatorPubKey,
 	Slot:                    12,
 	ValidatorIndex:          1,
 	CommitteeIndex:          22,

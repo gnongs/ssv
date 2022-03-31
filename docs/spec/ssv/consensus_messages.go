@@ -80,7 +80,7 @@ func (v *Validator) validateDecidedConsensusData(dutyRunner *DutyRunner, val *ty
 			return errors.New("decided value's AttestationData is nil")
 		}
 		if val.Duty.Slot != val.AttestationData.Slot {
-			return errors.New("decided value's duty has wrong beacon role type")
+			return errors.New("decided value's duty slot != attestation slot")
 		}
 	default:
 		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.BeaconRoleType.String())

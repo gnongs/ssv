@@ -1,14 +1,30 @@
 package consensus
 
 import (
+	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
-// WrongDutyPubKey tests decided value with duty validator pubkey != the duty runner's pubkey
-func WrongDutyPubKey() *tests.SpecTest {
+var testConsensusAttDataNil = &types.ConsensusData{
+	Duty: &beacon.Duty{
+		Type:                    beacon.RoleTypeAttester,
+		PubKey:                  testingutils.TestingValidatorPubKey,
+		Slot:                    12,
+		ValidatorIndex:          1,
+		CommitteeIndex:          22,
+		CommitteesAtSlot:        36,
+		CommitteeLength:         128,
+		ValidatorCommitteeIndex: 11,
+	},
+	AttestationData: nil,
+}
+var testConsensusAttDataNilByts, _ = testConsensusAttDataNil.Encode()
+
+// AttestationDataNil tests decided value attestation data nil (if duty beacon role is attester)
+func AttestationDataNil() *tests.SpecTest {
 	dr := testingutils.BaseRunner()
 	if err := dr.StartNewInstance([]byte{1, 2, 3, 4}); err != nil {
 		panic(err.Error())
@@ -20,57 +36,57 @@ func WrongDutyPubKey() *tests.SpecTest {
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.ProposalDataBytes(testingutils.TestConsensusWrongDutyPKDataByts, nil, nil),
+			Data:       testingutils.ProposalDataBytes(testConsensusAttDataNilByts, nil, nil),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Data:       testingutils.PrepareDataBytes(testConsensusAttDataNilByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Data:       testingutils.PrepareDataBytes(testConsensusAttDataNilByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Data:       testingutils.PrepareDataBytes(testConsensusAttDataNilByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Data:       testingutils.CommitDataBytes(testConsensusAttDataNilByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Data:       testingutils.CommitDataBytes(testConsensusAttDataNilByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Data:       testingutils.CommitDataBytes(testConsensusAttDataNilByts),
 		}), nil),
 	}
 
 	return &tests.SpecTest{
-		Name:                    "wrong decided value's pubkey",
+		Name:                    "decided value's attestation data nil (role attester)",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "181535bccef11500158f2d906d5e3e4472d979394da1e14ef834b49e32a590c5",
-		ExpectedError:           "decided value is invalid: decided value's validator pk is wrong",
+		PostDutyRunnerStateRoot: "de8cf92893f3a78e7e004ed918ae567e6803c4ce8f657d61cf2e1e2c69fc0ae9",
+		ExpectedError:           "decided value is invalid: decided value's AttestationData is nil",
 	}
 }

@@ -26,6 +26,12 @@ var TestConsensusUnkownDutyTypeData = &types.ConsensusData{
 }
 var TestConsensusUnkownDutyTypeDataByts, _ = TestConsensusUnkownDutyTypeData.Encode()
 
+var TestConsensusWrongDutyPKData = &types.ConsensusData{
+	Duty:            TestingWrongDutyPK,
+	AttestationData: TestingAttestationData,
+}
+var TestConsensusWrongDutyPKDataByts, _ = TestConsensusWrongDutyPKData.Encode()
+
 var SSVMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusMessage) *types.SSVMessage {
 	var msgType types.MsgType
 	var data []byte
