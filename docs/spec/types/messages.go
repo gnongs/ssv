@@ -3,6 +3,12 @@ package types
 // ValidatorPK is an eth2 validator public key
 type ValidatorPK []byte
 
+type Validate interface {
+	// Validate returns error if msg validation doesn't pass.
+	// Msg validation checks the msg, it's variables for validity.
+	Validate() error
+}
+
 type Root interface {
 	// GetRoot returns the root used for signing and verification
 	GetRoot() ([]byte, error)
