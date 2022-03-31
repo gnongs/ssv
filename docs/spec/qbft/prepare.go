@@ -128,6 +128,10 @@ func validSignedPrepareForHeightRoundAndValue(
 	if err != nil {
 		return errors.Wrap(err, "could not get prepare data")
 	}
+	if err := prepareData.Validate(); err != nil {
+		return errors.Wrap(err, "prepareData invalid")
+	}
+
 	if bytes.Compare(prepareData.Data, value) != 0 {
 		return errors.New("msg Identifier wrong")
 	}

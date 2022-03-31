@@ -72,6 +72,10 @@ func isValidProposal(
 	if err != nil {
 		return errors.Wrap(err, "could not get proposal data")
 	}
+	if err := proposalData.Validate(); err != nil {
+		return errors.Wrap(err, "proposalData invalid")
+	}
+
 	if err := isProposalJustification(
 		state,
 		config,
