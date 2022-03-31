@@ -14,7 +14,6 @@ const (
 	PrepareMsgType
 	CommitMsgType
 	RoundChangeMsgType
-	DecidedMsgType
 )
 
 type ProposalData struct {
@@ -33,6 +32,15 @@ func (d *ProposalData) Decode(data []byte) error {
 	return json.Unmarshal(data, &d)
 }
 
+// Validate returns error if msg validation doesn't pass.
+// Msg validation checks the msg, it's variables for validity.
+func (d *ProposalData) Validate() error {
+	if len(d.Data) == 0 {
+		return errors.New("ProposalData data is invalid")
+	}
+	return nil
+}
+
 type PrepareData struct {
 	Data []byte
 }
@@ -47,6 +55,15 @@ func (d *PrepareData) Decode(data []byte) error {
 	return json.Unmarshal(data, &d)
 }
 
+// Validate returns error if msg validation doesn't pass.
+// Msg validation checks the msg, it's variables for validity.
+func (d *PrepareData) Validate() error {
+	if len(d.Data) == 0 {
+		return errors.New("PrepareData data is invalid")
+	}
+	return nil
+}
+
 type CommitData struct {
 	Data []byte
 }
@@ -59,6 +76,15 @@ func (d *CommitData) Encode() ([]byte, error) {
 // Decode returns error if decoding failed
 func (d *CommitData) Decode(data []byte) error {
 	return json.Unmarshal(data, &d)
+}
+
+// Validate returns error if msg validation doesn't pass.
+// Msg validation checks the msg, it's variables for validity.
+func (d *CommitData) Validate() error {
+	if len(d.Data) == 0 {
+		return errors.New("CommitData data is invalid")
+	}
+	return nil
 }
 
 type RoundChangeData interface {
@@ -133,6 +159,21 @@ func (msg *Message) GetRoot() ([]byte, error) {
 // DeepCopy returns a new instance of Message, deep copied
 func (msg *Message) DeepCopy() *Message {
 	panic("implement")
+}
+
+// Validate returns error if msg validation doesn't pass.
+// Msg validation checks the msg, it's variables for validity.
+func (msg *Message) Validate() error {
+	if len(msg.Identifier) == 0 {
+		return errors.New("message identifier is invalid")
+	}
+	if len(msg.Data) == 0 {
+		return errors.New("message data is invalid")
+	}
+	if msg.MsgType > 5 {
+		return errors.New("message type is invalid")
+	}
+	return nil
 }
 
 type SignedMessage struct {
@@ -227,4 +268,16 @@ func (signedMsg *SignedMessage) DeepCopy() *SignedMessage {
 	copy(ret.Message.Identifier, signedMsg.Message.Identifier)
 	copy(ret.Message.Data, signedMsg.Message.Data)
 	return ret
+}
+
+// Validate returns error if msg validation doesn't pass.
+// Msg validation checks the msg, it's variables for validity.
+func (signedMsg *SignedMessage) Validate() error {
+	if len(signedMsg.Signature) != 96 {
+		return errors.New("message signature is invalid")
+	}
+	if len(signedMsg.Signers) == 0 {
+		return errors.New("message signers is empty")
+	}
+	return signedMsg.Message.Validate()
 }
