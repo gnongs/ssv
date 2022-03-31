@@ -152,6 +152,10 @@ func validRoundChange(state *State, config IConfig, signedMsg *SignedMessage, he
 	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSigType, state.Share.Committee); err != nil {
 		return errors.Wrap(err, "round change msg signature invalid")
 	}
+
+	if err := signedMsg.Message.GetRoundChangeData().Validate(); err != nil {
+		return errors.Wrap(err, "roundChangeData invalid")
+	}
 	if signedMsg.Message.GetRoundChangeData().GetPreparedRound() == NoRound &&
 		signedMsg.Message.GetRoundChangeData().GetPreparedValue() == nil {
 		return nil

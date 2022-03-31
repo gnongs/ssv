@@ -164,10 +164,15 @@ func validateCommit(
 	if err != nil {
 		return errors.Wrap(err, "could not get proposed commit data")
 	}
+
 	msgCommitData, err := signedCommit.Message.GetCommitData()
 	if err != nil {
 		return errors.Wrap(err, "could not get msg commit data")
 	}
+	if err := msgCommitData.Validate(); err != nil {
+		return errors.Wrap(err, "msgCommitData invalid")
+	}
+
 	if !bytes.Equal(proposedCommitData.Data, msgCommitData.Data) {
 		return errors.New("proposed data different than commit msg data")
 	}

@@ -88,6 +88,7 @@ func (d *CommitData) Validate() error {
 }
 
 type RoundChangeData interface {
+	types.Validate
 	GetPreparedValue() []byte
 	GetPreparedRound() Round
 	// GetNextProposalData returns NOT nil byte array if the signer is the next round's proposal.

@@ -69,6 +69,10 @@ func (i *Instance) Start(value []byte, height Height) {
 
 // ProcessMsg processes a new QBFT msg, returns non nil error on msg processing error
 func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []byte, aggregatedCommit *SignedMessage, err error) {
+	if err := msg.Validate(); err != nil {
+		return false, nil, nil, errors.Wrap(err, "invalid signed message")
+	}
+
 	res := i.processMsgF.Run(func() interface{} {
 		switch msg.Message.MsgType {
 		case ProposalMsgType:
