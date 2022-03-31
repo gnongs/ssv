@@ -17,55 +17,63 @@ var BaseRunner = func() *ssv.DutyRunner {
 }
 
 var DecidedRunner = func() *ssv.DutyRunner {
+	return decideRunner(TestAttesterConsensusDataByts)
+}
+
+var DecidedRunnerUnknownDutyType = func() *ssv.DutyRunner {
+	return decideRunner(TestConsensusUnkownDutyTypeDataByts)
+}
+
+var decideRunner = func(consensusData []byte) *ssv.DutyRunner {
 	msgs := []*types.SSVMessage{
 		SSVMsg(SignQBFTMsg(TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.ProposalMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       ProposalDataBytes(TestConsensusDataByts, nil, nil),
+			Data:       ProposalDataBytes(consensusData, nil, nil),
 		}), nil),
 		SSVMsg(SignQBFTMsg(TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       PrepareDataBytes(TestConsensusDataByts),
+			Data:       PrepareDataBytes(consensusData),
 		}), nil),
 		SSVMsg(SignQBFTMsg(TestingSK2, 2, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       PrepareDataBytes(TestConsensusDataByts),
+			Data:       PrepareDataBytes(consensusData),
 		}), nil),
 		SSVMsg(SignQBFTMsg(TestingSK3, 3, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       PrepareDataBytes(TestConsensusDataByts),
+			Data:       PrepareDataBytes(consensusData),
 		}), nil),
 		SSVMsg(SignQBFTMsg(TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       CommitDataBytes(TestConsensusDataByts),
+			Data:       CommitDataBytes(consensusData),
 		}), nil),
 		SSVMsg(SignQBFTMsg(TestingSK2, 2, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       CommitDataBytes(TestConsensusDataByts),
+			Data:       CommitDataBytes(consensusData),
 		}), nil),
 		SSVMsg(SignQBFTMsg(TestingSK3, 3, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       CommitDataBytes(TestConsensusDataByts),
+			Data:       CommitDataBytes(consensusData),
 		}), nil),
 	}
 

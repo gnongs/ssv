@@ -8,11 +8,23 @@ import (
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
-var TestConsensusData = &types.ConsensusData{
-	Duty:            TestingDuty,
+var TestAttesterConsensusData = &types.ConsensusData{
+	Duty:            TestingAttesterDuty,
 	AttestationData: TestingAttestationData,
 }
-var TestConsensusDataByts, _ = TestConsensusData.Encode()
+var TestAttesterConsensusDataByts, _ = TestAttesterConsensusData.Encode()
+
+var TestAggregatorConsensusData = &types.ConsensusData{
+	Duty:            TestingAggregatorDuty,
+	AttestationData: TestingAttestationData,
+}
+var TestAggregatorConsensusDataByts, _ = TestAggregatorConsensusData.Encode()
+
+var TestConsensusUnkownDutyTypeData = &types.ConsensusData{
+	Duty:            TestingUnknownDutyType,
+	AttestationData: TestingAttestationData,
+}
+var TestConsensusUnkownDutyTypeDataByts, _ = TestConsensusUnkownDutyTypeData.Encode()
 
 var SSVMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusMessage) *types.SSVMessage {
 	var msgType types.MsgType
@@ -66,10 +78,10 @@ var postConsensusAttestationMsg = func(
 	multiMsgSigners bool,
 ) *ssv.SignedPostConsensusMessage {
 	signer := NewTestingKeyManager()
-	signedAtt, root, _ := signer.SignAttestation(TestingAttestationData, TestingDuty, sk.GetPublicKey().Serialize())
+	signedAtt, root, _ := signer.SignAttestation(TestingAttestationData, TestingAttesterDuty, sk.GetPublicKey().Serialize())
 
 	if wrongBeaconSig {
-		signedAtt, _, _ = signer.SignAttestation(TestingAttestationData, TestingDuty, TestingWrongSK.GetPublicKey().Serialize())
+		signedAtt, _, _ = signer.SignAttestation(TestingAttestationData, TestingAttesterDuty, TestingWrongSK.GetPublicKey().Serialize())
 	}
 
 	if wrongRoot {

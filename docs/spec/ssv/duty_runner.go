@@ -102,6 +102,7 @@ func (dr *DutyRunner) DecideRunningInstance(decidedValue *types.ConsensusData, s
 		Height:  dr.DutyExecutionState.RunningInstance.GetHeight(),
 		Signers: []types.OperatorID{dr.Share.OperatorID},
 	}
+
 	switch dr.BeaconRoleType {
 	case beacon.RoleTypeAttester:
 		signedAttestation, r, err := signer.SignAttestation(decidedValue.AttestationData, decidedValue.Duty, dr.Share.SharePubKey)

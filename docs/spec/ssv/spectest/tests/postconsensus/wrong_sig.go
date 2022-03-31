@@ -19,7 +19,7 @@ func InvaliSignature() *tests.SpecTest {
 		Name:                    "Invalid SignedPostConsensusMessage signature",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "efacc0e9d5b27b8eab613b8d1ef33738f165edbc6be218dda66a92db0b5a71d2",
+		PostDutyRunnerStateRoot: "854de580f7c23c94607d671315b57afef2ca8494859ee5f3d4af235ba50c55bb",
 		ExpectedError:           "partial sig invalid: failed to verify DutySignature: failed to verify signature",
 	}
 }

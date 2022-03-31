@@ -46,49 +46,49 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       testingutils.ProposalDataBytes(testingutils.TestConsensusDataByts, nil, nil),
+				Data:       testingutils.ProposalDataBytes(testingutils.TestAttesterConsensusDataByts, nil, nil),
 			}),
 			testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 				MsgType:    qbft.PrepareMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusDataByts),
+				Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
 			}),
 			testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
 				MsgType:    qbft.PrepareMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusDataByts),
+				Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
 			}),
 			testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
 				MsgType:    qbft.PrepareMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusDataByts),
+				Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
 			}),
 			testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 				MsgType:    qbft.CommitMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       testingutils.CommitDataBytes(testingutils.TestConsensusDataByts),
+				Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
 			}),
 			testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
 				MsgType:    qbft.CommitMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       testingutils.CommitDataBytes(testingutils.TestConsensusDataByts),
+				Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
 			}),
 			testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
 				MsgType:    qbft.CommitMsgType,
 				Height:     qbft.FirstHeight,
 				Round:      qbft.FirstRound,
 				Identifier: []byte{1, 2, 3, 4},
-				Data:       testingutils.CommitDataBytes(testingutils.TestConsensusDataByts),
+				Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
 			}),
 		}
 
@@ -98,6 +98,6 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 
 		decidedVal, err := dr.DutyExecutionState.DecidedValue.Encode()
 		require.NoError(t, err)
-		require.EqualValues(t, decidedVal, testingutils.TestConsensusDataByts)
+		require.EqualValues(t, decidedVal, testingutils.TestAttesterConsensusDataByts)
 	})
 }

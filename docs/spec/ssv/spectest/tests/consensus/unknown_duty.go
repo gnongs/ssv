@@ -1,13 +1,14 @@
-package tests
+package consensus
 
 import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
-// HappyFullFlow tests a full consensus + post consensus + duty sig reconstruction flow
-func HappyFullFlow() *SpecTest {
+// UnknownDuty tests decided value with an unknown duty type
+func UnknownDuty() *tests.SpecTest {
 	dr := testingutils.BaseRunner()
 	if err := dr.StartNewInstance([]byte{1, 2, 3, 4}); err != nil {
 		panic(err.Error())
@@ -19,60 +20,57 @@ func HappyFullFlow() *SpecTest {
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.ProposalDataBytes(testingutils.TestAttesterConsensusDataByts, nil, nil),
+			Data:       testingutils.ProposalDataBytes(testingutils.TestConsensusUnkownDutyTypeDataByts, nil, nil),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
+			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusUnkownDutyTypeDataByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
+			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusUnkownDutyTypeDataByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
+			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusUnkownDutyTypeDataByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
+			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusUnkownDutyTypeDataByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
+			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusUnkownDutyTypeDataByts),
 		}), nil),
 		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
+			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusUnkownDutyTypeDataByts),
 		}), nil),
-
-		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK1, 1, qbft.FirstHeight)),
-		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK2, 2, qbft.FirstHeight)),
-		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK3, 3, qbft.FirstHeight)),
 	}
 
-	return &SpecTest{
-		Name:                    "happy full flow",
+	return &tests.SpecTest{
+		Name:                    "unknown decided value's duty type",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "8a61388a722c643ffda908a87dc452521ea2f1cee7b975385ac1a6b4f1dabad0",
+		PostDutyRunnerStateRoot: "a56b370679d010d217e2c87873e6820f011d9ace64fbfed91c2b185da3a79bba",
+		ExpectedError:           "decided value is invalid: decided value's duty has wrong beacon role type",
 	}
 }

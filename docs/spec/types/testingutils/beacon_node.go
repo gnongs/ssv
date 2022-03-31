@@ -7,7 +7,7 @@ import (
 )
 
 var TestingAttestationData = &spec.AttestationData{
-	Slot:            1,
+	Slot:            12,
 	Index:           3,
 	BeaconBlockRoot: spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
 	Source: &spec.Checkpoint{
@@ -27,8 +27,30 @@ var TestingValidatorPubKey = func() spec.BLSPubKey {
 	copy(blsPK[:], pk)
 	return blsPK
 }()
-var TestingDuty = &beacon.Duty{
+var TestingAttesterDuty = &beacon.Duty{
 	Type:                    beacon.RoleTypeAttester,
+	PubKey:                  TestingValidatorPubKey,
+	Slot:                    12,
+	ValidatorIndex:          1,
+	CommitteeIndex:          22,
+	CommitteesAtSlot:        36,
+	CommitteeLength:         128,
+	ValidatorCommitteeIndex: 11,
+}
+
+var TestingAggregatorDuty = &beacon.Duty{
+	Type:                    beacon.RoleTypeAggregator,
+	PubKey:                  TestingValidatorPubKey,
+	Slot:                    12,
+	ValidatorIndex:          1,
+	CommitteeIndex:          22,
+	CommitteesAtSlot:        36,
+	CommitteeLength:         128,
+	ValidatorCommitteeIndex: 11,
+}
+
+var TestingUnknownDutyType = &beacon.Duty{
+	Type:                    100,
 	PubKey:                  TestingValidatorPubKey,
 	Slot:                    12,
 	ValidatorIndex:          1,

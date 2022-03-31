@@ -28,6 +28,6 @@ func writeJson(data []byte) {
 
 	fmt.Printf("writing spec tests json to: %s\n", fullPath)
 	if err := ioutil.WriteFile(fullPath, data, 0644); err != nil {
-
+		panic(err.Error())
 	}
 }

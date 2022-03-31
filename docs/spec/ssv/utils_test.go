@@ -7,7 +7,7 @@ import (
 )
 
 var testConsensusData = &types.ConsensusData{
-	Duty:            testingutils.TestingDuty,
+	Duty:            testingutils.TestingAttesterDuty,
 	AttestationData: testingutils.TestingAttestationData,
 }
 var TestConsensusDataByts, _ = testConsensusData.Encode()
