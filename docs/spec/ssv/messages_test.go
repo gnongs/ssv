@@ -127,3 +127,125 @@ func TestSignedPostConsensusMessage_Marshaling(t *testing.T) {
 		require.NoError(t, decoded.Decode(byts))
 	})
 }
+
+func TestPostConsensusMessage_Validate(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		m := &ssv.PostConsensusMessage{
+			DutySignature:   make([]byte, 96),
+			DutySigningRoot: make([]byte, 32),
+			Signers:         []types.OperatorID{1},
+		}
+		require.NoError(t, m.Validate())
+	})
+
+	t.Run("invalid sig", func(t *testing.T) {
+		m := &ssv.PostConsensusMessage{
+			DutySignature:   make([]byte, 95),
+			DutySigningRoot: make([]byte, 32),
+			Signers:         []types.OperatorID{1},
+		}
+		require.EqualError(t, m.Validate(), "PostConsensusMessage sig invalid")
+
+		m.DutySignature = make([]byte, 97)
+		require.EqualError(t, m.Validate(), "PostConsensusMessage sig invalid")
+
+		m.DutySignature = nil
+		require.EqualError(t, m.Validate(), "PostConsensusMessage sig invalid")
+	})
+
+	t.Run("invalid root", func(t *testing.T) {
+		m := &ssv.PostConsensusMessage{
+			DutySignature:   make([]byte, 96),
+			DutySigningRoot: make([]byte, 31),
+			Signers:         []types.OperatorID{1},
+		}
+		require.EqualError(t, m.Validate(), "DutySigningRoot invalid")
+
+		m.DutySigningRoot = make([]byte, 33)
+		require.EqualError(t, m.Validate(), "DutySigningRoot invalid")
+
+		m.DutySigningRoot = nil
+		require.EqualError(t, m.Validate(), "DutySigningRoot invalid")
+	})
+
+	t.Run("invalid signers", func(t *testing.T) {
+		m := &ssv.PostConsensusMessage{
+			DutySignature:   make([]byte, 96),
+			DutySigningRoot: make([]byte, 32),
+			Signers:         []types.OperatorID{},
+		}
+		require.EqualError(t, m.Validate(), "invalid PostConsensusMessage signers")
+
+		m.Signers = []types.OperatorID{1, 2}
+		require.EqualError(t, m.Validate(), "invalid PostConsensusMessage signers")
+
+		m.Signers = nil
+		require.EqualError(t, m.Validate(), "invalid PostConsensusMessage signers")
+	})
+}
+
+func TestSignedPostConsensusMessage_Validate(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		m := &ssv.SignedPostConsensusMessage{
+			Signature: make([]byte, 96),
+			Signers:   []types.OperatorID{1},
+			Message: &ssv.PostConsensusMessage{
+				DutySignature:   make([]byte, 96),
+				DutySigningRoot: make([]byte, 32),
+				Signers:         []types.OperatorID{1},
+			},
+		}
+		require.NoError(t, m.Validate())
+	})
+
+	t.Run("invalid sig", func(t *testing.T) {
+		m := &ssv.SignedPostConsensusMessage{
+			Signature: make([]byte, 95),
+			Signers:   []types.OperatorID{1},
+			Message: &ssv.PostConsensusMessage{
+				DutySignature:   make([]byte, 96),
+				DutySigningRoot: make([]byte, 32),
+				Signers:         []types.OperatorID{1},
+			},
+		}
+		require.EqualError(t, m.Validate(), "SignedPostConsensusMessage sig invalid")
+
+		m.Signature = make([]byte, 97)
+		require.EqualError(t, m.Validate(), "SignedPostConsensusMessage sig invalid")
+
+		m.Signature = nil
+		require.EqualError(t, m.Validate(), "SignedPostConsensusMessage sig invalid")
+	})
+
+	t.Run("invalid signers", func(t *testing.T) {
+		m := &ssv.SignedPostConsensusMessage{
+			Signature: make([]byte, 95),
+			Signers:   []types.OperatorID{},
+			Message: &ssv.PostConsensusMessage{
+				DutySignature:   make([]byte, 96),
+				DutySigningRoot: make([]byte, 32),
+				Signers:         []types.OperatorID{1},
+			},
+		}
+		require.EqualError(t, m.Validate(), "SignedPostConsensusMessage sig invalid")
+
+		m.Signers = []types.OperatorID{1, 2}
+		require.EqualError(t, m.Validate(), "SignedPostConsensusMessage sig invalid")
+
+		m.Signers = nil
+		require.EqualError(t, m.Validate(), "SignedPostConsensusMessage sig invalid")
+	})
+
+	t.Run("invalid msg", func(t *testing.T) {
+		m := &ssv.SignedPostConsensusMessage{
+			Signature: make([]byte, 96),
+			Signers:   []types.OperatorID{1},
+			Message: &ssv.PostConsensusMessage{
+				DutySignature:   make([]byte, 95),
+				DutySigningRoot: make([]byte, 32),
+				Signers:         []types.OperatorID{1},
+			},
+		}
+		require.EqualError(t, m.Validate(), "PostConsensusMessage sig invalid")
+	})
+}

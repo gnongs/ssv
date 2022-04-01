@@ -46,8 +46,8 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 }
 
 func (v *Validator) validatePostConsensusMsg(executionState *DutyExecutionState, SignedMsg *SignedPostConsensusMessage) error {
-	if len(SignedMsg.GetSigners()) != 1 {
-		return errors.New("SignedPostConsensusMessage allows 1 signer")
+	if err := SignedMsg.Validate(); err != nil {
+		return errors.Wrap(err, "SignedPostConsensusMessage invalid")
 	}
 
 	if err := SignedMsg.GetSignature().VerifyByOperators(SignedMsg, v.share.DomainType, types.PostConsensusSigType, v.share.Committee); err != nil {

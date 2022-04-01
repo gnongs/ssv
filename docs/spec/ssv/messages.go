@@ -35,6 +35,19 @@ func (pcsm *PostConsensusMessage) GetRoot() ([]byte, error) {
 	return ret[:], nil
 }
 
+func (pcsm *PostConsensusMessage) Validate() error {
+	if len(pcsm.DutySignature) != 96 {
+		return errors.New("PostConsensusMessage sig invalid")
+	}
+	if len(pcsm.DutySigningRoot) != 32 {
+		return errors.New("DutySigningRoot invalid")
+	}
+	if len(pcsm.Signers) != 1 {
+		return errors.New("invalid PostConsensusMessage signers")
+	}
+	return nil
+}
+
 type SignedPostConsensusMessage struct {
 	Message   *PostConsensusMessage
 	Signature types.Signature
@@ -123,4 +136,14 @@ func blsSig(sig []byte) (*bls.Sign, error) {
 		return nil, errors.Wrap(err, "could not covert DutySignature byts to bls.sign")
 	}
 	return ret, nil
+}
+
+func (spcsm *SignedPostConsensusMessage) Validate() error {
+	if len(spcsm.Signature) != 96 {
+		return errors.New("SignedPostConsensusMessage sig invalid")
+	}
+	if len(spcsm.Signers) != 1 {
+		return errors.New("no SignedPostConsensusMessage signers")
+	}
+	return spcsm.Message.Validate()
 }

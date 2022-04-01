@@ -22,6 +22,6 @@ func MultipleSigners() *tests.SpecTest {
 		DutyRunner:              dr,
 		Messages:                msgs,
 		PostDutyRunnerStateRoot: "854de580f7c23c94607d671315b57afef2ca8494859ee5f3d4af235ba50c55bb",
-		ExpectedError:           "partial sig invalid: SignedPostConsensusMessage allows 1 signer",
+		ExpectedError:           "partial sig invalid: SignedPostConsensusMessage invalid: no SignedPostConsensusMessage signers",
 	}
 }
