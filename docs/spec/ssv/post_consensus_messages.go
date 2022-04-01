@@ -11,7 +11,7 @@ import (
 func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *SignedPostConsensusMessage) error {
 	postCons := dutyRunner.PostConsensusStateForHeight(signedMsg.Message.Height)
 	if postCons == nil {
-		return errors.New("PostConsensusMessage Height doesn't match duty runner's Height'")
+		return errors.New("PostConsensusMessage Height doesn't match duty runner's Height")
 	}
 
 	if err := v.validatePostConsensusMsg(postCons, signedMsg); err != nil {
