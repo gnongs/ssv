@@ -1,4 +1,4 @@
-package postconsensus
+package messages
 
 import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"
@@ -7,18 +7,18 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
-// MultipleSigners tests >1 SignedPostConsensusMessage Signers
-func MultipleSigners() *tests.SpecTest {
+// NoSigners tests an empty SignedPostConsensusMessage Signers
+func NoSigners() *tests.SpecTest {
 	dr := testingutils.DecidedRunner()
 
 	noSignerMsg := testingutils.PostConsensusAttestationMsg(testingutils.TestingSK1, 1, qbft.FirstHeight)
-	noSignerMsg.Signers = []types.OperatorID{1, 2}
+	noSignerMsg.Signers = []types.OperatorID{}
 	msgs := []*types.SSVMessage{
 		testingutils.SSVMsg(nil, noSignerMsg),
 	}
 
 	return &tests.SpecTest{
-		Name:                    ">1 SignedPostConsensusMessage Signers",
+		Name:                    "NoSigners SignedPostConsensusMessage",
 		DutyRunner:              dr,
 		Messages:                msgs,
 		PostDutyRunnerStateRoot: "854de580f7c23c94607d671315b57afef2ca8494859ee5f3d4af235ba50c55bb",

@@ -33,6 +33,14 @@ var TestConsensusWrongDutyPKData = &types.ConsensusData{
 var TestConsensusWrongDutyPKDataByts, _ = TestConsensusWrongDutyPKData.Encode()
 
 var SSVMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusMessage) *types.SSVMessage {
+	return ssvMsg(qbftMsg, postMsg, types.MessageIDForValidatorPKAndRole(TestingValidatorPubKey[:], beacon.RoleTypeAttester))
+}
+
+var SSVMsgWrongID = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusMessage) *types.SSVMessage {
+	return ssvMsg(qbftMsg, postMsg, types.MessageIDForValidatorPKAndRole(TestingWrongValidatorPubKey[:], beacon.RoleTypeAttester))
+}
+
+var ssvMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusMessage, msgID types.MessageID) *types.SSVMessage {
 	var msgType types.MsgType
 	var data []byte
 	if qbftMsg != nil {
@@ -44,8 +52,6 @@ var SSVMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPostConsensusM
 	} else {
 		panic("msg type undefined")
 	}
-
-	msgID := types.MessageIDForValidatorPKAndRole(TestingValidatorPubKey[:], beacon.RoleTypeAttester)
 
 	return &types.SSVMessage{
 		MsgType: msgType,

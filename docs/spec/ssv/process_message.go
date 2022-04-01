@@ -44,7 +44,7 @@ func (v *Validator) validateMessage(msg *types.SSVMessage) error {
 
 	dutyRunner := v.DutyRunners.DutyRunnerForMsgID(msg.GetID())
 	if dutyRunner == nil {
-		return errors.Errorf("could not get duty runner for msg ID %s", msg.GetID().String())
+		return errors.New("could not find duty runner for msg ID")
 	}
 
 	if msg.GetType() > 2 {
