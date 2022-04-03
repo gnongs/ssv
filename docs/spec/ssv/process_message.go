@@ -14,7 +14,7 @@ func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 
 	dutyRunner := v.DutyRunners.DutyRunnerForMsgID(msg.GetID())
 	if dutyRunner == nil {
-		return errors.Errorf("could not get duty runner for msg ID %s", msg.GetID().String())
+		return errors.Errorf("could not get duty runner for msg ID")
 	}
 
 	switch msg.GetType() {
@@ -42,8 +42,7 @@ func (v *Validator) validateMessage(msg *types.SSVMessage) error {
 		return errors.New("msg ID doesn't match validator ID")
 	}
 
-	dutyRunner := v.DutyRunners.DutyRunnerForMsgID(msg.GetID())
-	if dutyRunner == nil {
+	if v.DutyRunners.DutyRunnerForMsgID(msg.GetID()) == nil {
 		return errors.New("could not find duty runner for msg ID")
 	}
 
