@@ -123,7 +123,10 @@ Share1 = f(NodeID1)\
 Share1 = f(NodeID1)\
 ...
 
+### Spec tests
+The [spec tests](./spectest) are a generated as a json file that can be run in any implementation. They test the various flows within the SSV package, treating the consensus protocol as as black box.
+
 ## TODO
-- [ ] Message Encoding - chose an encoding protocol and implement
+- [X] Message Encoding - chose an encoding protocol and implement
 - [ ] Sync protocol
 - [ ] Test coverage
