@@ -6,6 +6,25 @@ import (
 	"testing"
 )
 
+func TestSignedMessage_Aggregate(t *testing.T) {
+	t.Run("roots don't match", func(t *testing.T) {
+		m1 := testingSignedMsg.DeepCopy()
+		m2 := testingSignedMsg.DeepCopy()
+
+		m1.Signers = []types.OperatorID{11}
+		m1.Message.Height = 1222 // changing root
+
+		require.EqualError(t, m1.Aggregate(m2), "can't aggregate, roots not equal")
+	})
+
+	t.Run("common signers", func(t *testing.T) {
+		m1 := testingSignedMsg.DeepCopy()
+		m2 := testingSignedMsg.DeepCopy()
+
+		require.EqualError(t, m1.Aggregate(m2), "can't aggregate 2 signed messages with mutual signers")
+	})
+}
+
 func TestSignedMessage_DeepCopy(t *testing.T) {
 	expected, err := testingSignedMsg.GetRoot()
 	require.NoError(t, err)

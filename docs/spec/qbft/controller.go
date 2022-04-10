@@ -115,11 +115,15 @@ func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
 
 	// Broadcast Decided msg
 	if err := c.network.BroadcastDecided(aggregatedCommit); err != nil {
-		//TODO We do not return error here, just Log broadcasting error.
+		// We do not return error here, just Log broadcasting error.
 		return decided, decidedValue, nil
 	}
 
 	return decided, decidedValue, nil
+}
+
+func (c *Controller) ProcessDecidedMsg(msg *SignedMessage) error {
+	return nil
 }
 
 func (c *Controller) InstanceForHeight(height Height) *Instance {
@@ -159,7 +163,6 @@ func (c *Controller) canStartInstance(value []byte) error {
 		return errors.Wrap(err, "value invalid")
 	}
 
-	// TODO - complete more checks
 	return nil
 }
 

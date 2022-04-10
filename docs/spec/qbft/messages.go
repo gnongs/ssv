@@ -1,6 +1,7 @@
 package qbft
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"github.com/bloxapp/ssv/docs/spec/types"
@@ -207,10 +208,10 @@ func (signedMsg *SignedMessage) MatchedSigners(ids []types.OperatorID) bool {
 	return true
 }
 
-// MutualSigners returns true if signatures have at least 1 mutual signer
-func (signedMsg *SignedMessage) MutualSigners(sig types.MessageSignature) bool {
+// CommonSigners returns true if there is at least 1 common signer
+func (signedMsg *SignedMessage) CommonSigners(ids []types.OperatorID) bool {
 	for _, id := range signedMsg.Signers {
-		for _, id2 := range sig.GetSigners() {
+		for _, id2 := range ids {
 			if id == id2 {
 				return true
 			}
@@ -221,8 +222,20 @@ func (signedMsg *SignedMessage) MutualSigners(sig types.MessageSignature) bool {
 
 // Aggregate will aggregate the signed message if possible (unique signers, same digest, valid)
 func (signedMsg *SignedMessage) Aggregate(sig types.MessageSignature) error {
-	if signedMsg.MutualSigners(sig) {
+	if signedMsg.CommonSigners(sig.GetSigners()) {
 		return errors.New("can't aggregate 2 signed messages with mutual signers")
+	}
+
+	r1, err := signedMsg.GetRoot()
+	if err != nil {
+		return errors.Wrap(err, "could not get signature root")
+	}
+	r2, err := sig.GetRoot()
+	if err != nil {
+		return errors.Wrap(err, "could not get signature root")
+	}
+	if !bytes.Equal(r1, r2) {
+		return errors.New("can't aggregate, roots not equal")
 	}
 
 	aggregated, err := signedMsg.Signature.Aggregate(sig.GetSignature())
