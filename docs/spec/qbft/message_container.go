@@ -52,8 +52,7 @@ func (c *MsgContainer) AddIfDoesntExist(msg *SignedMessage) (bool, error) {
 		if err != nil {
 			return false, errors.Wrap(err, "could not get existing signed msg root")
 		}
-		if bytes.Equal(r, toMatchRoot) && existingMsg.MatchedSigners(msg.Signers) {
-			// TODO - what about 2 msgs with common signers but not identical?
+		if bytes.Equal(r, toMatchRoot) && existingMsg.CommonSigners(msg.Signers) {
 			return false, nil
 		}
 	}
