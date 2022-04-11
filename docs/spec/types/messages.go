@@ -47,6 +47,8 @@ type MsgType uint64
 const (
 	// SSVConsensusMsgType are all QBFT consensus related messages
 	SSVConsensusMsgType MsgType = iota
+	// SSVDecidedMsgType are all QBFT decided messages
+	SSVDecidedMsgType MsgType = iota
 	// SSVSyncMsgType are all QBFT sync messages
 	SSVSyncMsgType
 	// SSVPostConsensusMsgType are all partial signatures sent after consensus

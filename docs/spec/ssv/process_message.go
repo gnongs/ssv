@@ -21,9 +21,15 @@ func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 	case types.SSVConsensusMsgType:
 		signedMsg := &qbft.SignedMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
-			return errors.Wrap(err, "could not get post consensus Message from network Message")
+			return errors.Wrap(err, "could not get consensus Message from network Message")
 		}
 		return v.processConsensusMsg(dutyRunner, signedMsg)
+	case types.SSVDecidedMsgType:
+		decidedMsg := &qbft.DecidedMessage{}
+		if err := decidedMsg.Decode(msg.GetData()); err != nil {
+			return errors.Wrap(err, "could not get decided Message from network Message")
+		}
+		return v.processDecidedMsg(dutyRunner, decidedMsg)
 	case types.SSVPostConsensusMsgType:
 		signedMsg := &SignedPostConsensusMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
