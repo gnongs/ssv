@@ -17,6 +17,7 @@ func main() {
 	}
 
 	byts, _ := json.Marshal(all)
+	fmt.Printf("found %d tests\n", len(all))
 	writeJson(byts)
 }
 
