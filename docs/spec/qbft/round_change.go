@@ -22,7 +22,7 @@ func uponRoundChange(
 		return errors.Wrap(err, "could not add round change msg to container")
 	}
 	if !addedMsg {
-		return nil // uponCommit was already called
+		return nil // UponCommit was already called
 	}
 
 	if highestJustifiedRoundChangeMsg := hasReceivedProposalJustification(state, config, signedRoundChange, roundChangeMsgContainer, valCheck); highestJustifiedRoundChangeMsg != nil {

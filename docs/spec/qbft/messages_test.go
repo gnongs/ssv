@@ -6,6 +6,33 @@ import (
 	"testing"
 )
 
+func TestSignedMessage_MatchedSigners(t *testing.T) {
+	t.Run("all unique", func(t *testing.T) {
+		m1 := &SignedMessage{Signers: []types.OperatorID{1}}
+		require.False(t, m1.MatchedSigners([]types.OperatorID{2}))
+	})
+
+	t.Run("unique multi signer", func(t *testing.T) {
+		m1 := &SignedMessage{Signers: []types.OperatorID{1, 2}}
+		require.False(t, m1.MatchedSigners([]types.OperatorID{3, 4}))
+	})
+
+	t.Run("common multi signer", func(t *testing.T) {
+		m1 := &SignedMessage{Signers: []types.OperatorID{1}}
+		require.False(t, m1.MatchedSigners([]types.OperatorID{1, 2}))
+	})
+
+	t.Run("common multi signer", func(t *testing.T) {
+		m1 := &SignedMessage{Signers: []types.OperatorID{1, 2}}
+		require.False(t, m1.MatchedSigners([]types.OperatorID{1}))
+	})
+
+	t.Run("common multi signer", func(t *testing.T) {
+		m1 := &SignedMessage{Signers: []types.OperatorID{1, 2}}
+		require.False(t, m1.MatchedSigners([]types.OperatorID{1, 3}))
+	})
+}
+
 func TestSignedMessage_Aggregate(t *testing.T) {
 	t.Run("roots don't match", func(t *testing.T) {
 		m1 := testingSignedMsg.DeepCopy()

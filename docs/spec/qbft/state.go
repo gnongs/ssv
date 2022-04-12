@@ -71,6 +71,13 @@ type State struct {
 	LastPreparedRound               Round
 	LastPreparedValue               []byte
 	ProposalAcceptedForCurrentRound *SignedMessage
+	Decided                         bool
+	DecidedValue                    []byte
+
+	ProposeContainer     *MsgContainer
+	PrepareContainer     *MsgContainer
+	CommitContainer      *MsgContainer
+	RoundChangeContainer *MsgContainer
 }
 
 // GetRoot returns the state's deterministic root
