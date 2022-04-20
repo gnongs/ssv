@@ -193,6 +193,10 @@ func (signedMsg *SignedMessage) GetSigners() []types.OperatorID {
 
 // MatchedSigners returns true if the provided signer ids are equal to GetSignerIds() without order significance
 func (signedMsg *SignedMessage) MatchedSigners(ids []types.OperatorID) bool {
+	if len(signedMsg.Signers) != len(ids) {
+		return false
+	}
+
 	for _, id := range signedMsg.Signers {
 		found := false
 		for _, id2 := range ids {

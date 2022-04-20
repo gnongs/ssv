@@ -53,16 +53,16 @@ var BaseInstance = func() *qbft.Instance {
 		LastPreparedValue:               nil,
 		ProposalAcceptedForCurrentRound: nil,
 	}
-	ret.ProposeContainer = &qbft.MsgContainer{
+	ret.State.ProposeContainer = &qbft.MsgContainer{
 		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
 	}
-	ret.PrepareContainer = &qbft.MsgContainer{
+	ret.State.PrepareContainer = &qbft.MsgContainer{
 		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
 	}
-	ret.CommitContainer = &qbft.MsgContainer{
+	ret.State.CommitContainer = &qbft.MsgContainer{
 		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
 	}
-	ret.RoundChangeContainer = &qbft.MsgContainer{
+	ret.State.RoundChangeContainer = &qbft.MsgContainer{
 		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
 	}
 	return ret

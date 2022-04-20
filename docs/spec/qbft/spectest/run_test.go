@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	tests2 "github.com/bloxapp/ssv/docs/spec/qbft/spectest/tests"
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -24,7 +25,7 @@ func TestJson(t *testing.T) {
 	basedir, _ := os.Getwd()
 	path := filepath.Join(basedir, "generate")
 	fileName := "tests.json"
-	tests := map[string]*SpecTest{}
+	tests := map[string]*tests2.SpecTest{}
 	byteValue, err := ioutil.ReadFile(path + "/" + fileName)
 	if err != nil {
 		panic(err.Error())
@@ -41,14 +42,25 @@ func TestJson(t *testing.T) {
 		pre := qbft.NewInstance(testingutils.TestingConfig, test.Pre.State.Share, test.Pre.State.ID)
 		pre.Decode(byts)
 		test.Pre = pre
-		runTest(t, test)
+		t.Run(test.Name, func(t *testing.T) {
+			runTest(t, test)
+		})
 	}
 }
 
-func runTest(t *testing.T, test *SpecTest) {
+func runTest(t *testing.T, test *tests2.SpecTest) {
+	var lastErr error
 	for _, msg := range test.Messages {
 		_, _, _, err := test.Pre.ProcessMsg(msg)
-		require.NoError(t, err)
+		if err != nil {
+			lastErr = err
+		}
+	}
+
+	if len(test.ExpectedError) != 0 {
+		require.EqualError(t, lastErr, test.ExpectedError)
+	} else {
+		require.NoError(t, lastErr)
 	}
 
 	postRoot, err := test.Pre.State.GetRoot()

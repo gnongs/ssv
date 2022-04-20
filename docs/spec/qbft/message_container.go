@@ -3,6 +3,7 @@ package qbft
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
@@ -35,8 +36,38 @@ func (c *MsgContainer) MessagesForRound(round Round) []*SignedMessage {
 	return make([]*SignedMessage, 0)
 }
 
-// AddIfDoesntExist will add a msg with the following unique params: (round, signers)
-// returns true if added
+// UniqueSignersSetForRound returns the longest set of unique signers and msgs for a specific round
+func (c *MsgContainer) UniqueSignersSetForRound(round Round) ([]types.OperatorID, []*SignedMessage) {
+	signersRet := make([]types.OperatorID, 0)
+	msgsRet := make([]*SignedMessage, 0)
+	if c.Msgs[round] == nil {
+		return signersRet, msgsRet
+	}
+
+	for i := 0; i < len(c.Msgs[round]); i++ {
+		m := c.Msgs[round][i]
+		currentSigners := make([]types.OperatorID, 0)
+		currentMsgs := make([]*SignedMessage, 0)
+		currentMsgs = append(currentMsgs, m)
+		currentSigners = append(currentSigners, m.GetSigners()...)
+		for j := i + 1; j < len(c.Msgs[round]); j++ {
+			m2 := c.Msgs[round][j]
+			if !m2.CommonSigners(currentSigners) {
+				currentMsgs = append(currentMsgs, m2)
+				currentSigners = append(currentSigners, m2.GetSigners()...)
+			}
+		}
+
+		if len(signersRet) < len(currentSigners) {
+			signersRet = currentSigners
+			msgsRet = currentMsgs
+		}
+	}
+
+	return signersRet, msgsRet
+}
+
+// AddIfDoesntExist will add a msg only if there isn't an existing msg with the same root and signers
 func (c *MsgContainer) AddIfDoesntExist(msg *SignedMessage) (bool, error) {
 	if c.Msgs[msg.Message.Round] == nil {
 		c.Msgs[msg.Message.Round] = make([]*SignedMessage, 0)
@@ -52,7 +83,7 @@ func (c *MsgContainer) AddIfDoesntExist(msg *SignedMessage) (bool, error) {
 		if err != nil {
 			return false, errors.Wrap(err, "could not get existing signed msg root")
 		}
-		if bytes.Equal(r, toMatchRoot) && existingMsg.CommonSigners(msg.Signers) {
+		if bytes.Equal(r, toMatchRoot) && existingMsg.MatchedSigners(msg.Signers) {
 			return false, nil
 		}
 	}

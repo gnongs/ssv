@@ -16,16 +16,9 @@ type Instance struct {
 	State  *State
 	config IConfig
 
-	ProposeContainer     *MsgContainer
-	PrepareContainer     *MsgContainer
-	CommitContainer      *MsgContainer
-	RoundChangeContainer *MsgContainer
-
-	Decided      bool
-	DecidedValue []byte
-	processMsgF  *utils.ThreadSafeF
-	startOnce    sync.Once
-	StartValue   []byte
+	processMsgF *utils.ThreadSafeF
+	startOnce   sync.Once
+	StartValue  []byte
 }
 
 func NewInstance(
@@ -35,15 +28,15 @@ func NewInstance(
 ) *Instance {
 	return &Instance{
 		State: &State{
-			Share: share,
-			ID:    identifier,
+			Share:                share,
+			ID:                   identifier,
+			ProposeContainer:     NewMsgContainer(),
+			PrepareContainer:     NewMsgContainer(),
+			CommitContainer:      NewMsgContainer(),
+			RoundChangeContainer: NewMsgContainer(),
 		},
-		config:               config,
-		ProposeContainer:     NewMsgContainer(),
-		PrepareContainer:     NewMsgContainer(),
-		CommitContainer:      NewMsgContainer(),
-		RoundChangeContainer: NewMsgContainer(),
-		processMsgF:          utils.NewThreadSafeF(),
+		config:      config,
+		processMsgF: utils.NewThreadSafeF(),
 	}
 }
 
@@ -76,20 +69,20 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 	res := i.processMsgF.Run(func() interface{} {
 		switch msg.Message.MsgType {
 		case ProposalMsgType:
-			return uponProposal(i.State, i.config, msg, i.ProposeContainer)
+			return uponProposal(i.State, i.config, msg, i.State.ProposeContainer)
 		case PrepareMsgType:
-			return uponPrepare(i.State, i.config, msg, i.PrepareContainer, i.CommitContainer)
+			return uponPrepare(i.State, i.config, msg, i.State.PrepareContainer, i.State.CommitContainer)
 		case CommitMsgType:
-			decided, decidedValue, aggregatedCommit, err = uponCommit(i.State, i.config, msg, i.CommitContainer)
-			i.Decided = decided
+			decided, decidedValue, aggregatedCommit, err = UponCommit(i.State, i.config, msg, i.State.CommitContainer)
+			i.State.Decided = decided
 			if decided {
-				i.DecidedValue = decidedValue
+				i.State.DecidedValue = decidedValue
 			}
 
 			// TODO - Roberto comment: we should send a Decided msg here
 			return err
 		case RoundChangeMsgType:
-			return uponRoundChange(i.State, i.config, msg, i.RoundChangeContainer, i.config.GetValueCheck())
+			return uponRoundChange(i.State, i.config, msg, i.State.RoundChangeContainer, i.config.GetValueCheck())
 		default:
 			return errors.New("signed message type not supported")
 		}
@@ -97,12 +90,12 @@ func (i *Instance) ProcessMsg(msg *SignedMessage) (decided bool, decidedValue []
 	if res != nil {
 		return false, nil, nil, res.(error)
 	}
-	return i.Decided, i.DecidedValue, aggregatedCommit, nil
+	return i.State.Decided, i.State.DecidedValue, aggregatedCommit, nil
 }
 
 // IsDecided interface implementation
 func (i *Instance) IsDecided() (bool, []byte) {
-	return i.Decided, i.DecidedValue
+	return i.State.Decided, i.State.DecidedValue
 }
 
 // GetHeight interface implementation

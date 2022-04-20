@@ -6,8 +6,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// uponCommit returns true if a quorum of commit messages was received.
-func uponCommit(state *State, config IConfig, signedCommit *SignedMessage, commitMsgContainer *MsgContainer) (bool, []byte, *SignedMessage, error) {
+// UponCommit returns true if a quorum of commit messages was received.
+func UponCommit(state *State, config IConfig, signedCommit *SignedMessage, commitMsgContainer *MsgContainer) (bool, []byte, *SignedMessage, error) {
 	if state.ProposalAcceptedForCurrentRound == nil {
 		return false, nil, nil, errors.New("did not receive proposal for this round")
 	}
@@ -29,7 +29,7 @@ func uponCommit(state *State, config IConfig, signedCommit *SignedMessage, commi
 		return false, nil, nil, errors.Wrap(err, "could not add commit msg to container")
 	}
 	if !addMsg {
-		return false, nil, nil, nil // uponCommit was already called
+		return false, nil, nil, nil // UponCommit was already called
 	}
 
 	// calculate commit quorum and act upon it
@@ -52,19 +52,8 @@ func uponCommit(state *State, config IConfig, signedCommit *SignedMessage, commi
 }
 
 func commitQuorumForValue(state *State, commitMsgContainer *MsgContainer, value []byte) (bool, []*SignedMessage, error) {
-	commitMsgs := commitMsgContainer.MessagesForRound(state.Round)
-	valueFiltered := make([]*SignedMessage, 0)
-	for _, msg := range commitMsgs {
-		commitData, err := msg.Message.GetCommitData()
-		if err != nil {
-			return false, nil, errors.Wrap(err, "could not get msg commit data")
-		}
-		if bytes.Equal(commitData.Data, value) {
-			valueFiltered = append(valueFiltered, msg)
-		}
-	}
-
-	return state.Share.HasQuorum(len(valueFiltered)), valueFiltered, nil
+	signers, msgs := commitMsgContainer.UniqueSignersSetForRound(state.Round)
+	return state.Share.HasQuorum(len(signers)), msgs, nil
 }
 
 func aggregateCommitMsgs(msgs []*SignedMessage) (*SignedMessage, error) {
@@ -176,11 +165,6 @@ func validateCommit(
 	if !bytes.Equal(proposedCommitData.Data, msgCommitData.Data) {
 		return errors.New("proposed data different than commit msg data")
 	}
-
-	if len(signedCommit.GetSigners()) != 1 {
-		return errors.New("commit msg allows 1 signer")
-	}
-	// TODO how to process Decided msgs with multiple signer?
 
 	if err := signedCommit.Signature.VerifyByOperators(signedCommit, config.GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
 		return errors.Wrap(err, "commit msg signature invalid")

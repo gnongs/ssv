@@ -60,37 +60,38 @@ var testingInstanceStruct = &Instance{
 		LastPreparedRound:               1,
 		LastPreparedValue:               []byte{1, 2, 3, 4},
 		ProposalAcceptedForCurrentRound: testingSignedMsg,
-	},
-	ProposeContainer: &MsgContainer{
-		Msgs: map[Round][]*SignedMessage{
-			1: {
-				testingSignedMsg,
+		Decided:                         false,
+		DecidedValue:                    []byte{1, 2, 3, 4},
+
+		ProposeContainer: &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{
+				1: {
+					testingSignedMsg,
+				},
+			},
+		},
+		PrepareContainer: &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{
+				1: {
+					testingSignedMsg,
+				},
+			},
+		},
+		CommitContainer: &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{
+				1: {
+					testingSignedMsg,
+				},
+			},
+		},
+		RoundChangeContainer: &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{
+				1: {
+					testingSignedMsg,
+				},
 			},
 		},
 	},
-	PrepareContainer: &MsgContainer{
-		Msgs: map[Round][]*SignedMessage{
-			1: {
-				testingSignedMsg,
-			},
-		},
-	},
-	CommitContainer: &MsgContainer{
-		Msgs: map[Round][]*SignedMessage{
-			1: {
-				testingSignedMsg,
-			},
-		},
-	},
-	RoundChangeContainer: &MsgContainer{
-		Msgs: map[Round][]*SignedMessage{
-			1: {
-				testingSignedMsg,
-			},
-		},
-	},
-	Decided:      false,
-	DecidedValue: []byte{1, 2, 3, 4},
 }
 var testingControllerStruct = &Controller{
 	Identifier: []byte{1, 2, 3, 4},

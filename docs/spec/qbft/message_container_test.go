@@ -50,7 +50,7 @@ func TestMsgContainer_AddIfDoesntExist(t *testing.T) {
 		m.Signers = []types.OperatorID{1, 5, 6, 7}
 		added, err = c.AddIfDoesntExist(m)
 		require.NoError(t, err)
-		require.False(t, added)
+		require.True(t, added)
 	})
 }
 
@@ -69,4 +69,103 @@ func TestMsgContainer_Marshaling(t *testing.T) {
 	decodedByts, err := decoded.Encode()
 	require.NoError(t, err)
 	require.EqualValues(t, byts, decodedByts)
+}
+
+func TestMsgContainer_UniqueSignersSetForRound(t *testing.T) {
+	t.Run("multi common signers", func(t *testing.T) {
+		c := &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{},
+		}
+
+		c.Msgs[1] = []*SignedMessage{
+			{Signers: []types.OperatorID{1, 2, 3}},
+			{Signers: []types.OperatorID{1, 2}},
+			{Signers: []types.OperatorID{4}},
+		}
+		cnt, _ := c.UniqueSignersSetForRound(1)
+		require.EqualValues(t, []types.OperatorID{1, 2, 3, 4}, cnt)
+	})
+
+	t.Run("multi common signers", func(t *testing.T) {
+		c := &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{},
+		}
+
+		c.Msgs[1] = []*SignedMessage{
+			{Signers: []types.OperatorID{1, 2, 3}},
+			{Signers: []types.OperatorID{1, 2, 5}},
+			{Signers: []types.OperatorID{4}},
+		}
+		cnt, _ := c.UniqueSignersSetForRound(1)
+		require.EqualValues(t, []types.OperatorID{1, 2, 3, 4}, cnt)
+	})
+
+	t.Run("multi common signers", func(t *testing.T) {
+		c := &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{},
+		}
+
+		c.Msgs[1] = []*SignedMessage{
+			{Signers: []types.OperatorID{1, 2, 3}},
+			{Signers: []types.OperatorID{1, 2, 5}},
+			{Signers: []types.OperatorID{4}},
+			{Signers: []types.OperatorID{3, 7, 8, 9, 10}},
+		}
+		cnt, _ := c.UniqueSignersSetForRound(1)
+		require.EqualValues(t, []types.OperatorID{1, 2, 5, 4, 3, 7, 8, 9, 10}, cnt)
+	})
+
+	t.Run("multi common signers", func(t *testing.T) {
+		c := &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{},
+		}
+
+		c.Msgs[1] = []*SignedMessage{
+			{Signers: []types.OperatorID{1}},
+			{Signers: []types.OperatorID{1, 2, 3}},
+		}
+		cnt, _ := c.UniqueSignersSetForRound(1)
+		require.EqualValues(t, []types.OperatorID{1, 2, 3}, cnt)
+	})
+
+	t.Run("multi common signers", func(t *testing.T) {
+		c := &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{},
+		}
+
+		c.Msgs[1] = []*SignedMessage{
+			{Signers: []types.OperatorID{1, 2, 3}},
+			{Signers: []types.OperatorID{1}},
+		}
+		cnt, _ := c.UniqueSignersSetForRound(1)
+		require.EqualValues(t, []types.OperatorID{1, 2, 3}, cnt)
+	})
+
+	t.Run("no common signers", func(t *testing.T) {
+		c := &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{},
+		}
+
+		c.Msgs[1] = []*SignedMessage{
+			{Signers: []types.OperatorID{1, 2, 3}},
+			{Signers: []types.OperatorID{6}},
+			{Signers: []types.OperatorID{4, 7}},
+		}
+		cnt, _ := c.UniqueSignersSetForRound(1)
+		require.EqualValues(t, []types.OperatorID{1, 2, 3, 6, 4, 7}, cnt)
+	})
+
+	t.Run("no round", func(t *testing.T) {
+		c := &MsgContainer{
+			Msgs: map[Round][]*SignedMessage{},
+		}
+
+		c.Msgs[1] = []*SignedMessage{
+			{Signers: []types.OperatorID{1, 2, 3}},
+			{Signers: []types.OperatorID{6}},
+			{Signers: []types.OperatorID{4, 7}},
+		}
+		cnt, _ := c.UniqueSignersSetForRound(2)
+		require.EqualValues(t, []types.OperatorID{}, cnt)
+	})
 }
