@@ -70,7 +70,7 @@ func WrongDutyPubKey() *tests.SpecTest {
 		Name:                    "wrong decided value's pubkey",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "181535bccef11500158f2d906d5e3e4472d979394da1e14ef834b49e32a590c5",
+		PostDutyRunnerStateRoot: "6c6d591f319835835ffd0f45fed6db34562e2a0a5ba0bb07b403bd2cffe0bda5",
 		ExpectedError:           "decided value is invalid: decided value's validator pk is wrong",
 	}
 }

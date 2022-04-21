@@ -99,7 +99,7 @@ func DecidedValueSlotMismatch() *tests.SpecTest {
 		Name:                    "decided value's slot and attestation data mismatch",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "39789c7c90787400d8062a4ec9a877b489fda6abbefc23aa88a880adaffcfee2",
+		PostDutyRunnerStateRoot: "89e9d0d138bc17d224bac84a38b0e5e2894a1bf52189c25da273ded82c237209",
 		ExpectedError:           "decided value is invalid: decided value's duty slot != attestation slot",
 	}
 }

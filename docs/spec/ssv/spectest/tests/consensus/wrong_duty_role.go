@@ -70,7 +70,7 @@ func WrongDutyRole() *tests.SpecTest {
 		Name:                    "wrong decided value's duty type",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "0e4187bf72098d7495d941c5f1a8c170a68254dd6046c1077f076e9c7ebe0017",
+		PostDutyRunnerStateRoot: "ffa08170540cdb023aab2321a74d2af8779cad36e2ed0b8e29ee3160b975cf24",
 		ExpectedError:           "decided value is invalid: decided value's duty has wrong beacon role type",
 	}
 }

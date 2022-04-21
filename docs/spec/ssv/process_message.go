@@ -52,7 +52,7 @@ func (v *Validator) validateMessage(msg *types.SSVMessage) error {
 		return errors.New("could not find duty runner for msg ID")
 	}
 
-	if msg.GetType() > 2 {
+	if msg.GetType() > 3 {
 		return errors.New("msg type not supported")
 	}
 

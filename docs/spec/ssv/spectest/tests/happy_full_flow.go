@@ -73,6 +73,6 @@ func HappyFullFlow() *SpecTest {
 		Name:                    "happy full flow",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "8a61388a722c643ffda908a87dc452521ea2f1cee7b975385ac1a6b4f1dabad0",
+		PostDutyRunnerStateRoot: "b64768f976bfdef32b0d01c89441515901ca91cd62b986eda1aecf7d9e6f804f",
 	}
 }

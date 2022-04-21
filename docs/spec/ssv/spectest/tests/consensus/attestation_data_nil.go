@@ -86,7 +86,7 @@ func AttestationDataNil() *tests.SpecTest {
 		Name:                    "decided value's attestation data nil (role attester)",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "de8cf92893f3a78e7e004ed918ae567e6803c4ce8f657d61cf2e1e2c69fc0ae9",
+		PostDutyRunnerStateRoot: "ed2563907d5359a979be22f89d9f8d858394df17bde3a8b24c9c2b848ffb6d98",
 		ExpectedError:           "decided value is invalid: decided value's AttestationData is nil",
 	}
 }
