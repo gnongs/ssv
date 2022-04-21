@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/ssv"
 )
 
 var TestingAttestationData = &spec.AttestationData{
@@ -82,6 +83,11 @@ type testingBeaconNode struct {
 
 func NewTestingBeaconNode() *testingBeaconNode {
 	return &testingBeaconNode{}
+}
+
+// GetBeaconNetwork returns the beacon network the node is on
+func (bn *testingBeaconNode) GetBeaconNetwork() ssv.BeaconNetwork {
+	return ssv.NowTestNetwork
 }
 
 // GetAttestationData returns attestation data by the given slot and committee index

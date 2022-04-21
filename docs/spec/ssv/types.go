@@ -24,6 +24,8 @@ type Storage interface {
 }
 
 type BeaconNode interface {
+	// GetBeaconNetwork returns the beacon network the node is on
+	GetBeaconNetwork() BeaconNetwork
 	// GetAttestationData returns attestation data by the given slot and committee index
 	GetAttestationData(slot phase0.Slot, committeeIndex phase0.CommitteeIndex) (*phase0.AttestationData, error)
 	// SubmitAttestation submit the attestation to the node
