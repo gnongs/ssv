@@ -29,7 +29,7 @@ func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 		if err := decidedMsg.Decode(msg.GetData()); err != nil {
 			return errors.Wrap(err, "could not get decided Message from network Message")
 		}
-		return v.processDecidedMsg(dutyRunner, decidedMsg)
+		return v.processConsensusMsg(dutyRunner, decidedMsg.SignedMessage)
 	case types.SSVPostConsensusMsgType:
 		signedMsg := &SignedPostConsensusMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
