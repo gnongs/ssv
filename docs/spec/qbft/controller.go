@@ -125,27 +125,6 @@ func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
 	return decided, decidedValue, nil
 }
 
-func (c *Controller) ProcessDecidedMsg(decidedMsg *DecidedMessage) error {
-	msg := decidedMsg.SignedMessage
-
-	if !bytes.Equal(c.Identifier, msg.Message.Identifier) {
-		return errors.New(fmt.Sprintf("message doesn't belong to Identifier %x", c.Identifier))
-	}
-
-	inst := c.InstanceForHeight(msg.Message.Height)
-	if inst == nil {
-		return errors.New(fmt.Sprintf("instance for Height %d,  Identifier %x not found", msg.Message.Height, c.Identifier))
-	}
-
-	if decided, _ := inst.IsDecided(); decided {
-		return nil
-	}
-
-	// TODO
-
-	return nil
-}
-
 func (c *Controller) InstanceForHeight(height Height) *Instance {
 	return c.StoredInstances.FindInstance(height)
 }
