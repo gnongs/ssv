@@ -10,7 +10,7 @@ import (
 // WrongDutyPubKey tests decided value with duty validator pubkey != the duty runner's pubkey
 func WrongDutyPubKey() *tests.SpecTest {
 	dr := testingutils.BaseRunner()
-	if err := dr.StartNewInstance([]byte{1, 2, 3, 4}); err != nil {
+	if err := dr.StartNewInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
 		panic(err.Error())
 	}
 
@@ -70,7 +70,7 @@ func WrongDutyPubKey() *tests.SpecTest {
 		Name:                    "wrong decided value's pubkey",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "6c6d591f319835835ffd0f45fed6db34562e2a0a5ba0bb07b403bd2cffe0bda5",
+		PostDutyRunnerStateRoot: "3b5b5299afc9000d671fdf75e1bb80d7c7afe3e7e7da04de765b2845cd24698b",
 		ExpectedError:           "decided value is invalid: decided value's validator pk is wrong",
 	}
 }

@@ -18,7 +18,7 @@ func FutureConsensusState() *tests.SpecTest {
 		Name:                    "future SignedPostConsensusMessage",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "a5757d77504f4ba7f62430d1b961a140ef15e87a316db1b713b69a453b179841",
+		PostDutyRunnerStateRoot: "33fd61d17dc89513774a7b566e9dddad28ea5703f83efae63aea69e369c1f367",
 		ExpectedError:           "PostConsensusMessage Height doesn't match duty runner's Height",
 	}
 }

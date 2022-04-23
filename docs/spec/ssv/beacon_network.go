@@ -1,6 +1,7 @@
 package ssv
 
 import (
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"time"
 )
 
@@ -72,26 +73,26 @@ func (n BeaconNetwork) SlotsPerEpoch() uint64 {
 }
 
 // EstimatedCurrentSlot returns the estimation of the current slot
-func (n BeaconNetwork) EstimatedCurrentSlot() uint64 {
+func (n BeaconNetwork) EstimatedCurrentSlot() spec.Slot {
 	return n.EstimatedSlotAtTime(time.Now().Unix())
 }
 
 // EstimatedSlotAtTime estimates slot at the given time
-func (n BeaconNetwork) EstimatedSlotAtTime(time int64) uint64 {
+func (n BeaconNetwork) EstimatedSlotAtTime(time int64) spec.Slot {
 	genesis := int64(n.MinGenesisTime())
 	if time < genesis {
 		return 0
 	}
-	return uint64(time-genesis) / uint64(n.SlotDurationSec().Seconds())
+	return spec.Slot(uint64(time-genesis) / uint64(n.SlotDurationSec().Seconds()))
 }
 
 // EstimatedCurrentEpoch estimates the current epoch
 // https://github.com/ethereum/eth2.0-specs/blob/dev/specs/phase0/beacon-chain.md#compute_start_slot_at_epoch
-func (n BeaconNetwork) EstimatedCurrentEpoch() uint64 {
+func (n BeaconNetwork) EstimatedCurrentEpoch() spec.Epoch {
 	return n.EstimatedEpochAtSlot(n.EstimatedCurrentSlot())
 }
 
 // EstimatedEpochAtSlot estimates epoch at the given slot
-func (n BeaconNetwork) EstimatedEpochAtSlot(slot uint64) uint64 {
-	return slot / n.SlotsPerEpoch()
+func (n BeaconNetwork) EstimatedEpochAtSlot(slot spec.Slot) spec.Epoch {
+	return spec.Epoch(slot / spec.Slot(n.SlotsPerEpoch()))
 }

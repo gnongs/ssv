@@ -22,6 +22,6 @@ func MsgAfterReconstruction() *tests.SpecTest {
 		Name:                    "4th msg after reconstruction",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "d020cbfdeb628ab92857b33a94c7a154118f41dff7e9b8368df54864611f0860",
+		PostDutyRunnerStateRoot: "1834da7eb13f02872bd5f02d918d3e17094c198dde6994edf46de43a27aa6f3c",
 	}
 }

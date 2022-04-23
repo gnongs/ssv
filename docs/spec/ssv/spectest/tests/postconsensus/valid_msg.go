@@ -19,6 +19,6 @@ func ValidMessage() *tests.SpecTest {
 		Name:                    "valid SignedPostConsensusMessage",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "06f989775de0c6f1ef52ef62140ba43ac1cad4d82c7a22f99e8f407a33187d44",
+		PostDutyRunnerStateRoot: "d7a0b944e8ace07e1f65b98513a00a23c7a63defb4be6443ae64c35639da099a",
 	}
 }

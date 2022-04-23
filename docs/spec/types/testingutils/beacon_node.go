@@ -12,11 +12,11 @@ var TestingAttestationData = &spec.AttestationData{
 	Index:           3,
 	BeaconBlockRoot: spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
 	Source: &spec.Checkpoint{
-		Epoch: 1,
+		Epoch: 0,
 		Root:  spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
 	},
 	Target: &spec.Checkpoint{
-		Epoch: 2,
+		Epoch: 1,
 		Root:  spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
 	},
 }
@@ -39,7 +39,7 @@ var TestingAttesterDuty = &beacon.Duty{
 	PubKey:                  TestingValidatorPubKey,
 	Slot:                    12,
 	ValidatorIndex:          1,
-	CommitteeIndex:          22,
+	CommitteeIndex:          3,
 	CommitteesAtSlot:        36,
 	CommitteeLength:         128,
 	ValidatorCommitteeIndex: 11,
@@ -72,7 +72,7 @@ var TestingWrongDutyPK = &beacon.Duty{
 	PubKey:                  TestingWrongValidatorPubKey,
 	Slot:                    12,
 	ValidatorIndex:          1,
-	CommitteeIndex:          22,
+	CommitteeIndex:          3,
 	CommitteesAtSlot:        36,
 	CommitteeLength:         128,
 	ValidatorCommitteeIndex: 11,

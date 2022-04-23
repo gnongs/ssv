@@ -2,6 +2,7 @@ package testingutils
 
 import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/docs/spec/ssv"
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
@@ -74,9 +75,7 @@ func NewTestingQBFTController(identifier []byte) *qbft.Controller {
 		TestingShare,
 		types.PrimusTestnet,
 		NewTestingKeyManager(),
-		func(data []byte) error {
-			return nil
-		},
+		ssv.BeaconAttestationValueCheck(ssv.NowTestNetwork),
 		NewTestingStorage(),
 		NewTestingNetwork(),
 	)

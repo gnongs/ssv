@@ -2,6 +2,7 @@ package spectest
 
 import (
 	tests2 "github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/attestations"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/messages"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/postconsensus"
@@ -28,9 +29,14 @@ var AllTests = []*tests2.SpecTest{
 	messages.NoData(),
 	messages.NoDutyRunner(),
 
-	consensus.UnknownDuty(),
-	consensus.WrongDutyRole(),
 	consensus.WrongDutyPubKey(),
-	consensus.DecidedValueSlotMismatch(),
-	consensus.AttestationDataNil(),
+
+	attestations.ValidAttestation(),
+	attestations.FarFutureDuty(),
+	attestations.DutySlotNotMatchingAttestationSlot(),
+	attestations.DutyCommitteeIndexNotMatchingAttestations(),
+	attestations.FarFutureAttestationTarget(),
+	attestations.AttestationSourceValid(),
+	attestations.DutyTypeWrong(),
+	attestations.AttestationDataNil(),
 }
