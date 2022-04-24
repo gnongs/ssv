@@ -18,7 +18,9 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 		return errors.Wrap(err, "partial sig invalid")
 	}
 
-	postCons.AddPartialSig(signedMsg.Message)
+	if err := postCons.AddPartialSig(signedMsg.Message); err != nil {
+		return errors.Wrap(err, "could not add partial signature")
+	}
 
 	if !postCons.HasPostConsensusSigQuorum() {
 		return nil

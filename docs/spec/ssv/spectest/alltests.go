@@ -6,6 +6,7 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/messages"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/postconsensus"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/processmsg"
 )
 
 var AllTests = []*tests2.SpecTest{
@@ -39,4 +40,12 @@ var AllTests = []*tests2.SpecTest{
 	attestations.AttestationSourceValid(),
 	attestations.DutyTypeWrong(),
 	attestations.AttestationDataNil(),
+
+	processmsg.NoData(),
+	processmsg.InvalidConsensusMsg(),
+	processmsg.InvalidDecidedMsg(),
+	processmsg.InvalidPostConsensusMsg(),
+	processmsg.UnknownType(),
+	processmsg.WrongPubKey(),
+	processmsg.WrongBeaconType(),
 }

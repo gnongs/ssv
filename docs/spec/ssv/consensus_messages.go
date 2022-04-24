@@ -2,7 +2,6 @@ package ssv
 
 import (
 	"bytes"
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
@@ -72,18 +71,6 @@ func (v *Validator) validateDecidedConsensusData(dutyRunner *DutyRunner, val *ty
 
 	if !bytes.Equal(dutyRunner.Share.ValidatorPubKey, val.Duty.PubKey[:]) {
 		return errors.New("decided value's validator pk is wrong")
-	}
-
-	switch dutyRunner.BeaconRoleType {
-	case beacon.RoleTypeAttester:
-		if val.AttestationData == nil {
-			return errors.New("decided value's AttestationData is nil")
-		}
-		if val.Duty.Slot != val.AttestationData.Slot {
-			return errors.New("decided value's duty slot != attestation slot")
-		}
-	default:
-		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.BeaconRoleType.String())
 	}
 
 	return nil
