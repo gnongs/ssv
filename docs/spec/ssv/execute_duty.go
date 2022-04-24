@@ -17,17 +17,24 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 		return errors.Wrap(err, "can't start new duty")
 	}
 
-	input := &types.ConsensusData{}
 	switch dutyRunner.BeaconRoleType {
 	case beacon.RoleTypeAttester:
-		attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)
-		if err != nil {
-			return errors.Wrap(err, "failed to get attestation data")
-		}
-		input.Duty = duty
-		input.AttestationData = attData
+		return v.executeAttestationDuty(duty, dutyRunner)
 	default:
 		return errors.Errorf("duty type %s unkwon", duty.Type.String())
+	}
+	return nil
+}
+
+func (v *Validator) executeAttestationDuty(duty *beacon.Duty, dutyRunner *DutyRunner) error {
+	attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)
+	if err != nil {
+		return errors.Wrap(err, "failed to get attestation data")
+	}
+
+	input := &types.ConsensusData{
+		Duty:            duty,
+		AttestationData: attData,
 	}
 
 	byts, err := input.Encode()
@@ -43,6 +50,5 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 	if err := dutyRunner.StartNewInstance(byts); err != nil {
 		return errors.Wrap(err, "can't start new duty runner instance for duty")
 	}
-
 	return nil
 }
