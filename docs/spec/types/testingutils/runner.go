@@ -83,7 +83,8 @@ var decideRunner = func(consensusData []byte, height qbft.Height) *ssv.DutyRunne
 			}), nil),
 		}
 
-		if err := v.DutyRunners[beacon.RoleTypeAttester].StartNewInstance(TestAttesterConsensusDataByts); err != nil {
+		v.DutyRunners[beacon.RoleTypeAttester].ResetExecutionState()
+		if err := v.DutyRunners[beacon.RoleTypeAttester].StartNewConsensusInstance(TestAttesterConsensusDataByts); err != nil {
 			panic(err.Error())
 		}
 		for _, msg := range msgs {

@@ -7,7 +7,7 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
-// WrongSigningRoot tests an invalid PostConsensusMessage DutySigningRoot
+// WrongSigningRoot tests an invalid PostConsensusMessage SigningRoot
 func WrongSigningRoot() *tests.SpecTest {
 	dr := testingutils.DecidedRunner()
 
@@ -16,10 +16,10 @@ func WrongSigningRoot() *tests.SpecTest {
 	}
 
 	return &tests.SpecTest{
-		Name:                    "invalid PostConsensusMessage DutySigningRoot",
+		Name:                    "invalid PostConsensusMessage SigningRoot",
 		DutyRunner:              dr,
 		Messages:                msgs,
 		PostDutyRunnerStateRoot: "33fd61d17dc89513774a7b566e9dddad28ea5703f83efae63aea69e369c1f367",
-		ExpectedError:           "partial sig invalid: SignedPostConsensusMessage invalid: DutySigningRoot invalid",
+		ExpectedError:           "partial sig invalid: SignedPostConsensusMessage invalid: SigningRoot invalid",
 	}
 }

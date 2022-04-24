@@ -30,12 +30,17 @@ func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 			return errors.Wrap(err, "could not get decided Message from network Message")
 		}
 		return v.processConsensusMsg(dutyRunner, decidedMsg.SignedMessage)
-	case types.SSVPostConsensusMsgType:
-		signedMsg := &SignedPostConsensusMessage{}
+	case types.SSVPartialSignatureMsgType:
+		signedMsg := &SignedPartialSignatureMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
 			return errors.Wrap(err, "could not get post consensus Message from network Message")
 		}
-		return v.processPostConsensusSig(dutyRunner, signedMsg)
+
+		if signedMsg.Message.Type == PostConsensusPartialSig {
+			return v.processPostConsensusSig(dutyRunner, signedMsg)
+		}
+		return v.processRandaoPartialSig(dutyRunner, signedMsg)
+
 	case types.SSVSyncMsgType:
 		panic("implement")
 	default:

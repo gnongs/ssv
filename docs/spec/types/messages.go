@@ -50,8 +50,8 @@ const (
 	SSVDecidedMsgType
 	// SSVSyncMsgType are all QBFT sync messages
 	SSVSyncMsgType
-	// SSVPostConsensusMsgType are all partial signatures sent after consensus
-	SSVPostConsensusMsgType
+	// SSVPartialSignatureMsgType are all partial signatures msgs over beacon chain specific signatures
+	SSVPartialSignatureMsgType
 )
 
 type Root interface {

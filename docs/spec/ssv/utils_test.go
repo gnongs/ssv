@@ -14,6 +14,6 @@ var TestConsensusDataByts, _ = testConsensusData.Encode()
 
 func NewTestingDutyExecutionState() *ssv.DutyExecutionState {
 	return &ssv.DutyExecutionState{
-		CollectedPartialSigs: make(map[types.OperatorID][]byte),
+		PostConsensusSignatures: make(map[types.OperatorID][]byte),
 	}
 }

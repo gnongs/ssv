@@ -11,7 +11,8 @@ import (
 func InvalidDecidedMsg() *tests.SpecTest {
 	dr := testingutils.BaseRunner()
 	startingValue := testingutils.TestAttesterConsensusDataByts
-	if err := dr.StartNewInstance(startingValue); err != nil {
+	dr.ResetExecutionState()
+	if err := dr.StartNewConsensusInstance(startingValue); err != nil {
 		panic(err.Error())
 	}
 

@@ -11,13 +11,14 @@ import (
 func InvalidPostConsensusMsg() *tests.SpecTest {
 	dr := testingutils.BaseRunner()
 	startingValue := testingutils.TestAttesterConsensusDataByts
-	if err := dr.StartNewInstance(startingValue); err != nil {
+	dr.ResetExecutionState()
+	if err := dr.StartNewConsensusInstance(startingValue); err != nil {
 		panic(err.Error())
 	}
 
 	msgs := []*types.SSVMessage{
 		{
-			MsgType: types.SSVPostConsensusMsgType,
+			MsgType: types.SSVPartialSignatureMsgType,
 			MsgID:   types.MessageIDForValidatorPKAndRole(testingutils.TestingValidatorPubKey[:], beacon.RoleTypeAttester),
 			Data:    []byte{1, 2, 3, 4},
 		},

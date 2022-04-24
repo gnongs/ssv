@@ -18,21 +18,29 @@ type DutyExecutionState struct {
 	SignedAttestation *spec.Attestation
 	SignedProposal    *spec.SignedBeaconBlock
 
-	CollectedPartialSigs map[types.OperatorID][]byte
-	PostConsensusSigRoot []byte
+	PostConsensusSignatures map[types.OperatorID][]byte
+	PostConsensusSigRoot    []byte
 	// Quorum is the number of min signatures needed for quorum
 	Quorum uint64
 
 	Finished bool
 }
 
-func (pcs *DutyExecutionState) AddPartialSig(sigMsg *PostConsensusMessage) error {
+func NewDutyExecutionState(quorum uint64) *DutyExecutionState {
+	return &DutyExecutionState{
+		Quorum:                  quorum,
+		PostConsensusSignatures: make(map[types.OperatorID][]byte),
+		Finished:                false,
+	}
+}
+
+func (pcs *DutyExecutionState) AddPostConsensusPartialSig(sigMsg *PartialSignatureMessage) error {
 	if len(sigMsg.Signers) != 1 {
-		return errors.New("PostConsensusMessage has != 1 Signers")
+		return errors.New("PartialSignatureMessage has != 1 Signers")
 	}
 
-	if pcs.CollectedPartialSigs[sigMsg.Signers[0]] == nil {
-		pcs.CollectedPartialSigs[sigMsg.Signers[0]] = sigMsg.DutySignature
+	if pcs.PostConsensusSignatures[sigMsg.Signers[0]] == nil {
+		pcs.PostConsensusSignatures[sigMsg.Signers[0]] = sigMsg.PartialSignature
 	}
 	return nil
 }
@@ -40,7 +48,7 @@ func (pcs *DutyExecutionState) AddPartialSig(sigMsg *PostConsensusMessage) error
 // ReconstructAttestationSig aggregates collected partial sigs, reconstructs a valid sig and returns an attestation obj with the reconstructed sig
 func (pcs *DutyExecutionState) ReconstructAttestationSig(validatorPubKey []byte) (*spec.Attestation, error) {
 	// Reconstruct signatures
-	signature, err := types.ReconstructSignatures(pcs.CollectedPartialSigs)
+	signature, err := types.ReconstructSignatures(pcs.PostConsensusSignatures)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to reconstruct signatures")
 	}
@@ -55,7 +63,7 @@ func (pcs *DutyExecutionState) ReconstructAttestationSig(validatorPubKey []byte)
 }
 
 func (pcs *DutyExecutionState) HasPostConsensusSigQuorum() bool {
-	return uint64(len(pcs.CollectedPartialSigs)) >= pcs.Quorum
+	return uint64(len(pcs.PostConsensusSignatures)) >= pcs.Quorum
 }
 
 // SetFinished will mark this execution state as finished

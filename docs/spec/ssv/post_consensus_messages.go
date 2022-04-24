@@ -8,17 +8,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *SignedPostConsensusMessage) error {
+func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *SignedPartialSignatureMessage) error {
 	postCons := dutyRunner.PostConsensusStateForHeight(signedMsg.Message.Height)
 	if postCons == nil {
-		return errors.New("PostConsensusMessage Height doesn't match duty runner's Height")
+		return errors.New("PartialSignatureMessage Height doesn't match duty runner's Height")
 	}
 
 	if err := v.validatePostConsensusMsg(postCons, signedMsg); err != nil {
 		return errors.Wrap(err, "partial sig invalid")
 	}
 
-	if err := postCons.AddPartialSig(signedMsg.Message); err != nil {
+	if err := postCons.AddPostConsensusPartialSig(signedMsg.Message); err != nil {
 		return errors.Wrap(err, "could not add partial signature")
 	}
 
@@ -26,7 +26,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 		return nil
 	}
 
-	// if finished, no need to proceed with reconstructing the DutySignature
+	// if finished, no need to proceed with reconstructing the PartialSignature
 	if postCons.IsFinished() {
 		return nil
 	}
@@ -47,17 +47,17 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 	return nil
 }
 
-func (v *Validator) validatePostConsensusMsg(executionState *DutyExecutionState, SignedMsg *SignedPostConsensusMessage) error {
+func (v *Validator) validatePostConsensusMsg(executionState *DutyExecutionState, SignedMsg *SignedPartialSignatureMessage) error {
 	if err := SignedMsg.Validate(); err != nil {
-		return errors.Wrap(err, "SignedPostConsensusMessage invalid")
+		return errors.Wrap(err, "SignedPartialSignatureMessage invalid")
 	}
 
 	if err := SignedMsg.GetSignature().VerifyByOperators(SignedMsg, v.share.DomainType, types.PostConsensusSigType, v.share.Committee); err != nil {
-		return errors.Wrap(err, "failed to verify DutySignature")
+		return errors.Wrap(err, "failed to verify PartialSignature")
 	}
 
 	// validate signing root equal to Decided
-	if !bytes.Equal(executionState.PostConsensusSigRoot, SignedMsg.Message.DutySigningRoot) {
+	if !bytes.Equal(executionState.PostConsensusSigRoot, SignedMsg.Message.SigningRoot) {
 		return errors.New("post consensus Message signing root is wrong")
 	}
 
@@ -68,14 +68,14 @@ func (v *Validator) validatePostConsensusMsg(executionState *DutyExecutionState,
 	return nil
 }
 
-func (v *Validator) verifyBeaconPartialSignature(msg *PostConsensusMessage) error {
+func (v *Validator) verifyBeaconPartialSignature(msg *PartialSignatureMessage) error {
 	if len(msg.Signers) != 1 {
-		return errors.New("PostConsensusMessage allows 1 signer")
+		return errors.New("PartialSignatureMessage allows 1 signer")
 	}
 
 	signer := msg.Signers[0]
-	signature := msg.DutySignature
-	root := msg.DutySigningRoot
+	signature := msg.PartialSignature
+	root := msg.SigningRoot
 
 	for _, n := range v.share.Committee {
 		if n.GetID() == signer {
@@ -100,13 +100,13 @@ func (v *Validator) verifyBeaconPartialSignature(msg *PostConsensusMessage) erro
 	return errors.New("beacon partial Signature signer not found")
 }
 
-func (v *Validator) signPostConsensusMsg(msg *PostConsensusMessage) (*SignedPostConsensusMessage, error) {
+func (v *Validator) signPostConsensusMsg(msg *PartialSignatureMessage) (*SignedPartialSignatureMessage, error) {
 	signature, err := v.signer.SignRoot(msg, types.PostConsensusSigType, v.share.SharePubKey)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not compute PostConsensusMessage root")
+		return nil, errors.Wrap(err, "could not compute PartialSignatureMessage root")
 	}
 
-	return &SignedPostConsensusMessage{
+	return &SignedPartialSignatureMessage{
 		Message:   msg,
 		Signature: signature,
 		Signers:   []types.OperatorID{v.share.OperatorID},

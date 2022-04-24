@@ -18,7 +18,8 @@ func AttestationDataNil() *tests.SpecTest {
 	startingValue, _ := consensusData.Encode()
 
 	// the starting value is not the same as the actual proposal!
-	if err := dr.StartNewInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
+	dr.ResetExecutionState()
+	if err := dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
 		panic(err.Error())
 	}
 

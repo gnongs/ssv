@@ -9,7 +9,8 @@ import (
 // HappyFullFlow tests a full consensus + post consensus + duty sig reconstruction flow
 func HappyFullFlow() *SpecTest {
 	dr := testingutils.BaseRunner()
-	if err := dr.StartNewInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
+	dr.ResetExecutionState()
+	if err := dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
 		panic(err.Error())
 	}
 
@@ -73,6 +74,6 @@ func HappyFullFlow() *SpecTest {
 		Name:                    "happy full flow",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "8f8666f78735b88a5cc897b2241e7f067f66abcf40a41434be1fbc23704d349f",
+		PostDutyRunnerStateRoot: "ee9b9950f51d8005592295c3b066f8045be09f3dc17b1790ebd81ac989f4ce9a",
 	}
 }
