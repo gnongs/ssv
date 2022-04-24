@@ -63,7 +63,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 	t.Run("running instance", func(t *testing.T) {
 		dr := testingutils.BaseRunner()
 		inst := testingutils.BaseInstance()
-		inst.Decided = false
+		inst.State.Decided = false
 		dr.DutyExecutionState = &ssv.DutyExecutionState{
 			RunningInstance: inst,
 		}
@@ -82,7 +82,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			PubKey: testingutils.TestingValidatorPubKey,
 		}
 		inst := testingutils.BaseInstance()
-		inst.Decided = true
+		inst.State.Decided = true
 		dr.DutyExecutionState = &ssv.DutyExecutionState{
 			RunningInstance: inst,
 			Quorum:          3,
@@ -107,7 +107,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			PubKey: testingutils.TestingValidatorPubKey,
 		}
 		inst := testingutils.BaseInstance()
-		inst.Decided = true
+		inst.State.Decided = true
 		dr.DutyExecutionState = &ssv.DutyExecutionState{
 			RunningInstance: inst,
 			Quorum:          3,
@@ -132,7 +132,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			PubKey: testingutils.TestingValidatorPubKey,
 		}
 		inst := testingutils.BaseInstance()
-		inst.Decided = true
+		inst.State.Decided = true
 		dr.DutyExecutionState = &ssv.DutyExecutionState{
 			RunningInstance: inst,
 			Quorum:          3,
@@ -157,7 +157,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			PubKey: testingutils.TestingValidatorPubKey,
 		}
 		inst := testingutils.BaseInstance()
-		inst.Decided = true
+		inst.State.Decided = true
 		dr.DutyExecutionState = &ssv.DutyExecutionState{
 			CollectedPartialSigs: make(map[types.OperatorID][]byte),
 			RunningInstance:      inst,
@@ -187,7 +187,7 @@ func TestDutyRunner_StartNewInstance(t *testing.T) {
 
 	t.Run("valid start", func(t *testing.T) {
 		dr := testingutils.BaseRunner()
-		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
+		require.NoError(t, dr.StartNewInstance(testingutils.TestAttesterConsensusDataByts))
 		require.NotNil(t, dr.DutyExecutionState)
 		require.NotNil(t, dr.DutyExecutionState.RunningInstance)
 		require.EqualValues(t, 3, dr.DutyExecutionState.Quorum)
@@ -202,7 +202,7 @@ func TestDutyRunner_PostConsensusStateForHeight(t *testing.T) {
 
 	t.Run("returns", func(t *testing.T) {
 		dr := testingutils.BaseRunner()
-		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
+		require.NoError(t, dr.StartNewInstance(testingutils.TestAttesterConsensusDataByts))
 		require.NotNil(t, dr.PostConsensusStateForHeight(qbft.FirstHeight))
 	})
 }
@@ -223,7 +223,7 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 			AttestationData: nil,
 		}
 
-		require.NoError(t, dr.StartNewInstance([]byte{1, 2, 3, 4}))
+		require.NoError(t, dr.StartNewInstance(testingutils.TestAttesterConsensusDataByts))
 		_, err := dr.DecideRunningInstance(decidedValue, testingutils.NewTestingKeyManager())
 		require.NoError(t, err)
 		require.NotNil(t, dr.DutyExecutionState.DecidedValue)
