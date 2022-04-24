@@ -1,7 +1,6 @@
 package ssv
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
@@ -44,17 +43,9 @@ func NewDutyRunner(
 // - a QBFT instance Decided and all post consensus sigs collectd or
 // - a QBFT instance Decided and 32 slots passed from Decided duty
 // else returns an error
-// Will return error if not same role type
 func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
-	if dr.DutyExecutionState == nil {
+	if dr.DutyExecutionState == nil || dr.DutyExecutionState.IsFinished() {
 		return nil
-	}
-
-	if dr.BeaconRoleType != duty.Type {
-		return errors.New("duty runner role != duty.MsgType")
-	}
-	if !bytes.Equal(dr.Share.ValidatorPubKey, duty.PubKey[:]) {
-		return errors.New("duty runner validator pk != duty.ValidatorPubKey")
 	}
 
 	if decided, _ := dr.DutyExecutionState.RunningInstance.IsDecided(); !decided {
@@ -68,8 +59,13 @@ func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
 	return nil
 }
 
-// StartNewInstance starts a new QBFT instance for value
-func (dr *DutyRunner) StartNewInstance(value []byte) error {
+// ResetExecutionState resets a mew execution state
+func (dr *DutyRunner) ResetExecutionState() {
+	dr.DutyExecutionState = NewDutyExecutionState(dr.Share.Quorum)
+}
+
+// StartNewConsensusInstance starts a new QBFT instance for value
+func (dr *DutyRunner) StartNewConsensusInstance(value []byte) error {
 	if len(value) == 0 {
 		return errors.New("new instance value invalid")
 	}
@@ -81,10 +77,7 @@ func (dr *DutyRunner) StartNewInstance(value []byte) error {
 		return errors.New("could not find newly created QBFT instance")
 	}
 
-	dr.DutyExecutionState = &DutyExecutionState{
-		RunningInstance: newInstance,
-		Quorum:          dr.Share.Quorum,
-	}
+	dr.DutyExecutionState.RunningInstance = newInstance
 	return nil
 }
 
@@ -96,9 +89,10 @@ func (dr *DutyRunner) PostConsensusStateForHeight(height qbft.Height) *DutyExecu
 	return nil
 }
 
-// DecideRunningInstance sets the Decided duty and partially signs the Decided data, returns a PostConsensusMessage to be broadcasted or error
-func (dr *DutyRunner) DecideRunningInstance(decidedValue *types.ConsensusData, signer types.KeyManager) (*PostConsensusMessage, error) {
-	ret := &PostConsensusMessage{
+// DecideRunningInstance sets the Decided duty and partially signs the Decided data, returns a PartialSignatureMessage to be broadcasted or error
+func (dr *DutyRunner) DecideRunningInstance(decidedValue *types.ConsensusData, signer types.KeyManager) (*PartialSignatureMessage, error) {
+	ret := &PartialSignatureMessage{
+		Type:    PostConsensusPartialSig,
 		Height:  dr.DutyExecutionState.RunningInstance.GetHeight(),
 		Signers: []types.OperatorID{dr.Share.OperatorID},
 	}
@@ -113,10 +107,10 @@ func (dr *DutyRunner) DecideRunningInstance(decidedValue *types.ConsensusData, s
 		dr.DutyExecutionState.DecidedValue = decidedValue
 		dr.DutyExecutionState.SignedAttestation = signedAttestation
 		dr.DutyExecutionState.PostConsensusSigRoot = ensureRoot(r)
-		dr.DutyExecutionState.CollectedPartialSigs = map[types.OperatorID][]byte{}
+		dr.DutyExecutionState.PostConsensusSignatures = map[types.OperatorID][]byte{}
 
-		ret.DutySigningRoot = dr.DutyExecutionState.PostConsensusSigRoot
-		ret.DutySignature = dr.DutyExecutionState.SignedAttestation.Signature[:]
+		ret.SigningRoot = dr.DutyExecutionState.PostConsensusSigRoot
+		ret.PartialSignature = dr.DutyExecutionState.SignedAttestation.Signature[:]
 
 		return ret, nil
 	default:
@@ -144,7 +138,7 @@ func (dr *DutyRunner) Decode(data []byte) error {
 	return json.Unmarshal(data, &dr)
 }
 
-// ensureRoot ensures that DutySigningRoot will have sufficient allocated memory
+// ensureRoot ensures that SigningRoot will have sufficient allocated memory
 // otherwise we get panic from bls:
 // github.com/herumi/bls-eth-go-binary/bls.(*Sign).VerifyByte:738
 func ensureRoot(root []byte) []byte {

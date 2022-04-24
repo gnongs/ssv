@@ -40,7 +40,7 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 		return errors.Wrap(err, "StartDuty input data invalid")
 	}
 
-	if err := dutyRunner.StartNewInstance(byts); err != nil {
+	if err := dutyRunner.StartNewConsensusInstance(byts); err != nil {
 		return errors.Wrap(err, "can't start new duty runner instance for duty")
 	}
 

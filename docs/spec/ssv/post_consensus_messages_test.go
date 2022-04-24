@@ -14,10 +14,10 @@ package ssv_test
 //func TestValidator_signPostConsensusMsg(t *testing.T) {
 //	t.Run("valid sig", func(t *testing.T) {
 //		v := testingutils.BaseValidator()
-//		msg := &ssv.PostConsensusMessage{
+//		msg := &ssv.PartialSignatureMessage{
 //			Height:          1,
-//			DutySignature:   []byte{1, 2, 3, 4},
-//			DutySigningRoot: []byte{1, 1, 1, 1},
+//			PartialSignature:   []byte{1, 2, 3, 4},
+//			SigningRoot: []byte{1, 1, 1, 1},
 //			Signers:         []types.OperatorID{1},
 //		}
 //		sig, err := v.signPostConsensusMsg(msg)
@@ -44,10 +44,10 @@ package ssv_test
 //		root := []byte{1, 2, 3, 4, 5, 6}
 //		sig := sk.SignByte(root).Serialize()
 //
-//		err := v.verifyBeaconPartialSignature(&ssv.PostConsensusMessage{
+//		err := v.verifyBeaconPartialSignature(&ssv.PartialSignatureMessage{
 //			Height:          1,
-//			DutySignature:   sig,
-//			DutySigningRoot: root,
+//			PartialSignature:   sig,
+//			SigningRoot: root,
 //			Signers:         []types.OperatorID{1},
 //		})
 //		require.NoError(t, err)
@@ -66,10 +66,10 @@ package ssv_test
 //		root := []byte{1, 2, 3, 4, 5, 6}
 //		sig := sk.SignByte(root).Serialize()
 //
-//		err := v.verifyBeaconPartialSignature(&ssv.PostConsensusMessage{
+//		err := v.verifyBeaconPartialSignature(&ssv.PartialSignatureMessage{
 //			Height:          1,
-//			DutySignature:   sig,
-//			DutySigningRoot: []byte{1, 2, 3, 4, 5, 5},
+//			PartialSignature:   sig,
+//			SigningRoot: []byte{1, 2, 3, 4, 5, 5},
 //			Signers:         []types.OperatorID{1},
 //		})
 //		require.EqualError(t, err, "could not verify Signature from iBFT member 1")
@@ -89,15 +89,15 @@ package ssv_test
 //
 //		root := []byte{1, 2, 3, 4, 5, 6}
 //		sig := sk.SignByte(root).Serialize()
-//		msg := &ssv.PostConsensusMessage{
+//		msg := &ssv.PartialSignatureMessage{
 //			Height:          1,
-//			DutySignature:   sig,
-//			DutySigningRoot: root,
+//			PartialSignature:   sig,
+//			SigningRoot: root,
 //			Signers:         []types.OperatorID{1},
 //		}
 //		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 //		require.NoError(t, err)
-//		signedMsg := &ssv.SignedPostConsensusMessage{
+//		signedMsg := &ssv.SignedPartialSignatureMessage{
 //			Message:   msg,
 //			Signature: sk.SignByte(r).Serialize(),
 //			Signers:   []types.OperatorID{1},
@@ -109,7 +109,7 @@ package ssv_test
 //		require.NoError(t, v.validatePostConsensusMsg(executionState, signedMsg))
 //	})
 //
-//	t.Run("SignedPostConsensusMessage wrong signer count", func(t *testing.T) {
+//	t.Run("SignedPartialSignatureMessage wrong signer count", func(t *testing.T) {
 //		sk := &bls.SecretKey{}
 //		sk.SetByCSPRNG()
 //
@@ -121,15 +121,15 @@ package ssv_test
 //
 //		root := []byte{1, 2, 3, 4, 5, 6}
 //		sig := sk.SignByte(root).Serialize()
-//		msg := &ssv.PostConsensusMessage{
+//		msg := &ssv.PartialSignatureMessage{
 //			Height:          1,
-//			DutySignature:   sig,
-//			DutySigningRoot: root,
+//			PartialSignature:   sig,
+//			SigningRoot: root,
 //			Signers:         []types.OperatorID{1},
 //		}
 //		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 //		require.NoError(t, err)
-//		signedMsg := &ssv.SignedPostConsensusMessage{
+//		signedMsg := &ssv.SignedPartialSignatureMessage{
 //			Message:   msg,
 //			Signature: sk.SignByte(r).Serialize(),
 //			Signers:   []types.OperatorID{1},
@@ -140,12 +140,12 @@ package ssv_test
 //		}
 //
 //		signedMsg.Signers = []types.OperatorID{1, 2}
-//		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "SignedPostConsensusMessage allows 1 signer")
+//		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "SignedPartialSignatureMessage allows 1 signer")
 //		signedMsg.Signers = []types.OperatorID{}
-//		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "SignedPostConsensusMessage allows 1 signer")
+//		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "SignedPartialSignatureMessage allows 1 signer")
 //	})
 //
-//	t.Run("invalid SignedPostConsensusMessage sig", func(t *testing.T) {
+//	t.Run("invalid SignedPartialSignatureMessage sig", func(t *testing.T) {
 //		sk := &bls.SecretKey{}
 //		sk.SetByCSPRNG()
 //
@@ -157,14 +157,14 @@ package ssv_test
 //
 //		root := []byte{1, 2, 3, 4, 5, 6}
 //		sig := sk.SignByte(root).Serialize()
-//		msg := &ssv.PostConsensusMessage{
+//		msg := &ssv.PartialSignatureMessage{
 //			Height:          1,
-//			DutySignature:   sig,
-//			DutySigningRoot: root,
+//			PartialSignature:   sig,
+//			SigningRoot: root,
 //			Signers:         []types.OperatorID{1},
 //		}
 //
-//		signedMsg := &ssv.SignedPostConsensusMessage{
+//		signedMsg := &ssv.SignedPartialSignatureMessage{
 //			Message:   msg,
 //			Signature: sk.SignByte([]byte{1, 2, 3, 4}).Serialize(),
 //			Signers:   []types.OperatorID{1},
@@ -173,7 +173,7 @@ package ssv_test
 //		executionState := &ssv.DutyExecutionState{
 //			PostConsensusSigRoot: root,
 //		}
-//		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "failed to verify DutySignature: failed to verify Signature")
+//		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "failed to verify PartialSignature: failed to verify Signature")
 //	})
 //
 //	t.Run("wrong post consensus root", func(t *testing.T) {
@@ -188,15 +188,15 @@ package ssv_test
 //
 //		root := []byte{1, 2, 3, 4, 5, 6}
 //		sig := sk.SignByte(root).Serialize()
-//		msg := &ssv.PostConsensusMessage{
+//		msg := &ssv.PartialSignatureMessage{
 //			Height:          1,
-//			DutySignature:   sig,
-//			DutySigningRoot: root,
+//			PartialSignature:   sig,
+//			SigningRoot: root,
 //			Signers:         []types.OperatorID{1},
 //		}
 //		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 //		require.NoError(t, err)
-//		signedMsg := &ssv.SignedPostConsensusMessage{
+//		signedMsg := &ssv.SignedPartialSignatureMessage{
 //			Message:   msg,
 //			Signature: sk.SignByte(r).Serialize(),
 //			Signers:   []types.OperatorID{1},
@@ -208,7 +208,7 @@ package ssv_test
 //		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "post consensus Message signing root is wrong")
 //	})
 //
-//	t.Run("too many Signers PostConsensusMessage", func(t *testing.T) {
+//	t.Run("too many Signers PartialSignatureMessage", func(t *testing.T) {
 //		sk := &bls.SecretKey{}
 //		sk.SetByCSPRNG()
 //
@@ -220,15 +220,15 @@ package ssv_test
 //
 //		root := []byte{1, 2, 3, 4, 5, 6}
 //		sig := sk.SignByte(root).Serialize()
-//		msg := &ssv.PostConsensusMessage{
+//		msg := &ssv.PartialSignatureMessage{
 //			Height:          1,
-//			DutySignature:   sig,
-//			DutySigningRoot: root,
+//			PartialSignature:   sig,
+//			SigningRoot: root,
 //			Signers:         []types.OperatorID{1, 2},
 //		}
 //		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 //		require.NoError(t, err)
-//		signedMsg := &ssv.SignedPostConsensusMessage{
+//		signedMsg := &ssv.SignedPartialSignatureMessage{
 //			Message:   msg,
 //			Signature: sk.SignByte(r).Serialize(),
 //			Signers:   []types.OperatorID{1},
@@ -237,10 +237,10 @@ package ssv_test
 //		executionState := &ssv.DutyExecutionState{
 //			PostConsensusSigRoot: root,
 //		}
-//		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "PostConsensusMessage allows 1 signer")
+//		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "PartialSignatureMessage allows 1 signer")
 //	})
 //
-//	t.Run("no Signers PostConsensusMessage", func(t *testing.T) {
+//	t.Run("no Signers PartialSignatureMessage", func(t *testing.T) {
 //		sk := &bls.SecretKey{}
 //		sk.SetByCSPRNG()
 //
@@ -252,15 +252,15 @@ package ssv_test
 //
 //		root := []byte{1, 2, 3, 4, 5, 6}
 //		sig := sk.SignByte(root).Serialize()
-//		msg := &ssv.PostConsensusMessage{
+//		msg := &ssv.PartialSignatureMessage{
 //			Height:          1,
-//			DutySignature:   sig,
-//			DutySigningRoot: root,
+//			PartialSignature:   sig,
+//			SigningRoot: root,
 //			Signers:         []types.OperatorID{},
 //		}
 //		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 //		require.NoError(t, err)
-//		signedMsg := &ssv.SignedPostConsensusMessage{
+//		signedMsg := &ssv.SignedPartialSignatureMessage{
 //			Message:   msg,
 //			Signature: sk.SignByte(r).Serialize(),
 //			Signers:   []types.OperatorID{1},
@@ -269,7 +269,7 @@ package ssv_test
 //		executionState := &ssv.DutyExecutionState{
 //			PostConsensusSigRoot: root,
 //		}
-//		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "PostConsensusMessage allows 1 signer")
+//		require.EqualError(t, v.validatePostConsensusMsg(executionState, signedMsg), "PartialSignatureMessage allows 1 signer")
 //	})
 //
 //	t.Run("beacon partial sig invalid", func(t *testing.T) {
@@ -287,15 +287,15 @@ package ssv_test
 //
 //		root := []byte{1, 2, 3, 4, 5, 6}
 //		sig := wrongSK.SignByte(root).Serialize()
-//		msg := &ssv.PostConsensusMessage{
+//		msg := &ssv.PartialSignatureMessage{
 //			Height:          1,
-//			DutySignature:   sig,
-//			DutySigningRoot: []byte{1, 2, 3, 4, 5, 6},
+//			PartialSignature:   sig,
+//			SigningRoot: []byte{1, 2, 3, 4, 5, 6},
 //			Signers:         []types.OperatorID{1},
 //		}
 //		r, err := types.ComputeSigningRoot(msg, types.ComputeSignatureDomain(types.PrimusTestnet, types.PostConsensusSigType))
 //		require.NoError(t, err)
-//		signedMsg := &ssv.SignedPostConsensusMessage{
+//		signedMsg := &ssv.SignedPartialSignatureMessage{
 //			Message:   msg,
 //			Signature: sk.SignByte(r).Serialize(),
 //			Signers:   []types.OperatorID{1},

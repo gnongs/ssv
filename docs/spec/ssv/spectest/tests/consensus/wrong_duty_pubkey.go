@@ -10,7 +10,8 @@ import (
 // WrongDutyPubKey tests decided value with duty validator pubkey != the duty runner's pubkey
 func WrongDutyPubKey() *tests.SpecTest {
 	dr := testingutils.BaseRunner()
-	if err := dr.StartNewInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
+	dr.ResetExecutionState()
+	if err := dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
 		panic(err.Error())
 	}
 

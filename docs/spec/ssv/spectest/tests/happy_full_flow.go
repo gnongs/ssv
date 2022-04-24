@@ -9,7 +9,8 @@ import (
 // HappyFullFlow tests a full consensus + post consensus + duty sig reconstruction flow
 func HappyFullFlow() *SpecTest {
 	dr := testingutils.BaseRunner()
-	if err := dr.StartNewInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
+	dr.ResetExecutionState()
+	if err := dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
 		panic(err.Error())
 	}
 
