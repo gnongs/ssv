@@ -7,14 +7,12 @@ import (
 )
 
 var TestingConfig = &qbft.Config{
-	Signer:    NewTestingKeyManager(),
-	SigningPK: TestingSK1.GetPublicKey().Serialize(),
-	Domain:    types.PrimusTestnet,
-	ValueCheck: func(data []byte) error {
-		return nil
-	},
-	Storage: NewTestingStorage(),
-	Network: NewTestingNetwork(),
+	Signer:     NewTestingKeyManager(),
+	SigningPK:  TestingSK1.GetPublicKey().Serialize(),
+	Domain:     types.PrimusTestnet,
+	ValueCheck: ssv.BeaconAttestationValueCheck(ssv.NowTestNetwork),
+	Storage:    NewTestingStorage(),
+	Network:    NewTestingNetwork(),
 }
 
 var TestingShare = &types.Share{
