@@ -55,8 +55,8 @@ Signature type Constants:
 
 | Signature Type       | Value                | Description                              |
 |----------------------|----------------------|------------------------------------------|
-| QBFT Signature       | [] byte {1, 0, 0, 0} | SignedMessage specific signatures        |
-| PostConsensusSigType | [] byte {2, 0, 0, 0} | PostConsensusMessage specific signatures |
+| QBFTSigType          | [] byte {1, 0, 0, 0} | SignedMessage specific signatures        |
+| PartialSignatureType | [] byte {2, 0, 0, 0} | PostConsensusMessage specific signatures |
 
 ## Validator and DutyRunner instances
 A validator instance is created for each validator independently, each validator will have multiple DutyRunners for each beacon chain duty type (Attestations, Blocks, etc.)
@@ -67,11 +67,11 @@ As a general rule, new duties can't start until a full duty cycle (see below) is
 One exception of the above is if a QBFT consensus decided, not all post consensus signatures were collected but 'PostConsensusSigCollectionSlotTimeout' slots passed.\
 CanStartNewDuty Constants:
 
-| Constant                              | Value | Description                                                                                                                       |
-|---------------------------------------|-------|-----------------------------------------------------------------------------------------------------------------------------------|
-| PostConsensusSigCollectionSlotTimeout | 32    | How many slots pass until a new QBFT instance can start without waiting for all post consensus partial signatures to be collected |
+| Constant                              | Value | Description                                                                                                                            |
+|---------------------------------------|-------|----------------------------------------------------------------------------------------------------------------------------------------|
+| DutyExecutionSlotTimeout | 32    | How many slots pass until a new QBFT instance can start without waiting for all pre/ post consensus partial signatures to be collected |
 
-New Duty Full Cycle:
+Attestation Duty Full Cycle:
 
 -> Received new beacon chain duty\
 &nbsp;&nbsp;&nbsp;-> Check can start a new consensus instance\
@@ -79,7 +79,17 @@ New Duty Full Cycle:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Broadcast and collect partial signature to reconstruct signature\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Reconstruct signature, broadcast to BN
 
-A duty runner holds a QBFT controller for processing QBFT messages and a dutyExecutionState which keeps progress for post consensus messages.
+Block Proposal Duty Full Cycle:
+
+-> Received new beacon chain duty\
+&nbsp;&nbsp;&nbsp;-> Check can start a new consensus instance\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Sign partial RANDAO and wait for other signatures\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Come to consensus on Duty + Duty data (AttestationData, etc.)\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Broadcast and collect partial signature to reconstruct signature\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Reconstruct signature, broadcast to BN
+
+
+A duty runner holds a QBFT controller for processing QBFT messages and a dutyExecutionState which keeps progress for all stages of duty execution: pre/ post consensus messages.
 Partial signatures are collected and reconstructed (when threshold reached) to be broadcasted to the BN network.
 
 ## Validator Share
@@ -92,11 +102,13 @@ Shares include:
 
 ```go
 type Share struct {
-    nodeID     types.NodeID
-    pubKey     types.ValidatorID
-    committee  []*types.Node
-    quorum     uint64
-    domainType types.DomainType
+    OperatorID            OperatorID
+    ValidatorPubKey       ValidatorPK
+    SharePubKey           []byte
+    Committee             []*Operator
+    Quorum, PartialQuorum uint64
+    DomainType            DomainType
+    Graffiti              []byte
 }
 ```
 
@@ -127,6 +139,6 @@ Share1 = f(NodeID1)\
 The [spec tests](./spectest) are a generated as a json file that can be run in any implementation. They test the various flows within the SSV package, treating the consensus protocol as as black box.
 
 ## TODO
-- [X] Message Encoding - chose an encoding protocol and implement
-- [ ] Sync protocol
-- [ ] Test coverage
+- [\\] Proposal duty execution + spec test
+- [ ] Aggregator duty execution + spec test 
+- [ ] Sync committee duty execution + spec test
