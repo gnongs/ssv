@@ -114,7 +114,7 @@ var postConsensusAttestationMsg = func(
 		postConsensusMsg.Signers = []types.OperatorID{id, 5}
 	}
 
-	sig, _ := signer.SignRoot(postConsensusMsg, types.PostConsensusSigType, sk.GetPublicKey().Serialize())
+	sig, _ := signer.SignRoot(postConsensusMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
 		Message:   postConsensusMsg,
 		Signature: sig,

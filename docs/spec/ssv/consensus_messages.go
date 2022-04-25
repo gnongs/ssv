@@ -51,7 +51,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *DutyRunner, msg *qbft.Signed
 	}
 
 	if err := v.network.Broadcast(msgToBroadcast); err != nil {
-		return errors.Wrap(err, "can't broadcast partial sig")
+		return errors.Wrap(err, "can't broadcast partial post consensus sig")
 	}
 	return nil
 }

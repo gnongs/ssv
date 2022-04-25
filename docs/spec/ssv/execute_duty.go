@@ -35,7 +35,51 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 // 4) Once consensus decides, sign partial block and broadcast
 // 5) collect 2f+1 partial sigs, reconstruct and broadcast valid block sig to the BN
 func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *DutyRunner) error {
+	// set up runner with new execution state
+	dutyRunner.NewExecutionState()
+	dutyRunner.DutyExecutionState.ProposedValue = &types.ConsensusData{
+		Duty: duty,
+	}
 
+	// sign partial randao
+	epoch := v.beacon.GetBeaconNetwork().EstimatedEpochAtSlot(duty.Slot)
+	sig, r, err := v.signer.SignRandaoReveal(epoch, v.share.SharePubKey)
+	if err != nil {
+		return errors.Wrap(err, "could not sign partial randao reveal")
+	}
+
+	// generate partial sig for randao
+	msg := &PartialSignatureMessage{
+		Type:             RandaoPartialSig,
+		Height:           dutyRunner.DutyExecutionState.Height,
+		PartialSignature: sig,
+		SigningRoot:      r,
+		Signers:          []types.OperatorID{v.share.OperatorID},
+	}
+	signature, err := v.signer.SignRoot(msg, types.PartialSignatureType, v.share.SharePubKey)
+	if err != nil {
+		return errors.Wrap(err, "could not sign PartialSignatureMessage for RandaoPartialSig")
+	}
+	signedPartialMsg := &SignedPartialSignatureMessage{
+		Message:   msg,
+		Signature: signature,
+		Signers:   []types.OperatorID{v.share.OperatorID},
+	}
+
+	// broadcast
+	data, err := signedPartialMsg.Encode()
+	if err != nil {
+		return errors.Wrap(err, "failed to encode post consensus signature msg")
+	}
+	msgToBroadcast := &types.SSVMessage{
+		MsgType: types.SSVPartialSignatureMsgType,
+		MsgID:   types.MessageIDForValidatorPKAndRole(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType),
+		Data:    data,
+	}
+	if err := v.network.Broadcast(msgToBroadcast); err != nil {
+		return errors.Wrap(err, "can't broadcast partial randao sig")
+	}
+	return nil
 }
 
 // executeAttestationDuty steps:
@@ -44,17 +88,20 @@ func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Duty
 // 3) Once consensus decides, sign partial attestation and broadcast
 // 4) collect 2f+1 partial sigs, reconstruct and broadcast valid attestation sig to the BN
 func (v *Validator) executeAttestationDuty(duty *beacon.Duty, dutyRunner *DutyRunner) error {
+	// set up runner with new execution state
+	dutyRunner.NewExecutionState()
+
 	attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)
 	if err != nil {
 		return errors.Wrap(err, "failed to get attestation data")
 	}
 
-	input := &types.ConsensusData{
+	dutyRunner.DutyExecutionState.ProposedValue = &types.ConsensusData{
 		Duty:            duty,
 		AttestationData: attData,
 	}
 
-	byts, err := input.Encode()
+	byts, err := dutyRunner.DutyExecutionState.ProposedValue.Encode()
 	if err != nil {
 		return errors.Wrap(err, "could not encode input")
 	}

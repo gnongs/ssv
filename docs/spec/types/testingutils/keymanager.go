@@ -64,6 +64,11 @@ func (km *testingKeyManager) SignRoot(data types.Root, sigType types.SignatureTy
 	return nil, errors.New("pk not found")
 }
 
+// SignRandaoReveal signs randao
+func (km *testingKeyManager) SignRandaoReveal(epoch spec.Epoch, pk []byte) (types.Signature, []byte, error) {
+	panic("implement")
+}
+
 func (km *testingKeyManager) AddShare(shareKey *bls.SecretKey) error {
 	km.keys[hex.EncodeToString(shareKey.GetPublicKey().Serialize())] = shareKey
 	return nil

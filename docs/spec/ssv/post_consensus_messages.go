@@ -15,14 +15,14 @@ func (v *Validator) processPostConsensusSig(dutyRunner *DutyRunner, signedMsg *S
 	}
 
 	if err := v.validatePostConsensusMsg(postCons, signedMsg); err != nil {
-		return errors.Wrap(err, "partial sig invalid")
+		return errors.Wrap(err, "partial post consensus sig invalid")
 	}
 
-	if err := postCons.AddPostConsensusPartialSig(signedMsg.Message); err != nil {
-		return errors.Wrap(err, "could not add partial signature")
+	if err := postCons.PostConsensusPartialSig.AddSignature(signedMsg.Message); err != nil {
+		return errors.Wrap(err, "could not add partial post consensus signature")
 	}
 
-	if !postCons.HasPostConsensusSigQuorum() {
+	if !postCons.PostConsensusPartialSig.HasQuorum() {
 		return nil
 	}
 
@@ -52,12 +52,12 @@ func (v *Validator) validatePostConsensusMsg(executionState *DutyExecutionState,
 		return errors.Wrap(err, "SignedPartialSignatureMessage invalid")
 	}
 
-	if err := SignedMsg.GetSignature().VerifyByOperators(SignedMsg, v.share.DomainType, types.PostConsensusSigType, v.share.Committee); err != nil {
+	if err := SignedMsg.GetSignature().VerifyByOperators(SignedMsg, v.share.DomainType, types.PartialSignatureType, v.share.Committee); err != nil {
 		return errors.Wrap(err, "failed to verify PartialSignature")
 	}
 
 	// validate signing root equal to Decided
-	if !bytes.Equal(executionState.PostConsensusSigRoot, SignedMsg.Message.SigningRoot) {
+	if !bytes.Equal(executionState.PostConsensusPartialSig.SigRoot, SignedMsg.Message.SigningRoot) {
 		return errors.New("post consensus Message signing root is wrong")
 	}
 
@@ -101,9 +101,9 @@ func (v *Validator) verifyBeaconPartialSignature(msg *PartialSignatureMessage) e
 }
 
 func (v *Validator) signPostConsensusMsg(msg *PartialSignatureMessage) (*SignedPartialSignatureMessage, error) {
-	signature, err := v.signer.SignRoot(msg, types.PostConsensusSigType, v.share.SharePubKey)
+	signature, err := v.signer.SignRoot(msg, types.PartialSignatureType, v.share.SharePubKey)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not compute PartialSignatureMessage root")
+		return nil, errors.Wrap(err, "could not sign PartialSignatureMessage for PostConsensusPartialSig")
 	}
 
 	return &SignedPartialSignatureMessage{

@@ -99,3 +99,8 @@ func (bn *testingBeaconNode) GetAttestationData(slot spec.Slot, committeeIndex s
 func (bn *testingBeaconNode) SubmitAttestation(attestation *spec.Attestation) error {
 	return nil
 }
+
+// GetBeaconBlock returns beacon block by the given slot and committee index
+func (bn *testingBeaconNode) GetBeaconBlock(slot spec.Slot, committeeIndex spec.CommitteeIndex, graffiti, randao []byte) (*spec.BeaconBlock, error) {
+	panic("implement")
+}

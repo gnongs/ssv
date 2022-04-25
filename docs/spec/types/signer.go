@@ -19,7 +19,7 @@ type SignatureType []byte
 
 var (
 	QBFTSigType          = []byte{1, 0, 0, 0}
-	PostConsensusSigType = []byte{2, 0, 0, 0}
+	PartialSignatureType = []byte{2, 0, 0, 0}
 )
 
 type BeaconSigner interface {
@@ -27,6 +27,8 @@ type BeaconSigner interface {
 	SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error)
 	// IsAttestationSlashable returns error if attestation is slashable
 	IsAttestationSlashable(data *spec.AttestationData) error
+	// SignRandaoReveal signs randao
+	SignRandaoReveal(epoch spec.Epoch, pk []byte) (Signature, []byte, error)
 }
 
 // SSVSigner used for all SSV specific signing
@@ -80,6 +82,10 @@ func (s *SSVKeyManager) IsAttestationSlashable(data *spec.AttestationData) error
 		return errors.New("attestation data target epoch potentially slashable")
 	}
 	return nil
+}
+
+func (s *SSVKeyManager) SignRandaoReveal(epoch spec.Epoch, pk []byte) (Signature, []byte, error) {
+	panic("implement")
 }
 
 func (s *SSVKeyManager) SignRoot(data Root, sigType SignatureType, pk []byte) (Signature, error) {

@@ -23,7 +23,7 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 	t.Run("non decided qbft msg", func(t *testing.T) {
 		v := testingutils.BaseValidator()
 		dr := v.DutyRunners[beacon.RoleTypeAttester]
-		dr.ResetExecutionState()
+		dr.NewExecutionState()
 		require.NoError(t, dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts))
 		require.NoError(t, v.ProcessMessage(testingutils.SSVMsg(testingSignedQBFTMsg, nil)))
 	})
@@ -32,7 +32,7 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 		v := testingutils.BaseValidator()
 		dr := v.DutyRunners[beacon.RoleTypeAttester]
 		dr.QBFTController.Identifier = []byte{1, 2, 3, 3}
-		dr.ResetExecutionState()
+		dr.NewExecutionState()
 		require.NoError(t, dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts))
 		require.EqualError(t, v.ProcessMessage(testingutils.SSVMsg(testingSignedQBFTMsg, nil)), "failed to process consensus msg: message doesn't belong to Identifier 01020303")
 	})
@@ -40,7 +40,7 @@ func TestValidator_ProcessConsensusMsg(t *testing.T) {
 	t.Run("decided", func(t *testing.T) {
 		v := testingutils.BaseValidator()
 		dr := v.DutyRunners[beacon.RoleTypeAttester]
-		dr.ResetExecutionState()
+		dr.NewExecutionState()
 		require.NoError(t, dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts))
 
 		msgs := []*qbft.SignedMessage{

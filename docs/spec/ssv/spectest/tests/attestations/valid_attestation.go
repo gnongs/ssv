@@ -12,7 +12,7 @@ func ValidAttestation() *tests.SpecTest {
 	dr := testingutils.BaseRunner()
 	startingValue := testingutils.TestAttesterConsensusDataByts
 
-	dr.ResetExecutionState()
+	dr.NewExecutionState()
 	if err := dr.StartNewConsensusInstance(startingValue); err != nil {
 		panic(err.Error())
 	}

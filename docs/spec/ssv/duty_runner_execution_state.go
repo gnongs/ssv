@@ -9,61 +9,91 @@ import (
 	"github.com/pkg/errors"
 )
 
-// DutyExecutionState holds all the relevant progress the duty execution progress
-type DutyExecutionState struct {
-	RunningInstance *qbft.Instance
-
-	DecidedValue *types.ConsensusData
-
-	SignedAttestation *spec.Attestation
-	SignedProposal    *spec.SignedBeaconBlock
-
-	PostConsensusSignatures map[types.OperatorID][]byte
-	PostConsensusSigRoot    []byte
+type PartialSigContainer struct {
+	Signatures map[types.OperatorID][]byte
+	SigRoot    []byte
 	// Quorum is the number of min signatures needed for quorum
 	Quorum uint64
-
-	Finished bool
 }
 
-func NewDutyExecutionState(quorum uint64) *DutyExecutionState {
-	return &DutyExecutionState{
-		Quorum:                  quorum,
-		PostConsensusSignatures: make(map[types.OperatorID][]byte),
-		Finished:                false,
+func NewPartialSigContainer(quorum uint64) *PartialSigContainer {
+	return &PartialSigContainer{
+		Quorum:     quorum,
+		Signatures: make(map[types.OperatorID][]byte),
 	}
 }
 
-func (pcs *DutyExecutionState) AddPostConsensusPartialSig(sigMsg *PartialSignatureMessage) error {
+func (ps *PartialSigContainer) AddSignature(sigMsg *PartialSignatureMessage) error {
 	if len(sigMsg.Signers) != 1 {
 		return errors.New("PartialSignatureMessage has != 1 Signers")
 	}
 
-	if pcs.PostConsensusSignatures[sigMsg.Signers[0]] == nil {
-		pcs.PostConsensusSignatures[sigMsg.Signers[0]] = sigMsg.PartialSignature
+	if ps.Signatures[sigMsg.Signers[0]] == nil {
+		ps.Signatures[sigMsg.Signers[0]] = sigMsg.PartialSignature
 	}
 	return nil
+}
+
+func (ps *PartialSigContainer) ReconstructSignature(validatorPubKey []byte) ([]byte, error) {
+	// Reconstruct signatures
+	signature, err := types.ReconstructSignatures(ps.Signatures)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to reconstruct signatures")
+	}
+	if err := types.VerifyReconstructedSignature(signature, validatorPubKey, ps.SigRoot); err != nil {
+		return nil, errors.Wrap(err, "failed to verify reconstruct signature")
+	}
+	return signature.Serialize(), nil
+}
+
+func (ps *PartialSigContainer) HasQuorum() bool {
+	return uint64(len(ps.Signatures)) >= ps.Quorum
+}
+
+// DutyExecutionState holds all the relevant progress the duty execution progress
+type DutyExecutionState struct {
+	// Height represents a unique consensus height for this state
+	Height          qbft.Height
+	RunningInstance *qbft.Instance
+
+	ProposedValue *types.ConsensusData
+	DecidedValue  *types.ConsensusData
+
+	SignedAttestation *spec.Attestation
+	SignedProposal    *spec.SignedBeaconBlock
+
+	RandaoPartialSig        *PartialSigContainer
+	PostConsensusPartialSig *PartialSigContainer
+
+	Finished bool
+}
+
+func NewDutyExecutionState(quorum uint64, height qbft.Height) *DutyExecutionState {
+	return &DutyExecutionState{
+		Height:                  height,
+		RandaoPartialSig:        NewPartialSigContainer(quorum),
+		PostConsensusPartialSig: NewPartialSigContainer(quorum),
+		Finished:                false,
+	}
+}
+
+// ReconstructRandaoSig aggregates collected partial randao sigs, reconstructs a valid sig and returns it
+func (pcs *DutyExecutionState) ReconstructRandaoSig(validatorPubKey []byte) ([]byte, error) {
+	panic("implement")
 }
 
 // ReconstructAttestationSig aggregates collected partial sigs, reconstructs a valid sig and returns an attestation obj with the reconstructed sig
 func (pcs *DutyExecutionState) ReconstructAttestationSig(validatorPubKey []byte) (*spec.Attestation, error) {
 	// Reconstruct signatures
-	signature, err := types.ReconstructSignatures(pcs.PostConsensusSignatures)
+	signature, err := pcs.PostConsensusPartialSig.ReconstructSignature(validatorPubKey)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to reconstruct signatures")
-	}
-	if err := types.VerifyReconstructedSignature(signature, validatorPubKey, pcs.PostConsensusSigRoot); err != nil {
-		return nil, errors.Wrap(err, "failed to verify reconstruct signature")
+		return nil, errors.Wrap(err, "could not reconstruct attestation sig")
 	}
 
 	blsSig := spec.BLSSignature{}
-	copy(blsSig[:], signature.Serialize())
+	copy(blsSig[:], signature)
 	pcs.SignedAttestation.Signature = blsSig
 	return pcs.SignedAttestation, nil
-}
-
-func (pcs *DutyExecutionState) HasPostConsensusSigQuorum() bool {
-	return uint64(len(pcs.PostConsensusSignatures)) >= pcs.Quorum
 }
 
 // SetFinished will mark this execution state as finished

@@ -31,7 +31,7 @@ func AttestationSourceValid() *tests.SpecTest {
 	startingValue, _ := consensusData.Encode()
 
 	// the starting value is not the same as the actual proposal!
-	dr.ResetExecutionState()
+	dr.NewExecutionState()
 	if err := dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
 		panic(err.Error())
 	}

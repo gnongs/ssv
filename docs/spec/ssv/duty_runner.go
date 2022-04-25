@@ -10,8 +10,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// PostConsensusSigCollectionSlotTimeout represents for how many slots the post consensus sig collection has timeout for
-const PostConsensusSigCollectionSlotTimeout spec.Slot = 32
+// DutyExecutionSlotTimeout is the timeout for pre or post consensus signature collection.
+const DutyExecutionSlotTimeout spec.Slot = 32
 
 // DutyRunner is manages the execution of a duty from start to finish, it can only execute 1 duty at a time.
 // Prev duty must finish before the next one can start.
@@ -40,28 +40,44 @@ func NewDutyRunner(
 
 // CanStartNewDuty returns nil if:
 // - no running instance exists or
+// - pre consensus timeout
 // - a QBFT instance Decided and all post consensus sigs collectd or
-// - a QBFT instance Decided and 32 slots passed from Decided duty
+// - a QBFT instance Decided and post consensus timeout
 // else returns an error
 func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
 	if dr.DutyExecutionState == nil || dr.DutyExecutionState.IsFinished() {
 		return nil
 	}
 
+	// check pre consensus signature collection timeout
+	switch dr.BeaconRoleType {
+	case beacon.RoleTypeProposer:
+		if !dr.DutyExecutionState.RandaoPartialSig.HasQuorum() {
+			if dr.DutyExecutionState.ProposedValue.Duty.Slot+DutyExecutionSlotTimeout >= duty.Slot {
+				return errors.New("randao consensus sig collection is running")
+			} else {
+				return nil // randao partial sig timeout
+			}
+		}
+	}
+
+	// check consensus decided
 	if decided, _ := dr.DutyExecutionState.RunningInstance.IsDecided(); !decided {
 		return errors.New("consensus on duty is running")
 	}
 
-	if !dr.DutyExecutionState.HasPostConsensusSigQuorum() &&
-		dr.DutyExecutionState.DecidedValue.Duty.Slot+PostConsensusSigCollectionSlotTimeout >= duty.Slot { // if 32 slots (1 epoch) passed from running duty, start a new duty
+	// check post consensus signature collection timeout
+	if !dr.DutyExecutionState.PostConsensusPartialSig.HasQuorum() &&
+		dr.DutyExecutionState.DecidedValue.Duty.Slot+DutyExecutionSlotTimeout >= duty.Slot {
 		return errors.New("post consensus sig collection is running")
 	}
 	return nil
 }
 
-// ResetExecutionState resets a mew execution state
-func (dr *DutyRunner) ResetExecutionState() {
-	dr.DutyExecutionState = NewDutyExecutionState(dr.Share.Quorum)
+// NewExecutionState resets a mew execution state
+func (dr *DutyRunner) NewExecutionState() {
+	// TODO - should we use some other method to calculate execution state height?
+	dr.DutyExecutionState = NewDutyExecutionState(dr.Share.Quorum, dr.QBFTController.Height+1)
 }
 
 // StartNewConsensusInstance starts a new QBFT instance for value
@@ -83,7 +99,7 @@ func (dr *DutyRunner) StartNewConsensusInstance(value []byte) error {
 
 // PostConsensusStateForHeight returns a DutyExecutionState instance for a specific Height
 func (dr *DutyRunner) PostConsensusStateForHeight(height qbft.Height) *DutyExecutionState {
-	if dr.DutyExecutionState != nil && dr.DutyExecutionState.RunningInstance.GetHeight() == height {
+	if dr.DutyExecutionState != nil && dr.DutyExecutionState.Height == height {
 		return dr.DutyExecutionState
 	}
 	return nil
@@ -106,10 +122,9 @@ func (dr *DutyRunner) DecideRunningInstance(decidedValue *types.ConsensusData, s
 
 		dr.DutyExecutionState.DecidedValue = decidedValue
 		dr.DutyExecutionState.SignedAttestation = signedAttestation
-		dr.DutyExecutionState.PostConsensusSigRoot = ensureRoot(r)
-		dr.DutyExecutionState.PostConsensusSignatures = map[types.OperatorID][]byte{}
+		dr.DutyExecutionState.PostConsensusPartialSig.SigRoot = ensureRoot(r)
 
-		ret.SigningRoot = dr.DutyExecutionState.PostConsensusSigRoot
+		ret.SigningRoot = dr.DutyExecutionState.PostConsensusPartialSig.SigRoot
 		ret.PartialSignature = dr.DutyExecutionState.SignedAttestation.Signature[:]
 
 		return ret, nil

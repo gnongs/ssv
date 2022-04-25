@@ -12,6 +12,7 @@ type Share struct {
 	Committee             []*Operator
 	Quorum, PartialQuorum uint64
 	DomainType            DomainType
+	Graffiti              []byte
 }
 
 // HasQuorum returns true if at least 2f+1 items are present (cnt is the number of items). It assumes nothing about those items, not their type or structure
