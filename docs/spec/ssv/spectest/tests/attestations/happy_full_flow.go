@@ -1,13 +1,14 @@
-package tests
+package attestations
 
 import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
 // HappyFullFlow tests a full consensus + post consensus + duty sig reconstruction flow
-func HappyFullFlow() *SpecTest {
+func HappyFullFlow() *tests.SpecTest {
 	dr := testingutils.BaseRunner()
 	dr.NewExecutionState()
 	if err := dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
@@ -70,7 +71,7 @@ func HappyFullFlow() *SpecTest {
 		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK3, 3, qbft.FirstHeight)),
 	}
 
-	return &SpecTest{
+	return &tests.SpecTest{
 		Name:                    "happy full flow",
 		DutyRunner:              dr,
 		Messages:                msgs,

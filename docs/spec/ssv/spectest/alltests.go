@@ -10,8 +10,6 @@ import (
 )
 
 var AllTests = []*tests2.SpecTest{
-	tests2.HappyFullFlow(),
-
 	postconsensus.ValidMessage(),
 	postconsensus.InvaliSignature(),
 	postconsensus.WrongSigningRoot(),
@@ -32,7 +30,7 @@ var AllTests = []*tests2.SpecTest{
 
 	consensus.WrongDutyPubKey(),
 
-	attestations.ValidAttestation(),
+	attestations.HappyFullFlow(),
 	attestations.FarFutureDuty(),
 	attestations.DutySlotNotMatchingAttestationSlot(),
 	attestations.DutyCommitteeIndexNotMatchingAttestations(),
