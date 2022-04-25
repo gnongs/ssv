@@ -53,6 +53,7 @@ func (n *p2pNetwork) setLegacyStreamHandler() {
 		}
 		// adjusting message and propagating to other (internal) components
 		cm.SyncMessage.FromPeerID = stream.Conn().RemotePeer().String()
+		n.logger.Debug("got sync message from peer", zap.String("peerID", cm.SyncMessage.FromPeerID), zap.Any("cm", cm))
 		go propagateSyncMessage(n.listeners.GetListeners(network.NetworkMsg_SyncType), cm)
 	})
 }
