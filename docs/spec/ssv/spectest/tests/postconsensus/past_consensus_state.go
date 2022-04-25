@@ -19,7 +19,7 @@ func PastConsensusState() *tests.SpecTest {
 		Name:                    "past SignedPostConsensusMessage",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "536b38f1f42551a08803fa158e5795b76e98a76a9ecd0376df4363fed98f3a68",
-		ExpectedError:           "PostConsensusMessage Height doesn't match duty runner's Height",
+		PostDutyRunnerStateRoot: "b3556d24734587bbd424e9de7dca4efca7bcdb2045ebeb4a44faec0d506fdfef",
+		ExpectedError:           "PartialSignatureMessage Height doesn't match duty runner's Height",
 	}
 }

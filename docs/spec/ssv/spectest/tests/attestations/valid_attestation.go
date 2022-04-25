@@ -31,6 +31,6 @@ func ValidAttestation() *tests.SpecTest {
 		Name:                    "valid attestation",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "43ef87f035cfe31847a253c9809183a3369dfac41abc3d342c0f83f3b6c4722e",
+		PostDutyRunnerStateRoot: "123d7f93154d9786630b47808b2b636ca2bc6fa476900a8610dc86134c0cc1ac",
 	}
 }

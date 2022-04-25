@@ -19,7 +19,7 @@ func WrongSigningRoot() *tests.SpecTest {
 		Name:                    "invalid PostConsensusMessage SigningRoot",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "33fd61d17dc89513774a7b566e9dddad28ea5703f83efae63aea69e369c1f367",
-		ExpectedError:           "partial sig invalid: SignedPostConsensusMessage invalid: SigningRoot invalid",
+		PostDutyRunnerStateRoot: "cbcefe579470d914c3c230bd45cee06e9c5723460044b278a0c629a742551b02",
+		ExpectedError:           "partial post consensus sig invalid: SignedPartialSignatureMessage invalid: SigningRoot invalid",
 	}
 }

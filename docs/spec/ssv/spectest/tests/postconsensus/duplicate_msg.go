@@ -21,6 +21,6 @@ func DuplicateMsg() *tests.SpecTest {
 		Name:                    "valid SignedPostConsensusMessage",
 		DutyRunner:              dr,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "d7a0b944e8ace07e1f65b98513a00a23c7a63defb4be6443ae64c35639da099a",
+		PostDutyRunnerStateRoot: "926e788adee20f009bbe499c55ead2efce02a5a63bd4c00ba6cf6ea244529af6",
 	}
 }
