@@ -71,23 +71,48 @@ CanStartNewDuty Constants:
 |---------------------------------------|-------|----------------------------------------------------------------------------------------------------------------------------------------|
 | DutyExecutionSlotTimeout | 32    | How many slots pass until a new QBFT instance can start without waiting for all pre/ post consensus partial signatures to be collected |
 
-Attestation Duty Full Cycle:
-
--> Received new beacon chain duty\
-&nbsp;&nbsp;&nbsp;-> Check can start a new consensus instance\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Come to consensus on Duty + Duty data (AttestationData, etc.)\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Broadcast and collect partial signature to reconstruct signature\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Reconstruct signature, broadcast to BN
-
-Block Proposal Duty Full Cycle:
-
--> Received new beacon chain duty\
-&nbsp;&nbsp;&nbsp;-> Check can start a new consensus instance\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Sign partial RANDAO and wait for other signatures\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Come to consensus on Duty + Duty data (AttestationData, etc.)\
+**Attestation Duty Full Cycle:**\
+-> Wait to slot 1/3\
+&nbsp;&nbsp;&nbsp;-> Received new beacon chain duty\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Check can start a new consensus instance\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Come to consensus on duty + attestation data\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Broadcast and collect partial signature to reconstruct signature\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Reconstruct signature, broadcast to BN
 
+**Block Proposal Duty Full Cycle:**\
+-> Received new beacon chain duty\
+&nbsp;&nbsp;&nbsp;-> Check can start a new consensus instance\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Sign partial RANDAO and wait for other signatures\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Come to consensus on duty + beacon block\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Broadcast and collect partial signature to reconstruct signature\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Reconstruct signature, broadcast to BN
+
+**Attestation Aggregator Duty Full Cycle:**\
+-> Received new beacon chain duty\
+&nbsp;&nbsp;&nbsp;-> Check can start a new consensus instance\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Sign partial selection proof and wait for other signatures\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Wait to slot 2/3\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Come to consensus on duty + aggregated selection proof\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Broadcast and collect partial signature to reconstruct signature\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Reconstruct signature, broadcast to BN
+
+**Sync Committee Duty Full Cycle:**\
+-> Wait to slot 1/3\
+&nbsp;&nbsp;&nbsp;-> Received new beacon chain duty\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Check can start a new consensus instance\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Come to consensus on duty + sync message\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Broadcast and collect partial signature to reconstruct signature\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Reconstruct signature, broadcast to BN
+
+**Sync Committee Aggregator Duty Full Cycle:**\
+-> Received new beacon chain duty\
+&nbsp;&nbsp;&nbsp;-> Check can start a new consensus instance\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Locally get sync sub-committee index for slot\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Partial sign index and wait for other signatures\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> wait to slot 2/3\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Come to consensus on duty + sync committee contribution\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Broadcast and collect partial signature to reconstruct signature\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Reconstruct signature, broadcast to BN
 
 A duty runner holds a QBFT controller for processing QBFT messages and a dutyExecutionState which keeps progress for all stages of duty execution: pre/ post consensus messages.
 Partial signatures are collected and reconstructed (when threshold reached) to be broadcasted to the BN network.
