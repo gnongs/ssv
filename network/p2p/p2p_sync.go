@@ -33,6 +33,7 @@ func (n *p2pNetwork) sendSyncRequest(peerStr string, protocol protocol.ID, msg *
 // RespondSyncMsg responds to the given stream
 func (n *p2pNetwork) RespondSyncMsg(streamID string, msg *network.SyncMessage) error {
 	msg.FromPeerID = n.host.ID().Pretty()
+	n.logger.Debug("xxx sync response", zap.Any("msg", msg))
 	return n.streamCtrl.Respond(&network.Message{
 		SyncMessage: msg,
 		Type:        network.NetworkMsg_SyncType,
