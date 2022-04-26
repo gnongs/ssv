@@ -2,6 +2,9 @@ package streams
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/bloxapp/ssv/network"
 	"github.com/bloxapp/ssv/network/forks"
 	core "github.com/libp2p/go-libp2p-core"
@@ -11,8 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/async"
 	"go.uber.org/zap"
-	"sync"
-	"time"
 )
 
 var (
@@ -137,7 +138,7 @@ func (n *streamCtrl) sendMsg(stream network.SyncStream, msg *network.Message) er
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal message")
 	}
-
+	n.logger.Debug("xxx sync response", zap.Any("msg", msg))
 	if err := stream.WriteWithTimeout(msgBytes, n.requestTimeout); err != nil {
 		return errors.Wrap(err, "could not write to stream")
 	}
