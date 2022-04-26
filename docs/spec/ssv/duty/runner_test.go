@@ -1,9 +1,10 @@
-package ssv_test
+package duty_test
 
 import (
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/ssv"
+	"github.com/bloxapp/ssv/docs/spec/ssv/duty"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 	"github.com/stretchr/testify/require"
@@ -12,7 +13,7 @@ import (
 
 func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 	t.Run("add to empty", func(t *testing.T) {
-		s := NewTestingDutyExecutionState()
+		s := ssv.NewTestingDutyExecutionState()
 		s.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{
 			Signers: []types.OperatorID{1},
 		})
@@ -21,7 +22,7 @@ func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 	})
 
 	t.Run("add multiple", func(t *testing.T) {
-		s := NewTestingDutyExecutionState()
+		s := ssv.NewTestingDutyExecutionState()
 		s.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{
 			Signers: []types.OperatorID{1},
 		})
@@ -36,7 +37,7 @@ func TestDutyExecutionState_AddPartialSig(t *testing.T) {
 	})
 
 	t.Run("add duplicate", func(t *testing.T) {
-		s := NewTestingDutyExecutionState()
+		s := ssv.NewTestingDutyExecutionState()
 		s.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{
 			Signers: []types.OperatorID{1},
 		})
@@ -64,9 +65,9 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		dr := testingutils.BaseRunner()
 		inst := testingutils.BaseInstance()
 		inst.State.Decided = false
-		dr.DutyExecutionState = &ssv.DutyExecutionState{
+		dr.State = &duty.State{
 			RunningInstance:         inst,
-			PostConsensusPartialSig: ssv.NewPartialSigContainer(3),
+			PostConsensusPartialSig: duty.NewPartialSigContainer(3),
 		}
 		err := dr.CanStartNewDuty(&beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
@@ -84,9 +85,9 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := testingutils.BaseInstance()
 		inst.State.Decided = true
-		dr.DutyExecutionState = &ssv.DutyExecutionState{
+		dr.State = &duty.RunnerState{
 			RunningInstance:         inst,
-			PostConsensusPartialSig: ssv.NewPartialSigContainer(3),
+			PostConsensusPartialSig: duty.NewPartialSigContainer(3),
 			DecidedValue: &types.ConsensusData{
 				Duty:            duty,
 				AttestationData: nil,
@@ -109,9 +110,9 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := testingutils.BaseInstance()
 		inst.State.Decided = true
-		dr.DutyExecutionState = &ssv.DutyExecutionState{
+		dr.State = &duty.RunnerState{
 			RunningInstance:         inst,
-			PostConsensusPartialSig: ssv.NewPartialSigContainer(3),
+			PostConsensusPartialSig: duty.NewPartialSigContainer(3),
 			DecidedValue: &types.ConsensusData{
 				Duty:            duty,
 				AttestationData: nil,
@@ -119,7 +120,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		err := dr.CanStartNewDuty(&beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
-			Slot:   12 + ssv.DutyExecutionSlotTimeout,
+			Slot:   12 + duty.DutyExecutionSlotTimeout,
 			PubKey: testingutils.TestingValidatorPubKey,
 		})
 		require.EqualError(t, err, "post consensus sig collection is running")
@@ -134,9 +135,9 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := testingutils.BaseInstance()
 		inst.State.Decided = true
-		dr.DutyExecutionState = &ssv.DutyExecutionState{
+		dr.State = &duty.RunnerState{
 			RunningInstance:         inst,
-			PostConsensusPartialSig: ssv.NewPartialSigContainer(3),
+			PostConsensusPartialSig: duty.NewPartialSigContainer(3),
 			DecidedValue: &types.ConsensusData{
 				Duty:            duty,
 				AttestationData: nil,
@@ -144,7 +145,7 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		err := dr.CanStartNewDuty(&beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
-			Slot:   12 + ssv.DutyExecutionSlotTimeout + 1,
+			Slot:   12 + duty.DutyExecutionSlotTimeout + 1,
 			PubKey: testingutils.TestingValidatorPubKey,
 		})
 		require.NoError(t, err)
@@ -159,17 +160,17 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := testingutils.BaseInstance()
 		inst.State.Decided = true
-		dr.DutyExecutionState = &ssv.DutyExecutionState{
+		dr.State = &duty.RunnerState{
 			RunningInstance:         inst,
-			PostConsensusPartialSig: ssv.NewPartialSigContainer(3),
+			PostConsensusPartialSig: duty.NewPartialSigContainer(3),
 			DecidedValue: &types.ConsensusData{
 				Duty:            duty,
 				AttestationData: nil,
 			},
 		}
-		dr.DutyExecutionState.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{1}, PartialSignature: []byte{1, 2, 3, 4}})
-		dr.DutyExecutionState.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{2}, PartialSignature: []byte{1, 2, 3, 4}})
-		dr.DutyExecutionState.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{3}, PartialSignature: []byte{1, 2, 3, 4}})
+		dr.State.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{1}, PartialSignature: []byte{1, 2, 3, 4}})
+		dr.State.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{2}, PartialSignature: []byte{1, 2, 3, 4}})
+		dr.State.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{3}, PartialSignature: []byte{1, 2, 3, 4}})
 		err := dr.CanStartNewDuty(&beacon.Duty{
 			Type:   beacon.RoleTypeAttester,
 			Slot:   12,
@@ -186,12 +187,10 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			Slot:   12,
 			PubKey: testingutils.TestingValidatorPubKey,
 		}
-		dr.DutyExecutionState = &ssv.DutyExecutionState{
-			RandaoPartialSig:        ssv.NewPartialSigContainer(3),
-			PostConsensusPartialSig: ssv.NewPartialSigContainer(3),
-			ProposedValue: &types.ConsensusData{
-				Duty: duty,
-			},
+		dr.StartNewDuty(duty)
+		dr.State = &duty.RunnerState{
+			RandaoPartialSig:        duty.NewPartialSigContainer(3),
+			PostConsensusPartialSig: duty.NewPartialSigContainer(3),
 		}
 
 		err := dr.CanStartNewDuty(&beacon.Duty{
@@ -210,12 +209,10 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 			Slot:   12,
 			PubKey: testingutils.TestingValidatorPubKey,
 		}
-		dr.DutyExecutionState = &ssv.DutyExecutionState{
-			RandaoPartialSig:        ssv.NewPartialSigContainer(3),
-			PostConsensusPartialSig: ssv.NewPartialSigContainer(3),
-			ProposedValue: &types.ConsensusData{
-				Duty: duty,
-			},
+		dr.StartNewDuty(duty)
+		dr.State = &duty.RunnerState{
+			RandaoPartialSig:        duty.NewPartialSigContainer(3),
+			PostConsensusPartialSig: duty.NewPartialSigContainer(3),
 		}
 
 		err := dr.CanStartNewDuty(&beacon.Duty{
@@ -235,10 +232,10 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 		inst := testingutils.BaseInstance()
 		inst.State.Decided = true
-		dr.DutyExecutionState = &ssv.DutyExecutionState{
+		dr.State = &duty.RunnerState{
 			RunningInstance:         inst,
-			RandaoPartialSig:        ssv.NewPartialSigContainer(3),
-			PostConsensusPartialSig: ssv.NewPartialSigContainer(3),
+			RandaoPartialSig:        duty.NewPartialSigContainer(3),
+			PostConsensusPartialSig: duty.NewPartialSigContainer(3),
 			DecidedValue: &types.ConsensusData{
 				Duty:            duty,
 				AttestationData: nil,
@@ -246,14 +243,14 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 		}
 
 		// pre
-		dr.DutyExecutionState.RandaoPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{1}, PartialSignature: []byte{1, 2, 3, 4}})
-		dr.DutyExecutionState.RandaoPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{2}, PartialSignature: []byte{1, 2, 3, 4}})
-		dr.DutyExecutionState.RandaoPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{3}, PartialSignature: []byte{1, 2, 3, 4}})
+		dr.State.RandaoPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{1}, PartialSignature: []byte{1, 2, 3, 4}})
+		dr.State.RandaoPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{2}, PartialSignature: []byte{1, 2, 3, 4}})
+		dr.State.RandaoPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{3}, PartialSignature: []byte{1, 2, 3, 4}})
 
 		// post
-		dr.DutyExecutionState.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{1}, PartialSignature: []byte{1, 2, 3, 4}})
-		dr.DutyExecutionState.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{2}, PartialSignature: []byte{1, 2, 3, 4}})
-		dr.DutyExecutionState.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{3}, PartialSignature: []byte{1, 2, 3, 4}})
+		dr.State.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{1}, PartialSignature: []byte{1, 2, 3, 4}})
+		dr.State.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{2}, PartialSignature: []byte{1, 2, 3, 4}})
+		dr.State.PostConsensusPartialSig.AddSignature(&ssv.PartialSignatureMessage{Signers: []types.OperatorID{3}, PartialSignature: []byte{1, 2, 3, 4}})
 		err := dr.CanStartNewDuty(&beacon.Duty{
 			Type:   beacon.RoleTypeProposer,
 			Slot:   12,
@@ -267,16 +264,15 @@ func TestDutyRunner_CanStartNewDuty(t *testing.T) {
 func TestDutyRunner_StartNewInstance(t *testing.T) {
 	t.Run("value nil", func(t *testing.T) {
 		dr := testingutils.BaseRunner()
-		require.EqualError(t, dr.StartNewConsensusInstance(nil), "new instance value invalid")
+		require.EqualError(t, dr.Decide(nil), "new instance value invalid")
 	})
 
 	t.Run("valid start", func(t *testing.T) {
 		dr := testingutils.BaseRunner()
-		dr.NewExecutionState()
-		require.NoError(t, dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts))
-		require.NotNil(t, dr.DutyExecutionState)
-		require.NotNil(t, dr.DutyExecutionState.RunningInstance)
-		require.EqualValues(t, 3, dr.DutyExecutionState.PostConsensusPartialSig.Quorum)
+		require.NoError(t, dr.Decide(testingutils.TestAttesterConsensusDataByts))
+		require.NotNil(t, dr.State)
+		require.NotNil(t, dr.State.RunningInstance)
+		require.EqualValues(t, 3, dr.State.PostConsensusPartialSig.Quorum)
 	})
 }
 
@@ -288,8 +284,7 @@ func TestDutyRunner_PostConsensusStateForHeight(t *testing.T) {
 
 	t.Run("returns", func(t *testing.T) {
 		dr := testingutils.BaseRunner()
-		dr.NewExecutionState()
-		require.NoError(t, dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts))
+		require.NoError(t, dr.Decide(testingutils.TestAttesterConsensusDataByts))
 		require.NotNil(t, dr.PostConsensusStateForHeight(qbft.FirstHeight))
 	})
 }
@@ -297,7 +292,7 @@ func TestDutyRunner_PostConsensusStateForHeight(t *testing.T) {
 func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		dr := testingutils.BaseRunner()
-		dr.DutyExecutionState = NewTestingDutyExecutionState()
+		dr.State = ssv.NewTestingDutyExecutionState()
 		decidedValue := &types.ConsensusData{
 			Duty: &beacon.Duty{
 				Type:   beacon.RoleTypeAttester,
@@ -307,12 +302,12 @@ func TestDutyRunner_DecideRunningInstance(t *testing.T) {
 			AttestationData: nil,
 		}
 
-		require.NoError(t, dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts))
-		_, err := dr.DecideRunningInstance(decidedValue, testingutils.NewTestingKeyManager())
+		require.NoError(t, dr.Decide(testingutils.TestAttesterConsensusDataByts))
+		_, err := dr.SignDutyPostConsensus(decidedValue, testingutils.NewTestingKeyManager())
 		require.NoError(t, err)
-		require.NotNil(t, dr.DutyExecutionState.DecidedValue)
-		require.NotNil(t, dr.DutyExecutionState.SignedAttestation)
-		require.NotNil(t, dr.DutyExecutionState.PostConsensusPartialSig.SigRoot)
-		require.NotNil(t, dr.DutyExecutionState.PostConsensusPartialSig.Signatures)
+		require.NotNil(t, dr.State.DecidedValue)
+		require.NotNil(t, dr.State.SignedAttestation)
+		require.NotNil(t, dr.State.PostConsensusPartialSig.SigRoot)
+		require.NotNil(t, dr.State.PostConsensusPartialSig.Signatures)
 	})
 }

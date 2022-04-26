@@ -3,12 +3,12 @@ package testingutils
 import (
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
-	"github.com/bloxapp/ssv/docs/spec/ssv"
+	"github.com/bloxapp/ssv/docs/spec/ssv/duty"
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
-var BaseRunner = func() *ssv.DutyRunner {
-	ret := ssv.NewDutyRunner(
+var BaseRunner = func() *duty.Runner {
+	ret := duty.NewDutyRunner(
 		beacon.RoleTypeAttester,
 		TestingShare,
 		NewTestingQBFTController([]byte{1, 2, 3, 4}),
@@ -18,19 +18,19 @@ var BaseRunner = func() *ssv.DutyRunner {
 	return ret
 }
 
-var DecidedRunner = func() *ssv.DutyRunner {
+var DecidedRunner = func() *duty.Runner {
 	return decideRunner(TestAttesterConsensusDataByts, qbft.FirstHeight)
 }
 
-var DecidedRunnerWithHeight = func(height qbft.Height) *ssv.DutyRunner {
+var DecidedRunnerWithHeight = func(height qbft.Height) *duty.Runner {
 	return decideRunner(TestAttesterConsensusDataByts, height)
 }
 
-var DecidedRunnerUnknownDutyType = func() *ssv.DutyRunner {
+var DecidedRunnerUnknownDutyType = func() *duty.Runner {
 	return decideRunner(TestConsensusUnkownDutyTypeDataByts, qbft.FirstHeight)
 }
 
-var decideRunner = func(consensusData []byte, height qbft.Height) *ssv.DutyRunner {
+var decideRunner = func(consensusData []byte, height qbft.Height) *duty.Runner {
 	v := BaseValidator()
 	for h := qbft.Height(qbft.FirstHeight); h <= height; h++ {
 		msgs := []*types.SSVMessage{
@@ -85,7 +85,7 @@ var decideRunner = func(consensusData []byte, height qbft.Height) *ssv.DutyRunne
 			}), nil),
 		}
 
-		if err := v.DutyRunners[beacon.RoleTypeAttester].StartNewConsensusInstance(TestAttesterConsensusDataByts); err != nil {
+		if err := v.DutyRunners[beacon.RoleTypeAttester].Decide(TestAttesterConsensusDataByts); err != nil {
 			panic(err.Error())
 		}
 		for _, msg := range msgs {

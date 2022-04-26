@@ -2,6 +2,7 @@ package ssv
 
 import (
 	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/ssv/duty"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
@@ -34,7 +35,7 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 // 3) start consensus on duty + block data
 // 4) Once consensus decides, sign partial block and broadcast
 // 5) collect 2f+1 partial sigs, reconstruct and broadcast valid block sig to the BN
-func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *DutyRunner) error {
+func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *duty.Runner) error {
 	// sign partial randao
 	epoch := v.beacon.GetBeaconNetwork().EstimatedEpochAtSlot(duty.Slot)
 	sig, r, err := v.signer.SignRandaoReveal(epoch, v.share.SharePubKey)
@@ -80,7 +81,7 @@ func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Duty
 // 2) start consensus on duty + attestation data
 // 3) Once consensus decides, sign partial attestation and broadcast
 // 4) collect 2f+1 partial sigs, reconstruct and broadcast valid attestation sig to the BN
-func (v *Validator) executeAttestationDuty(duty *beacon.Duty, dutyRunner *DutyRunner) error {
+func (v *Validator) executeAttestationDuty(duty *beacon.Duty, dutyRunner *duty.Runner) error {
 	attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)
 	if err != nil {
 		return errors.Wrap(err, "failed to get attestation data")

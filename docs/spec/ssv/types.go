@@ -3,14 +3,15 @@ package ssv
 import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
+	"github.com/bloxapp/ssv/docs/spec/ssv/duty"
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
 // DutyRunners is a map of duty runners mapped by msg id hex.
-type DutyRunners map[beacon.RoleType]*DutyRunner
+type DutyRunners map[beacon.RoleType]*duty.Runner
 
-// DutyRunnerForMsgID returns a DutyRunner from the provided msg ID, or nil if not found
-func (ci DutyRunners) DutyRunnerForMsgID(msgID types.MessageID) *DutyRunner {
+// DutyRunnerForMsgID returns a Runner from the provided msg ID, or nil if not found
+func (ci DutyRunners) DutyRunnerForMsgID(msgID types.MessageID) *duty.Runner {
 	role := msgID.GetRoleType()
 	return ci[role]
 }

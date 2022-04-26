@@ -1,7 +1,9 @@
 package ssv
 
 import (
+	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
+	"github.com/bloxapp/ssv/docs/spec/ssv/duty"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
@@ -66,4 +68,118 @@ func (v *Validator) validateMessage(msg *types.SSVMessage) error {
 	}
 
 	return nil
+}
+
+func (v *Validator) processConsensusMsg(dutyRunner *duty.Runner, msg *qbft.SignedMessage) error {
+	decided, decidedValue, err := dutyRunner.ProcessConsensusMessage(msg)
+	if err != nil {
+		return errors.Wrap(err, "failed processing consensus message")
+	}
+
+	// Decided returns true only once so if it is true it must be for the current running instance
+	if !decided {
+		return nil
+	}
+
+	postConsensusMsg, err := dutyRunner.SignDutyPostConsensus(decidedValue, v.signer)
+	if err != nil {
+		return errors.Wrap(err, "failed to decide duty at runner")
+	}
+
+	signedMsg, err := v.signPostConsensusMsg(postConsensusMsg)
+	if err != nil {
+		return errors.Wrap(err, "could not sign post consensus msg")
+	}
+
+	data, err := signedMsg.Encode()
+	if err != nil {
+		return errors.Wrap(err, "failed to encode post consensus signature msg")
+	}
+
+	msgToBroadcast := &types.SSVMessage{
+		MsgType: types.SSVPartialSignatureMsgType,
+		MsgID:   types.MessageIDForValidatorPKAndRole(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType),
+		Data:    data,
+	}
+
+	if err := v.network.Broadcast(msgToBroadcast); err != nil {
+		return errors.Wrap(err, "can't broadcast partial post consensus sig")
+	}
+	return nil
+}
+
+func (v *Validator) processPostConsensusSig(dutyRunner *duty.Runner, signedMsg *SignedPartialSignatureMessage) error {
+	quorum, err := dutyRunner.ProcessPostConsensusMessage(signedMsg)
+	if err != nil {
+		return errors.Wrap(err, "failed processing post consensus message")
+	}
+
+	// quorum returns true only once (first time quorum achieved)
+	if !quorum {
+		return nil
+	}
+
+	switch dutyRunner.BeaconRoleType {
+	case beacon.RoleTypeAttester:
+		att, err := dutyRunner.State.ReconstructAttestationSig(v.share.ValidatorPubKey)
+		if err != nil {
+			return errors.Wrap(err, "could not reconstruct post consensus sig")
+		}
+		if err := v.beacon.SubmitAttestation(att); err != nil {
+			return errors.Wrap(err, "could not submit to beacon chain reconstructed attestation")
+		}
+	default:
+		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.BeaconRoleType.String())
+	}
+	return nil
+}
+
+func (v *Validator) processRandaoPartialSig(dutyRunner *duty.Runner, signedMsg *SignedPartialSignatureMessage) error {
+	quorum, err := dutyRunner.ProcessRandaoMessage(signedMsg)
+	if err != nil {
+		return errors.Wrap(err, "failed processing randao message")
+	}
+
+	// quorum returns true only once (first time quorum achieved)
+	if !quorum {
+		return nil
+	}
+
+	// randao is relevant only for block proposals, no need to check type
+	fullSig, err := dutyRunner.State.ReconstructRandaoSig(v.share.ValidatorPubKey)
+	if err != nil {
+		return errors.Wrap(err, "could not reconstruct randao sig")
+	}
+
+	duty := dutyRunner.CurrentDuty
+
+	// get block data
+	blk, err := v.beacon.GetBeaconBlock(duty.Slot, duty.CommitteeIndex, v.share.Graffiti, fullSig)
+	if err != nil {
+		return errors.Wrap(err, "failed to get beacon block")
+	}
+
+	input := &types.ConsensusData{
+		Duty:      duty,
+		BlockData: blk,
+	}
+
+	if err := dutyRunner.Decide(input); err != nil {
+		return errors.Wrap(err, "can't start new duty runner instance for duty")
+	}
+
+	return nil
+}
+
+func (v *Validator) signPostConsensusMsg(msg *PartialSignatureMessage) (*SignedPartialSignatureMessage, error) {
+	signature, err := v.signer.SignRoot(msg, types.PartialSignatureType, v.share.SharePubKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not sign PartialSignatureMessage for PostConsensusPartialSig")
+	}
+
+	return &SignedPartialSignatureMessage{
+		Message:   msg,
+		Signature: signature,
+		Signers:   []types.OperatorID{v.share.OperatorID},
+	}, nil
 }
