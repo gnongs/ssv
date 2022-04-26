@@ -91,17 +91,7 @@ func (v *Validator) executeAttestationDuty(duty *beacon.Duty, dutyRunner *DutyRu
 		AttestationData: attData,
 	}
 
-	byts, err := input.Encode()
-	if err != nil {
-		return errors.Wrap(err, "could not encode input")
-	}
-
-	// validate input
-	if err := v.valCheck(byts); err != nil {
-		return errors.Wrap(err, "StartDuty input data invalid")
-	}
-
-	if err := dutyRunner.StartNewConsensusInstance(byts); err != nil {
+	if err := dutyRunner.Decide(input); err != nil {
 		return errors.Wrap(err, "can't start new duty runner instance for duty")
 	}
 	return nil

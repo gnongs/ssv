@@ -94,12 +94,18 @@ func (dr *DutyRunner) CanStartNewDuty(duty *beacon.Duty) error {
 	return nil
 }
 
-// StartNewConsensusInstance starts a new QBFT instance for value
-func (dr *DutyRunner) StartNewConsensusInstance(value []byte) error {
-	if len(value) == 0 {
-		return errors.New("new instance value invalid")
+// Decide starts a new consensus instance for input value
+func (dr *DutyRunner) Decide(input *types.ConsensusData) error {
+	byts, err := input.Encode()
+	if err != nil {
+		return errors.Wrap(err, "could not encode ConsensusData")
 	}
-	if err := dr.QBFTController.StartNewInstance(value); err != nil {
+
+	if err := dr.valCheck(byts); err != nil {
+		return errors.Wrap(err, "input data invalid")
+	}
+
+	if err := dr.QBFTController.StartNewInstance(byts); err != nil {
 		return errors.Wrap(err, "could not start new QBFT instance")
 	}
 	newInstance := dr.QBFTController.InstanceForHeight(dr.QBFTController.Height)

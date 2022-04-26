@@ -2,7 +2,6 @@ package ssv
 
 import (
 	beacon2 "github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
@@ -16,7 +15,6 @@ type Validator struct {
 	storage     Storage
 	share       *types.Share
 	signer      types.KeyManager
-	valCheck    qbft.ProposedValueCheck
 }
 
 func NewValidator(
@@ -25,7 +23,6 @@ func NewValidator(
 	storage Storage,
 	share *types.Share,
 	signer types.KeyManager,
-	valCheck qbft.ProposedValueCheck,
 ) *Validator {
 	return &Validator{
 		DutyRunners: map[beacon2.RoleType]*DutyRunner{},
@@ -34,6 +31,5 @@ func NewValidator(
 		storage:     storage,
 		share:       share,
 		signer:      signer,
-		valCheck:    valCheck,
 	}
 }

@@ -13,6 +13,6 @@ var testConsensusData = &types.ConsensusData{
 }
 var TestConsensusDataByts, _ = testConsensusData.Encode()
 
-func NewTestingDutyExecutionState() *ssv.DutyExecutionState {
+func NewTestingDutyExecutionState() *ssv.RunnerState {
 	return ssv.NewDutyExecutionState(3, qbft.FirstHeight)
 }

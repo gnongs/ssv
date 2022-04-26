@@ -35,18 +35,7 @@ func (v *Validator) processRandaoPartialSig(dutyRunner *DutyRunner, signedMsg *S
 		BlockData: blk,
 	}
 
-	byts, err := input.Encode()
-	if err != nil {
-		return errors.Wrap(err, "could not encode input")
-	}
-
-	// validate input
-	//we should maybe move the val check to the duty runner as it needs to change with each duty type
-	if err := v.valCheck(byts); err != nil {
-		return errors.Wrap(err, "StartDuty input data invalid")
-	}
-
-	if err := dutyRunner.StartNewConsensusInstance(byts); err != nil {
+	if err := dutyRunner.Decide(input); err != nil {
 		return errors.Wrap(err, "can't start new duty runner instance for duty")
 	}
 
