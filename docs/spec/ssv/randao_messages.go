@@ -6,32 +6,23 @@ import (
 )
 
 func (v *Validator) processRandaoPartialSig(dutyRunner *DutyRunner, signedMsg *SignedPartialSignatureMessage) error {
-	postCons := dutyRunner.PostConsensusStateForHeight(signedMsg.Message.Height)
-	if postCons == nil {
-		return errors.New("PartialSignatureMessage Height doesn't match duty runner's Height")
+	quorum, err := dutyRunner.ProcessRandaoMessage(signedMsg)
+	if err != nil {
+		return errors.Wrap(err, "failed processing randao message")
 	}
 
-	if err := v.validateRandaoPartialSig(postCons, signedMsg); err != nil {
-		return errors.Wrap(err, "partial randao sig invalid")
-	}
-
-	prevQuorum := postCons.RandaoPartialSig.HasQuorum()
-
-	if err := postCons.RandaoPartialSig.AddSignature(signedMsg.Message); err != nil {
-		return errors.Wrap(err, "could not add partial randao signature")
-	}
-
-	if prevQuorum || !postCons.RandaoPartialSig.HasQuorum() {
+	// quorum returns true only once (first time quorum achieved)
+	if !quorum {
 		return nil
 	}
 
 	// randao is relevant only for block proposals, no need to check type
-	fullSig, err := postCons.ReconstructRandaoSig(v.share.ValidatorPubKey)
+	fullSig, err := dutyRunner.State.ReconstructRandaoSig(v.share.ValidatorPubKey)
 	if err != nil {
 		return errors.Wrap(err, "could not reconstruct randao sig")
 	}
 
-	duty := dutyRunner.DutyExecutionState.ProposedValue.Duty
+	duty := dutyRunner.CurrentDuty
 
 	// get block data
 	blk, err := v.beacon.GetBeaconBlock(duty.Slot, duty.CommitteeIndex, v.share.Graffiti, fullSig)
@@ -60,8 +51,4 @@ func (v *Validator) processRandaoPartialSig(dutyRunner *DutyRunner, signedMsg *S
 	}
 
 	return nil
-}
-
-func (v *Validator) validateRandaoPartialSig(executionState *DutyExecutionState, SignedMsg *SignedPartialSignatureMessage) error {
-	panic("implement")
 }

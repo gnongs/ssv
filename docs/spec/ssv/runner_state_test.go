@@ -8,13 +8,13 @@ import (
 )
 
 func TestDutyExecutionState_Marshaling(t *testing.T) {
-	es := &ssv.DutyExecutionState{
+	es := &ssv.RunnerState{
 		RunningInstance: testingutils.BaseInstance(),
 	}
 
 	byts, err := es.Encode()
 	require.NoError(t, err)
 
-	decoded := &ssv.DutyExecutionState{}
+	decoded := &ssv.RunnerState{}
 	require.NoError(t, decoded.Decode(byts))
 }

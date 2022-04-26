@@ -13,7 +13,7 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 		return errors.Errorf("duty type %s not supported", duty.Type.String())
 	}
 
-	if err := dutyRunner.CanStartNewDuty(duty); err != nil {
+	if err := dutyRunner.StartNewDuty(duty); err != nil {
 		return errors.Wrap(err, "can't start new duty")
 	}
 
@@ -35,12 +35,6 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 // 4) Once consensus decides, sign partial block and broadcast
 // 5) collect 2f+1 partial sigs, reconstruct and broadcast valid block sig to the BN
 func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *DutyRunner) error {
-	// set up runner with new execution state
-	dutyRunner.NewExecutionState()
-	dutyRunner.DutyExecutionState.ProposedValue = &types.ConsensusData{
-		Duty: duty,
-	}
-
 	// sign partial randao
 	epoch := v.beacon.GetBeaconNetwork().EstimatedEpochAtSlot(duty.Slot)
 	sig, r, err := v.signer.SignRandaoReveal(epoch, v.share.SharePubKey)
@@ -51,7 +45,6 @@ func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Duty
 	// generate partial sig for randao
 	msg := &PartialSignatureMessage{
 		Type:             RandaoPartialSig,
-		Height:           dutyRunner.DutyExecutionState.Height,
 		PartialSignature: sig,
 		SigningRoot:      r,
 		Signers:          []types.OperatorID{v.share.OperatorID},
@@ -88,20 +81,17 @@ func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Duty
 // 3) Once consensus decides, sign partial attestation and broadcast
 // 4) collect 2f+1 partial sigs, reconstruct and broadcast valid attestation sig to the BN
 func (v *Validator) executeAttestationDuty(duty *beacon.Duty, dutyRunner *DutyRunner) error {
-	// set up runner with new execution state
-	dutyRunner.NewExecutionState()
-
 	attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)
 	if err != nil {
 		return errors.Wrap(err, "failed to get attestation data")
 	}
 
-	dutyRunner.DutyExecutionState.ProposedValue = &types.ConsensusData{
+	input := &types.ConsensusData{
 		Duty:            duty,
 		AttestationData: attData,
 	}
 
-	byts, err := dutyRunner.DutyExecutionState.ProposedValue.Encode()
+	byts, err := input.Encode()
 	if err != nil {
 		return errors.Wrap(err, "could not encode input")
 	}

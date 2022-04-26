@@ -3,7 +3,6 @@ package ssv
 import (
 	"crypto/sha256"
 	"encoding/json"
-	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
@@ -21,7 +20,6 @@ const (
 // PartialSignatureMessage is a msg for partial beacon chain related signatures (like partial attestation, block, randao sigs)
 type PartialSignatureMessage struct {
 	Type             PartialSigMsgType
-	Height           qbft.Height
 	PartialSignature []byte // The beacon chain partial Signature for a duty
 	SigningRoot      []byte // the root signed in PartialSignature
 	Signers          []types.OperatorID

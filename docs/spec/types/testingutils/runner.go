@@ -8,12 +8,14 @@ import (
 )
 
 var BaseRunner = func() *ssv.DutyRunner {
-	return ssv.NewDutyRunner(
+	ret := ssv.NewDutyRunner(
 		beacon.RoleTypeAttester,
 		TestingShare,
 		NewTestingQBFTController([]byte{1, 2, 3, 4}),
 		NewTestingStorage(),
 	)
+	ret.StartNewDuty(TestingAttesterDuty)
+	return ret
 }
 
 var DecidedRunner = func() *ssv.DutyRunner {
@@ -83,7 +85,6 @@ var decideRunner = func(consensusData []byte, height qbft.Height) *ssv.DutyRunne
 			}), nil),
 		}
 
-		v.DutyRunners[beacon.RoleTypeAttester].NewExecutionState()
 		if err := v.DutyRunners[beacon.RoleTypeAttester].StartNewConsensusInstance(TestAttesterConsensusDataByts); err != nil {
 			panic(err.Error())
 		}
