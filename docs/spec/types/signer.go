@@ -18,8 +18,8 @@ var (
 type SignatureType []byte
 
 var (
-	QBFTSigType          = []byte{1, 0, 0, 0}
-	PostConsensusSigType = []byte{2, 0, 0, 0}
+	QBFTSignatureType    = []byte{1, 0, 0, 0}
+	PartialSignatureType = []byte{2, 0, 0, 0}
 )
 
 type BeaconSigner interface {

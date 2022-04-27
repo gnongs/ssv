@@ -140,7 +140,7 @@ func validSignedPrepareForHeightRoundAndValue(
 		return errors.New("prepare msg allows 1 signer")
 	}
 
-	if err := signedPrepare.Signature.VerifyByOperators(signedPrepare, config.GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
+	if err := signedPrepare.Signature.VerifyByOperators(signedPrepare, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
 		return errors.Wrap(err, "prepare msg signature invalid")
 	}
 	return nil
@@ -170,7 +170,7 @@ func createPrepare(state *State, config IConfig, newRound Round, value []byte) (
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, state.Share.SharePubKey)
+	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed signing prepare msg")
 	}

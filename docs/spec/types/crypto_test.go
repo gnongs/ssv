@@ -43,7 +43,7 @@ func TestComputeSigningRoot(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		root := &testSigningRoot{root: []byte{1, 2, 3, 4}}
 		domain := PrimusTestnet
-		sigType := QBFTSigType
+		sigType := QBFTSignatureType
 		byts, err := ComputeSigningRoot(root, ComputeSignatureDomain(domain, sigType))
 		require.NoError(t, err)
 		require.EqualValues(t, []byte{0x8e, 0x9e, 0xa8, 0x82, 0x0, 0x46, 0xb7, 0x5d, 0xe9, 0x0, 0xb5, 0xdc, 0x1c, 0xb, 0xa5, 0x82, 0xf7, 0xc6, 0x79, 0xc7, 0x3d, 0x20, 0xf, 0x95, 0x81, 0x23, 0xa5, 0xbc, 0x2f, 0x2c, 0xd8, 0x3e}, byts)
@@ -57,7 +57,7 @@ func TestComputeSignatureDomain(t *testing.T) {
 func TestSignature_Verify(t *testing.T) {
 	msgRoot := &testSigningRoot{root: []byte{1, 2, 3, 4}}
 	domain := PrimusTestnet
-	sigType := QBFTSigType
+	sigType := QBFTSignatureType
 
 	computedRoot, err := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
 	require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestSignature_Verify(t *testing.T) {
 func TestSignature_VerifyMultiPubKey(t *testing.T) {
 	msgRoot := &testSigningRoot{root: []byte{1, 2, 3, 4}}
 	domain := PrimusTestnet
-	sigType := QBFTSigType
+	sigType := QBFTSignatureType
 
 	computedRoot, err := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
 	require.NoError(t, err)
@@ -161,7 +161,7 @@ func TestSignature_VerifyMultiPubKey(t *testing.T) {
 func TestSignature_VerifyByNodes(t *testing.T) {
 	msgRoot := &testSigningRoot{root: []byte{1, 2, 3, 4}}
 	domain := PrimusTestnet
-	sigType := QBFTSigType
+	sigType := QBFTSignatureType
 
 	computedRoot, err := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
 	require.NoError(t, err)
@@ -227,7 +227,7 @@ func TestSignature_VerifyByNodes(t *testing.T) {
 func TestSignature_Aggregate(t *testing.T) {
 	msgRoot := &testSigningRoot{root: []byte{1, 2, 3, 4}}
 	domain := PrimusTestnet
-	sigType := QBFTSigType
+	sigType := QBFTSignatureType
 
 	computedRoot, err := ComputeSigningRoot(msgRoot, ComputeSignatureDomain(domain, sigType))
 	require.NoError(t, err)

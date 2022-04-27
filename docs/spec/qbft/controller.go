@@ -101,16 +101,18 @@ func (c *Controller) ProcessMsg(msg *SignedMessage) (bool, []byte, error) {
 		return false, nil, errors.Wrap(err, "could not process msg")
 	}
 
-	// save the highest Decided
-	if decided && inst.GetHeight() == c.Height { // It's the highest instance
-		if err := c.storage.SaveHighestDecided(aggregatedCommit); err != nil {
-			// LOG
-		}
-	}
-
 	// if previously Decided we do not return Decided true again
 	if prevDecided {
 		return false, nil, err
+	}
+
+	// save the highest Decided
+	if !decided {
+		return false, nil, nil
+	}
+
+	if err := c.storage.SaveHighestDecided(aggregatedCommit); err != nil {
+		// TODO - LOG
 	}
 
 	// Broadcast Decided msg

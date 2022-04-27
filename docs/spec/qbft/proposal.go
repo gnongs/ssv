@@ -61,7 +61,7 @@ func isValidProposal(
 	if len(signedProposal.GetSigners()) != 1 {
 		return errors.New("proposal msg allows 1 signer")
 	}
-	if err := signedProposal.Signature.VerifyByOperators(signedProposal, config.GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
+	if err := signedProposal.Signature.VerifyByOperators(signedProposal, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
 		return errors.Wrap(err, "proposal msg signature invalid")
 	}
 	if !signedProposal.MatchedSigners([]types.OperatorID{proposer(state, signedProposal.Message.Round)}) {
@@ -204,7 +204,7 @@ func createProposal(state *State, config IConfig, value []byte, roundChanges, pr
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, state.Share.SharePubKey)
+	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed signing prepare msg")
 	}
