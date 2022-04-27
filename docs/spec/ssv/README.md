@@ -17,11 +17,42 @@ to run validators in a decentralized and trustless way.
 ## SSV Spec
 This repo contains the spec for SSV.Network node.
 
-### SSV messages
-SSV network message is called SSVMessage, it includes a MessageID and MsgType to route messages within the SSV node code, and, data for the actual message (QBFT/ Post consensus messages for example).
+### SSVMessage
+SSV network message is called SSVMessage, it includes a MessageID and MsgType to route messages within the SSV node code, and, data for the actual message (QBFT/ pre/ Post consensus messages for example).
 
 Any message data struct must be signed and nested within a signed message struct which follows the MessageSignature interface. 
 A signed message structure includes the signature over the data structure, the signed root and signer list.
+
+#### QBFT Message
+This type of message is used for all consensus messages 
+```go
+type Message struct {
+	MsgType    MessageType
+	Height     Height // QBFT instance Height
+	Round      Round  // QBFT round for which the msg is for
+	Identifier []byte // instance Identifier this msg belongs to
+	Data       []byte
+}
+```
+
+#### Decided Message
+Once a QBFT instance is decdied, this message is broadcasted with at least 2f+1 aggrageted commit messages in it 
+```go
+type DecidedMessage struct {
+    SignedMessage *SignedMessage
+}
+```
+
+#### Partial Signature Message
+Used for pre and post consensus sigantures for collecting partial BN signatures and then reconstructing them
+```go
+type PartialSignatureMessage struct {
+    Type             PartialSigMsgType
+    PartialSignature []byte // The beacon chain partial Signature for a duty
+    SigningRoot      []byte // the root signed in PartialSignature
+    Signers          []types.OperatorID
+}
+```
 
 ### Signing messages
 The KeyManager interface has a function to sign roots, a slice of bytes. 
@@ -55,17 +86,19 @@ Signature type Constants:
 
 | Signature Type       | Value                | Description                              |
 |----------------------|----------------------|------------------------------------------|
-| QBFTSigType          | [] byte {1, 0, 0, 0} | SignedMessage specific signatures        |
+| QBFTSignatureType          | [] byte {1, 0, 0, 0} | SignedMessage specific signatures        |
 | PartialSignatureType | [] byte {2, 0, 0, 0} | PostConsensusMessage specific signatures |
 
-## Validator and DutyRunner instances
-A validator instance is created for each validator independently, each validator will have multiple DutyRunners for each beacon chain duty type (Attestations, Blocks, etc.)
+## Validator and Runners
+A validator instance is created for each validator independently, each validator will have multiple Runner for each beacon chain duty type (Attestations, Blocks, etc.)
 Duty runners are responsible for processing incoming messages and act upon them, completing a full beacon chain duty cycle.
 
-CanStartNewDuty returns true if a new QBFT instance can start (meaning a new duty can get processed). 
-As a general rule, new duties can't start until a full duty cycle (see below) is completed.  
-One exception of the above is if a QBFT consensus decided, not all post consensus signatures were collected but 'PostConsensusSigCollectionSlotTimeout' slots passed.\
-CanStartNewDuty Constants:
+Each duty starts by calling the StartNewDuty func in the respective Runner.
+StartNewDuty might return error if can't start a new duty, depending on the previous duty life cycle.
+As a general rule, when a runner is executing a duty in the consensus phase, a new duty can't start.
+Pre/ Post partial signature collection will not enable starting a new duty if not completed except if timed out.
+
+Constants:
 
 | Constant                              | Value | Description                                                                                                                            |
 |---------------------------------------|-------|----------------------------------------------------------------------------------------------------------------------------------------|
@@ -114,7 +147,7 @@ CanStartNewDuty Constants:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Broadcast and collect partial signature to reconstruct signature\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Reconstruct signature, broadcast to BN
 
-A duty runner holds a QBFT controller for processing QBFT messages and a dutyExecutionState which keeps progress for all stages of duty execution: pre/ post consensus messages.
+A runner holds a QBFT controller for processing QBFT messages and a State which keeps progress for all stages of duty execution: pre/ post consensus messages.
 Partial signatures are collected and reconstructed (when threshold reached) to be broadcasted to the BN network.
 
 ## Validator Share

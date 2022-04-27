@@ -74,6 +74,13 @@ func (dr *Runner) canProcessPostConsensusMsg(msg *SignedPartialSignatureMessage)
 		return errors.Wrap(err, "post consensus msg invalid")
 	}
 
+	switch dr.BeaconRoleType {
+	case beacon.RoleTypeProposer:
+		if !dr.State.RandaoPartialSig.HasQuorum() {
+			return errors.New("randao quorum incomplete")
+		}
+	}
+
 	if decided, _ := dr.State.RunningInstance.IsDecided(); !decided {
 		return errors.New("consensus didn't decide")
 	}
