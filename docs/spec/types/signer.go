@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/hex"
+	altair "github.com/attestantio/go-eth2-client/spec/altair"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/herumi/bls-eth-go-binary/bls"
@@ -29,6 +30,10 @@ type BeaconSigner interface {
 	IsAttestationSlashable(data *spec.AttestationData) error
 	// SignRandaoReveal signs randao
 	SignRandaoReveal(epoch spec.Epoch, pk []byte) (Signature, []byte, error)
+	// IsBeaconBlockSlashable returns true if the given block is slashable
+	IsBeaconBlockSlashable(block *altair.BeaconBlock) error
+	// SignBeaconBlock signs the given beacon block
+	SignBeaconBlock(block *altair.BeaconBlock, duty *beacon.Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error)
 }
 
 // SSVSigner used for all SSV specific signing
@@ -85,6 +90,15 @@ func (s *SSVKeyManager) IsAttestationSlashable(data *spec.AttestationData) error
 }
 
 func (s *SSVKeyManager) SignRandaoReveal(epoch spec.Epoch, pk []byte) (Signature, []byte, error) {
+	panic("implement")
+}
+
+// IsBeaconBlockSlashable returns true if the given block is slashable
+func (s *SSVKeyManager) IsBeaconBlockSlashable(block *altair.BeaconBlock) error {
+	panic("implement")
+}
+
+func (s *SSVKeyManager) SignBeaconBlock(data *altair.BeaconBlock, duty *beacon.Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error) {
 	panic("implement")
 }
 

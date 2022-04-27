@@ -1,14 +1,13 @@
-package duty
+package ssv
 
 import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/bloxapp/ssv/docs/spec/ssv"
 	"github.com/pkg/errors"
 )
 
 // ProcessRandaoMessage process randao msg, returns true if it has quorum for partial signatures.
 // returns true only once (first time quorum achieved)
-func (dr *Runner) ProcessRandaoMessage(msg *ssv.SignedPartialSignatureMessage) (bool, error) {
+func (dr *Runner) ProcessRandaoMessage(msg *SignedPartialSignatureMessage) (bool, error) {
 	if err := dr.canProcessRandaoMsg(msg); err != nil {
 		return false, errors.Wrap(err, "can't process randao message")
 	}
@@ -27,7 +26,7 @@ func (dr *Runner) ProcessRandaoMessage(msg *ssv.SignedPartialSignatureMessage) (
 }
 
 // canProcessRandaoMsg returns true if it can process randao message, false if not
-func (dr *Runner) canProcessRandaoMsg(msg *ssv.SignedPartialSignatureMessage) error {
+func (dr *Runner) canProcessRandaoMsg(msg *SignedPartialSignatureMessage) error {
 	if err := dr.validatePartialSigMsg(msg, dr.State.RandaoPartialSig); err != nil {
 		return errors.Wrap(err, "randao msg invalid")
 	}

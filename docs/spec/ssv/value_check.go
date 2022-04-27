@@ -14,7 +14,7 @@ func dutyValueCheck(duty *beacon.Duty, network BeaconNetwork) error {
 	return nil
 }
 
-func BeaconAttestationValueCheck(network BeaconNetwork) qbft.ProposedValueCheck {
+func BeaconAttestationValueCheck(signer types.BeaconSigner, network BeaconNetwork) qbft.ProposedValueCheck {
 	return func(data []byte) error {
 		cd := &types.ConsensusData{}
 		if err := cd.Decode(data); err != nil {
@@ -51,6 +51,12 @@ func BeaconAttestationValueCheck(network BeaconNetwork) qbft.ProposedValueCheck 
 			return errors.New("attestation data source and target epochs invalid")
 		}
 
+		return signer.IsAttestationSlashable(cd.AttestationData)
+	}
+}
+
+func BeaconBlockValueCheck(signer types.BeaconSigner, network BeaconNetwork) qbft.ProposedValueCheck {
+	return func(data []byte) error {
 		return nil
 	}
 }

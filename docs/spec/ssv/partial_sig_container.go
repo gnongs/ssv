@@ -1,7 +1,6 @@
-package duty
+package ssv
 
 import (
-	"github.com/bloxapp/ssv/docs/spec/ssv"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
@@ -20,7 +19,7 @@ func NewPartialSigContainer(quorum uint64) *PartialSigContainer {
 	}
 }
 
-func (ps *PartialSigContainer) AddSignature(sigMsg *ssv.PartialSignatureMessage) error {
+func (ps *PartialSigContainer) AddSignature(sigMsg *PartialSignatureMessage) error {
 	if len(sigMsg.Signers) != 1 {
 		return errors.New("PartialSignatureMessage has != 1 Signers")
 	}

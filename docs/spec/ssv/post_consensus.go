@@ -1,9 +1,8 @@
-package duty
+package ssv
 
 import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
-	"github.com/bloxapp/ssv/docs/spec/ssv"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
@@ -11,7 +10,7 @@ import (
 
 // ProcessPostConsensusMessage process post consensus msg, returns true if it has quorum for partial signatures.
 // returns true only once (first time quorum achieved)
-func (dr *Runner) ProcessPostConsensusMessage(msg *ssv.SignedPartialSignatureMessage) (bool, error) {
+func (dr *Runner) ProcessPostConsensusMessage(msg *SignedPartialSignatureMessage) (bool, error) {
 	if err := dr.canProcessPostConsensusMsg(msg); err != nil {
 		return false, errors.Wrap(err, "can't process post consensus message")
 	}
@@ -31,9 +30,9 @@ func (dr *Runner) ProcessPostConsensusMessage(msg *ssv.SignedPartialSignatureMes
 }
 
 // SignDutyPostConsensus sets the Decided duty and partially signs the Decided data, returns a PartialSignatureMessage to be broadcasted or error
-func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signer types.KeyManager) (*ssv.PartialSignatureMessage, error) {
-	ret := &ssv.PartialSignatureMessage{
-		Type:    ssv.PostConsensusPartialSig,
+func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signer types.KeyManager) (*PartialSignatureMessage, error) {
+	ret := &PartialSignatureMessage{
+		Type:    PostConsensusPartialSig,
 		Signers: []types.OperatorID{dr.Share.OperatorID},
 	}
 
@@ -58,7 +57,7 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 }
 
 // canProcessPostConsensusMsg returns true if it can process post consensus message, false if not
-func (dr *Runner) canProcessPostConsensusMsg(msg *ssv.SignedPartialSignatureMessage) error {
+func (dr *Runner) canProcessPostConsensusMsg(msg *SignedPartialSignatureMessage) error {
 	if err := dr.validatePartialSigMsg(msg, dr.State.PostConsensusPartialSig); err != nil {
 		return errors.Wrap(err, "post consensus msg invalid")
 	}
@@ -70,7 +69,7 @@ func (dr *Runner) canProcessPostConsensusMsg(msg *ssv.SignedPartialSignatureMess
 	return nil
 }
 
-func (dr *Runner) verifyBeaconPartialSignature(msg *ssv.PartialSignatureMessage) error {
+func (dr *Runner) verifyBeaconPartialSignature(msg *PartialSignatureMessage) error {
 	if len(msg.Signers) != 1 {
 		return errors.New("PartialSignatureMessage allows 1 signer")
 	}

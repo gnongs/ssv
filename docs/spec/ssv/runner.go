@@ -1,4 +1,4 @@
-package duty
+package ssv
 
 import (
 	"bytes"
@@ -7,7 +7,6 @@ import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
-	"github.com/bloxapp/ssv/docs/spec/ssv"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
@@ -19,23 +18,23 @@ const DutyExecutionSlotTimeout spec.Slot = 32
 // Prev duty must finish before the next one can start.
 type Runner struct {
 	BeaconRoleType beacon.RoleType
-	BeaconNetwork  ssv.BeaconNetwork
+	BeaconNetwork  BeaconNetwork
 	Share          *types.Share
 	// State holds all relevant params for a full duty execution (consensus & post consensus)
 	State *State
 	// CurrentDuty is the current executing duty, changes once StartNewDuty is called
 	CurrentDuty    *beacon.Duty
 	QBFTController *qbft.Controller
-	storage        ssv.Storage
+	storage        Storage
 	valCheck       qbft.ProposedValueCheck
 }
 
 func NewDutyRunner(
 	beaconRoleType beacon.RoleType,
-	beaconNetwork ssv.BeaconNetwork,
+	beaconNetwork BeaconNetwork,
 	share *types.Share,
 	qbftController *qbft.Controller,
-	storage ssv.Storage,
+	storage Storage,
 	valCheck qbft.ProposedValueCheck,
 ) *Runner {
 	return &Runner{
@@ -114,7 +113,7 @@ func (dr *Runner) Decode(data []byte) error {
 	return json.Unmarshal(data, &dr)
 }
 
-func (dr *Runner) validatePartialSigMsg(msg *ssv.SignedPartialSignatureMessage, container *PartialSigContainer) error {
+func (dr *Runner) validatePartialSigMsg(msg *SignedPartialSignatureMessage, container *PartialSigContainer) error {
 	if err := msg.Validate(); err != nil {
 		return errors.Wrap(err, "SignedPartialSignatureMessage invalid")
 	}

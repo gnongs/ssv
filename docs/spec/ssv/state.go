@@ -1,4 +1,4 @@
-package duty
+package ssv
 
 import (
 	"crypto/sha256"

@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 )
@@ -10,7 +11,7 @@ import (
 type ConsensusData struct {
 	Duty            *beacon.Duty
 	AttestationData *phase0.AttestationData
-	BlockData       *phase0.BeaconBlock
+	BlockData       *altair.BeaconBlock
 }
 
 func (cid *ConsensusData) Encode() ([]byte, error) {

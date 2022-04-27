@@ -3,7 +3,6 @@ package ssv
 import (
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
-	"github.com/bloxapp/ssv/docs/spec/ssv/duty"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
@@ -70,7 +69,7 @@ func (v *Validator) validateMessage(msg *types.SSVMessage) error {
 	return nil
 }
 
-func (v *Validator) processConsensusMsg(dutyRunner *duty.Runner, msg *qbft.SignedMessage) error {
+func (v *Validator) processConsensusMsg(dutyRunner *Runner, msg *qbft.SignedMessage) error {
 	decided, decidedValue, err := dutyRunner.ProcessConsensusMessage(msg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing consensus message")
@@ -108,7 +107,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *duty.Runner, msg *qbft.Signe
 	return nil
 }
 
-func (v *Validator) processPostConsensusSig(dutyRunner *duty.Runner, signedMsg *SignedPartialSignatureMessage) error {
+func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *SignedPartialSignatureMessage) error {
 	quorum, err := dutyRunner.ProcessPostConsensusMessage(signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing post consensus message")
@@ -134,7 +133,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *duty.Runner, signedMsg *
 	return nil
 }
 
-func (v *Validator) processRandaoPartialSig(dutyRunner *duty.Runner, signedMsg *SignedPartialSignatureMessage) error {
+func (v *Validator) processRandaoPartialSig(dutyRunner *Runner, signedMsg *SignedPartialSignatureMessage) error {
 	quorum, err := dutyRunner.ProcessRandaoMessage(signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing randao message")
