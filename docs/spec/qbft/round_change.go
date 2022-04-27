@@ -149,7 +149,7 @@ func validRoundChange(state *State, config IConfig, signedMsg *SignedMessage, he
 		return errors.New("round change msg allows 1 signer")
 	}
 
-	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSigType, state.Share.Committee); err != nil {
+	if err := signedMsg.Signature.VerifyByOperators(signedMsg, config.GetSignatureDomainType(), types.QBFTSignatureType, state.Share.Committee); err != nil {
 		return errors.Wrap(err, "round change msg signature invalid")
 	}
 

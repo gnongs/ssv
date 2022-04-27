@@ -117,7 +117,7 @@ func createCommit(state *State, config IConfig, value []byte) (*SignedMessage, e
 		Identifier: state.ID,
 		Data:       dataByts,
 	}
-	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSigType, state.Share.SharePubKey)
+	sig, err := config.GetSigner().SignRoot(msg, types.QBFTSignatureType, state.Share.SharePubKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed signing commit msg")
 	}
@@ -166,7 +166,7 @@ func validateCommit(
 		return errors.New("proposed data different than commit msg data")
 	}
 
-	if err := signedCommit.Signature.VerifyByOperators(signedCommit, config.GetSignatureDomainType(), types.QBFTSigType, operators); err != nil {
+	if err := signedCommit.Signature.VerifyByOperators(signedCommit, config.GetSignatureDomainType(), types.QBFTSignatureType, operators); err != nil {
 		return errors.Wrap(err, "commit msg signature invalid")
 	}
 	return nil
