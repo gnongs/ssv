@@ -45,11 +45,23 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 
 		dr.State.DecidedValue = decidedValue
 		dr.State.SignedAttestation = signedAttestation
-		dr.State.PostConsensusPartialSig.SigRoot = ensureRoot(r)
+		dr.State.PostConsensusPartialSig.SigRoot = r
 
 		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
 		ret.PartialSignature = dr.State.SignedAttestation.Signature[:]
+		return ret, nil
+	case beacon.RoleTypeProposer:
+		signedBlock, r, err := signer.SignBeaconBlock(decidedValue.BlockData, decidedValue.Duty, dr.Share.SharePubKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to sign attestation")
+		}
 
+		dr.State.DecidedValue = decidedValue
+		dr.State.SignedProposal = signedBlock
+		dr.State.PostConsensusPartialSig.SigRoot = r
+
+		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
+		ret.PartialSignature = dr.State.SignedProposal.Signature[:]
 		return ret, nil
 	default:
 		return nil, errors.Errorf("unknown duty %s", decidedValue.Duty.Type.String())
@@ -60,6 +72,10 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 func (dr *Runner) canProcessPostConsensusMsg(msg *SignedPartialSignatureMessage) error {
 	if err := dr.validatePartialSigMsg(msg, dr.State.PostConsensusPartialSig); err != nil {
 		return errors.Wrap(err, "post consensus msg invalid")
+	}
+
+	if decided, _ := dr.State.RunningInstance.IsDecided(); !decided {
+		return errors.New("consensus didn't decide")
 	}
 
 	if dr.postConsensusSigTimeout(dr.BeaconNetwork.EstimatedCurrentSlot()) {

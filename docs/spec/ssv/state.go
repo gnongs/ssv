@@ -3,6 +3,7 @@ package ssv
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
@@ -16,7 +17,7 @@ type State struct {
 	DecidedValue *types.ConsensusData
 
 	SignedAttestation *spec.Attestation
-	SignedProposal    *spec.SignedBeaconBlock
+	SignedProposal    *altair.SignedBeaconBlock
 
 	RandaoPartialSig        *PartialSigContainer
 	PostConsensusPartialSig *PartialSigContainer
@@ -34,7 +35,12 @@ func NewDutyExecutionState(quorum uint64) *State {
 
 // ReconstructRandaoSig aggregates collected partial randao sigs, reconstructs a valid sig and returns it
 func (pcs *State) ReconstructRandaoSig(validatorPubKey []byte) ([]byte, error) {
-	panic("implement")
+	// Reconstruct signatures
+	signature, err := pcs.RandaoPartialSig.ReconstructSignature(validatorPubKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not reconstruct randao sig")
+	}
+	return signature, nil
 }
 
 // ReconstructAttestationSig aggregates collected partial sigs, reconstructs a valid sig and returns an attestation obj with the reconstructed sig
@@ -49,6 +55,20 @@ func (pcs *State) ReconstructAttestationSig(validatorPubKey []byte) (*spec.Attes
 	copy(blsSig[:], signature)
 	pcs.SignedAttestation.Signature = blsSig
 	return pcs.SignedAttestation, nil
+}
+
+// ReconstructBeaconBlockSig aggregates collected partial sigs, reconstructs a valid sig and returns a SignedBeaconBlock with the reconstructed sig
+func (pcs *State) ReconstructBeaconBlockSig(validatorPubKey []byte) (*altair.SignedBeaconBlock, error) {
+	// Reconstruct signatures
+	signature, err := pcs.PostConsensusPartialSig.ReconstructSignature(validatorPubKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not reconstruct attestation sig")
+	}
+
+	blsSig := spec.BLSSignature{}
+	copy(blsSig[:], signature)
+	pcs.SignedProposal.Signature = blsSig
+	return pcs.SignedProposal, nil
 }
 
 // SetFinished will mark this execution state as finished

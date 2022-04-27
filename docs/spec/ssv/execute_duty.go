@@ -37,18 +37,12 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Runner) error {
 	// sign partial randao
 	epoch := v.beacon.GetBeaconNetwork().EstimatedEpochAtSlot(duty.Slot)
-	sig, r, err := v.signer.SignRandaoReveal(epoch, v.share.SharePubKey)
+
+	msg, err := dutyRunner.SignRandaoPreConsensus(epoch, v.signer)
 	if err != nil {
-		return errors.Wrap(err, "could not sign partial randao reveal")
+		return errors.Wrap(err, "could not sign randao for pre-consensus")
 	}
 
-	// generate partial sig for randao
-	msg := &PartialSignatureMessage{
-		Type:             RandaoPartialSig,
-		PartialSignature: sig,
-		SigningRoot:      r,
-		Signers:          []types.OperatorID{v.share.OperatorID},
-	}
 	signature, err := v.signer.SignRoot(msg, types.PartialSignatureType, v.share.SharePubKey)
 	if err != nil {
 		return errors.Wrap(err, "could not sign PartialSignatureMessage for RandaoPartialSig")

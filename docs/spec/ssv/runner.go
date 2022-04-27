@@ -123,7 +123,7 @@ func (dr *Runner) validatePartialSigMsg(msg *SignedPartialSignatureMessage, cont
 	}
 
 	// validate signing root equal to Decided
-	if !bytes.Equal(container.SigRoot, msg.Message.SigningRoot) {
+	if len(container.SigRoot) == 0 || !bytes.Equal(container.SigRoot, msg.Message.SigningRoot) {
 		return errors.New("partial sig signing root is wrong")
 	}
 

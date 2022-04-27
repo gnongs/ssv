@@ -12,8 +12,8 @@ var BaseValidator = func() *ssv.Validator {
 		NewTestingStorage(),
 		TestingShare,
 		NewTestingKeyManager(),
-		ssv.BeaconAttestationValueCheck(ssv.NowTestNetwork),
 	)
-	ret.DutyRunners[beacon.RoleTypeAttester] = BaseRunner()
+	ret.DutyRunners[beacon.RoleTypeAttester] = AttesterRunner()
+	ret.DutyRunners[beacon.RoleTypeProposer] = ProposerRunner()
 	return ret
 }

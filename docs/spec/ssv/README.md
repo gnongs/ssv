@@ -167,3 +167,4 @@ The [spec tests](./spectest) are a generated as a json file that can be run in a
 - [\\] Proposal duty execution + spec test
 - [ ] Aggregator duty execution + spec test 
 - [ ] Sync committee duty execution + spec test
+- [ ] Duty data validation (how do we ensure malicious leader doesn't proposer a non slashable attestation/ block but with invalid data)

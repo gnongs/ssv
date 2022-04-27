@@ -2,6 +2,7 @@ package ssv
 
 import (
 	"bytes"
+	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
@@ -31,6 +32,10 @@ func (dr *Runner) Decide(input *types.ConsensusData) error {
 }
 
 func (dr *Runner) ProcessConsensusMessage(msg *qbft.SignedMessage) (decided bool, decidedValue *types.ConsensusData, err error) {
+	if err := dr.canProcessConsensusMsg(msg); err != nil {
+		return false, nil, errors.Wrap(err, "can't process consensus msg")
+	}
+
 	decided, decidedValueByts, err := dr.QBFTController.ProcessMsg(msg)
 	if err != nil {
 		return false, nil, errors.Wrap(err, "failed to process consensus msg")
@@ -73,4 +78,19 @@ func (dr *Runner) validateDecidedConsensusData(val *types.ConsensusData) error {
 	}
 
 	return nil
+}
+
+func (dr *Runner) canProcessConsensusMsg(msg *qbft.SignedMessage) error {
+	switch dr.BeaconRoleType {
+	case beacon.RoleTypeAttester:
+		// no pre-condition for processing consensus msgs
+		return nil
+	case beacon.RoleTypeProposer:
+		if !dr.State.RandaoPartialSig.HasQuorum() {
+			return errors.New("randao quorum incomplete")
+		}
+		return nil
+	default:
+		return errors.New("beacon role not supporter")
+	}
 }

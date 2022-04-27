@@ -2,6 +2,7 @@ package testingutils
 
 import (
 	"encoding/hex"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/types"
@@ -66,7 +67,34 @@ func (km *testingKeyManager) SignRoot(data types.Root, sigType types.SignatureTy
 
 // SignRandaoReveal signs randao
 func (km *testingKeyManager) SignRandaoReveal(epoch spec.Epoch, pk []byte) (types.Signature, []byte, error) {
-	panic("implement")
+	if k, found := km.keys[hex.EncodeToString(pk)]; found {
+		sig := k.SignByte(TestingRandaoRoot)
+		blsSig := spec.BLSSignature{}
+		copy(blsSig[:], sig.Serialize())
+
+		return sig.Serialize(), TestingRandaoRoot, nil
+	}
+	return nil, nil, errors.New("pk not found")
+}
+
+// IsBeaconBlockSlashable returns true if the given block is slashable
+func (km *testingKeyManager) IsBeaconBlockSlashable(block *altair.BeaconBlock) error {
+	return nil
+}
+
+// SignBeaconBlock signs the given beacon block
+func (km *testingKeyManager) SignBeaconBlock(data *altair.BeaconBlock, duty *beacon.Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error) {
+	if k, found := km.keys[hex.EncodeToString(pk)]; found {
+		sig := k.SignByte(TestingBeaconBlockRoot)
+		blsSig := spec.BLSSignature{}
+		copy(blsSig[:], sig.Serialize())
+
+		return &altair.SignedBeaconBlock{
+			Message:   data,
+			Signature: blsSig,
+		}, TestingBeaconBlockRoot, nil
+	}
+	return nil, nil, errors.New("pk not found")
 }
 
 func (km *testingKeyManager) AddShare(shareKey *bls.SecretKey) error {

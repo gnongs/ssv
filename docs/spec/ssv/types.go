@@ -34,6 +34,8 @@ type BeaconNode interface {
 	SubmitAttestation(attestation *phase0.Attestation) error
 	// GetBeaconBlock returns beacon block by the given slot and committee index
 	GetBeaconBlock(slot phase0.Slot, committeeIndex phase0.CommitteeIndex, graffiti, randao []byte) (*altair.BeaconBlock, error)
+	// SubmitBeaconBlock submit the block to the node
+	SubmitBeaconBlock(block *altair.SignedBeaconBlock) error
 }
 
 // Available networks.

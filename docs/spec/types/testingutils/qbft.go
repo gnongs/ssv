@@ -10,7 +10,7 @@ var TestingConfig = &qbft.Config{
 	Signer:     NewTestingKeyManager(),
 	SigningPK:  TestingSK1.GetPublicKey().Serialize(),
 	Domain:     types.PrimusTestnet,
-	ValueCheck: ssv.BeaconAttestationValueCheck(ssv.NowTestNetwork),
+	ValueCheck: ssv.BeaconAttestationValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork),
 	Storage:    NewTestingStorage(),
 	Network:    NewTestingNetwork(),
 }
@@ -67,17 +67,16 @@ var BaseInstance = func() *qbft.Instance {
 	return ret
 }
 
-func NewTestingQBFTController(identifier []byte) *qbft.Controller {
+func NewTestingQBFTController(identifier []byte, valCheck qbft.ProposedValueCheck) *qbft.Controller {
 	ret := qbft.NewController(
-		[]byte{1, 2, 3, 4},
+		identifier,
 		TestingShare,
 		types.PrimusTestnet,
 		NewTestingKeyManager(),
-		ssv.BeaconAttestationValueCheck(ssv.NowTestNetwork),
+		valCheck,
 		NewTestingStorage(),
 		NewTestingNetwork(),
 	)
-	ret.Identifier = identifier
 	ret.Domain = types.PrimusTestnet
 	return ret
 }
