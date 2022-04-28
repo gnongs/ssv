@@ -7,24 +7,41 @@ import (
 	"testing"
 )
 
+var testingPubKey = make([]byte, 48)
+
 func TestMessageIDForValidatorPKAndRole(t *testing.T) {
-	require.EqualValues(t, []byte{1, 2, 3, 4, 1, 0, 0, 0}, MessageIDForValidatorPKAndRole([]byte{1, 2, 3, 4}, beacon.RoleTypeAttester))
+	require.EqualValues(t, []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x64, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, NewMsgID(testingPubKey, beacon.RoleTypeAttester, 100))
 }
 
 func TestMessageID_GetRoleType(t *testing.T) {
 	t.Run("attester", func(t *testing.T) {
-		msgID := MessageIDForValidatorPKAndRole([]byte{1, 2, 3, 4}, beacon.RoleTypeAttester)
+		msgID := NewMsgID(testingPubKey, beacon.RoleTypeAttester, 100)
 		require.EqualValues(t, beacon.RoleTypeAttester, msgID.GetRoleType())
 	})
 
 	t.Run("proposer", func(t *testing.T) {
-		msgID := MessageIDForValidatorPKAndRole([]byte{1, 2, 3, 4}, beacon.RoleTypeProposer)
+		msgID := NewMsgID(testingPubKey, beacon.RoleTypeProposer, 100)
 		require.EqualValues(t, beacon.RoleTypeProposer, msgID.GetRoleType())
 	})
 
 	t.Run("long pk", func(t *testing.T) {
-		msgID := MessageIDForValidatorPKAndRole([]byte{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}, beacon.RoleTypeProposer)
+		msgID := NewMsgID(testingPubKey, beacon.RoleTypeProposer, 100)
 		require.EqualValues(t, beacon.RoleTypeProposer, msgID.GetRoleType())
+	})
+}
+
+func TestMessageID_GetSlot(t *testing.T) {
+	t.Run("100", func(t *testing.T) {
+		msgID := NewMsgID(testingPubKey, beacon.RoleTypeAttester, 100)
+		require.EqualValues(t, 100, msgID.GetSlot())
+	})
+	t.Run("1000", func(t *testing.T) {
+		msgID := NewMsgID(testingPubKey, beacon.RoleTypeAttester, 1000)
+		require.EqualValues(t, 1000, msgID.GetSlot())
+	})
+	t.Run("100000000000", func(t *testing.T) {
+		msgID := NewMsgID(testingPubKey, beacon.RoleTypeAttester, 100000000000)
+		require.EqualValues(t, 100000000000, msgID.GetSlot())
 	})
 }
 

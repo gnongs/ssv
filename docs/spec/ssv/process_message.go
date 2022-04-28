@@ -9,13 +9,13 @@ import (
 
 // ProcessMessage processes network Message of all types
 func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
-	if err := v.validateMessage(msg); err != nil {
-		return errors.Wrap(err, "Message invalid")
-	}
-
 	dutyRunner := v.DutyRunners.DutyRunnerForMsgID(msg.GetID())
 	if dutyRunner == nil {
 		return errors.Errorf("could not get duty runner for msg ID")
+	}
+
+	if err := v.validateMessage(dutyRunner, msg); err != nil {
+		return errors.Wrap(err, "Message invalid")
 	}
 
 	switch msg.GetType() {
@@ -49,7 +49,15 @@ func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 	}
 }
 
-func (v *Validator) validateMessage(msg *types.SSVMessage) error {
+func (v *Validator) validateMessage(runner *Runner, msg *types.SSVMessage) error {
+	if runner.CurrentDuty == nil {
+		return errors.New("no running duty")
+	}
+
+	if runner.CurrentDuty.Slot != msg.MsgID.GetSlot() {
+		return errors.New("msg slot != current duty slot")
+	}
+
 	if !v.share.ValidatorPubKey.MessageIDBelongs(msg.GetID()) {
 		return errors.New("msg ID doesn't match validator ID")
 	}
@@ -97,7 +105,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *Runner, msg *qbft.SignedMess
 
 	msgToBroadcast := &types.SSVMessage{
 		MsgType: types.SSVPartialSignatureMsgType,
-		MsgID:   types.MessageIDForValidatorPKAndRole(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType),
+		MsgID:   types.NewMsgID(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType, dutyRunner.CurrentDuty.Slot),
 		Data:    data,
 	}
 

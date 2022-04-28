@@ -8,8 +8,8 @@ import (
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
-var AttesterMsgID = types.MessageIDForValidatorPKAndRole(TestingValidatorPubKey[:], beacon.RoleTypeAttester)
-var ProposerMsgID = types.MessageIDForValidatorPKAndRole(TestingValidatorPubKey[:], beacon.RoleTypeProposer)
+var AttesterMsgID = types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeAttester, TestingDutySlot)
+var ProposerMsgID = types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeProposer, TestingDutySlot)
 
 var TestAttesterConsensusData = &types.ConsensusData{
 	Duty:            TestingAttesterDuty,
@@ -42,15 +42,15 @@ var TestConsensusWrongDutyPKData = &types.ConsensusData{
 var TestConsensusWrongDutyPKDataByts, _ = TestConsensusWrongDutyPKData.Encode()
 
 var SSVMsgAttester = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
-	return ssvMsg(qbftMsg, postMsg, types.MessageIDForValidatorPKAndRole(TestingValidatorPubKey[:], beacon.RoleTypeAttester))
+	return ssvMsg(qbftMsg, postMsg, types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeAttester, TestingDutySlot))
 }
 
 var SSVMsgWrongID = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
-	return ssvMsg(qbftMsg, postMsg, types.MessageIDForValidatorPKAndRole(TestingWrongValidatorPubKey[:], beacon.RoleTypeAttester))
+	return ssvMsg(qbftMsg, postMsg, types.NewMsgID(TestingWrongValidatorPubKey[:], beacon.RoleTypeAttester, TestingDutySlot))
 }
 
 var SSVMsgProposer = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
-	return ssvMsg(qbftMsg, postMsg, types.MessageIDForValidatorPKAndRole(TestingValidatorPubKey[:], beacon.RoleTypeProposer))
+	return ssvMsg(qbftMsg, postMsg, types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeProposer, TestingDutySlot))
 }
 
 var ssvMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPartialSignatureMessage, msgID types.MessageID) *types.SSVMessage {

@@ -12,7 +12,7 @@ func WrongSigningRoot() *tests.SpecTest {
 	dr := testingutils.DecidedRunner()
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsgWithWrongRoot(testingutils.TestingSK1, 1, qbft.FirstHeight)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsgWithWrongRoot(testingutils.TestingSK1, 1, qbft.FirstHeight)),
 	}
 
 	return &tests.SpecTest{

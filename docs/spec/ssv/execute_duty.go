@@ -60,7 +60,7 @@ func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Runn
 	}
 	msgToBroadcast := &types.SSVMessage{
 		MsgType: types.SSVPartialSignatureMsgType,
-		MsgID:   types.MessageIDForValidatorPKAndRole(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType),
+		MsgID:   types.NewMsgID(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType, duty.Slot),
 		Data:    data,
 	}
 	if err := v.network.Broadcast(msgToBroadcast); err != nil {

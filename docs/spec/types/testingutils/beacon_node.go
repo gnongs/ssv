@@ -70,10 +70,13 @@ var TestingWrongValidatorPubKey = func() spec.BLSPubKey {
 	copy(blsPK[:], pk)
 	return blsPK
 }()
+
+const TestingDutySlot = 12
+
 var TestingAttesterDuty = &beacon.Duty{
 	Type:                    beacon.RoleTypeAttester,
 	PubKey:                  TestingValidatorPubKey,
-	Slot:                    12,
+	Slot:                    TestingDutySlot,
 	ValidatorIndex:          1,
 	CommitteeIndex:          3,
 	CommitteesAtSlot:        36,

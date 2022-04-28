@@ -5,11 +5,21 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 )
 
 // ValidatorPK is an eth2 validator public key
 type ValidatorPK []byte
+
+const (
+	pubKeySize       = 48
+	pubKeyStartPos   = 0
+	roleTypeSize     = 4
+	roleTypeStartPos = pubKeyStartPos + pubKeySize
+	slotSize         = 8
+	slotStartPos     = roleTypeStartPos + roleTypeSize
+)
 
 type Validate interface {
 	// Validate returns error if msg validation doesn't pass.
@@ -19,22 +29,35 @@ type Validate interface {
 
 // MessageIDBelongs returns true if message ID belongs to validator
 func (vid ValidatorPK) MessageIDBelongs(msgID MessageID) bool {
-	toMatch := msgID[:len(vid)]
+	toMatch := msgID.GetPubKey()
 	return bytes.Equal(vid, toMatch)
 }
 
-// MessageID is used to identify and route messages to the right validator and DutyRunner
+// MessageID is used to identify and route messages to the right validator and Runner
 type MessageID []byte
 
+func (msg MessageID) GetPubKey() []byte {
+	return msg[pubKeyStartPos : pubKeyStartPos+pubKeySize]
+}
+
 func (msg MessageID) GetRoleType() beacon.RoleType {
-	roleByts := msg[len(msg)-4:]
+	roleByts := msg[roleTypeStartPos : roleTypeStartPos+roleTypeSize]
 	return beacon.RoleType(binary.LittleEndian.Uint32(roleByts))
 }
 
-func MessageIDForValidatorPKAndRole(pk []byte, role beacon.RoleType) MessageID {
+func (msg MessageID) GetSlot() spec.Slot {
+	byts := msg[slotStartPos : slotStartPos+slotSize]
+	return spec.Slot(binary.LittleEndian.Uint64(byts))
+}
+
+func NewMsgID(pk []byte, role beacon.RoleType, slot spec.Slot) MessageID {
 	roleByts := make([]byte, 4)
 	binary.LittleEndian.PutUint32(roleByts, uint32(role))
-	return append(pk, roleByts...)
+
+	slotByts := make([]byte, 8)
+	binary.LittleEndian.PutUint64(slotByts, uint64(slot))
+
+	return append(append(pk, roleByts...), slotByts...)
 }
 
 func (msgID MessageID) String() string {
