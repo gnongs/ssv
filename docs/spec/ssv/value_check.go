@@ -60,3 +60,9 @@ func BeaconBlockValueCheck(signer types.BeaconSigner, network BeaconNetwork) qbf
 		return nil
 	}
 }
+
+func AggregatorValueCheck(signer types.BeaconSigner, network BeaconNetwork) qbft.ProposedValueCheck {
+	return func(data []byte) error {
+		return nil
+	}
+}

@@ -18,18 +18,21 @@ type State struct {
 
 	SignedAttestation *spec.Attestation
 	SignedProposal    *altair.SignedBeaconBlock
+	SignedAggregate   *spec.SignedAggregateAndProof
 
-	RandaoPartialSig        *PartialSigContainer
-	PostConsensusPartialSig *PartialSigContainer
+	SelectionProofPartialSig *PartialSigContainer
+	RandaoPartialSig         *PartialSigContainer
+	PostConsensusPartialSig  *PartialSigContainer
 
 	Finished bool
 }
 
 func NewDutyExecutionState(quorum uint64) *State {
 	return &State{
-		RandaoPartialSig:        NewPartialSigContainer(quorum),
-		PostConsensusPartialSig: NewPartialSigContainer(quorum),
-		Finished:                false,
+		SelectionProofPartialSig: NewPartialSigContainer(quorum),
+		RandaoPartialSig:         NewPartialSigContainer(quorum),
+		PostConsensusPartialSig:  NewPartialSigContainer(quorum),
+		Finished:                 false,
 	}
 }
 
@@ -39,6 +42,16 @@ func (pcs *State) ReconstructRandaoSig(validatorPubKey []byte) ([]byte, error) {
 	signature, err := pcs.RandaoPartialSig.ReconstructSignature(validatorPubKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not reconstruct randao sig")
+	}
+	return signature, nil
+}
+
+// ReconstructSelectionProofSig aggregates collected partial selection proof sigs, reconstructs a valid sig and returns it
+func (pcs *State) ReconstructSelectionProofSig(validatorPubKey []byte) ([]byte, error) {
+	// Reconstruct signatures
+	signature, err := pcs.SelectionProofPartialSig.ReconstructSignature(validatorPubKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not reconstruct selection proof sig")
 	}
 	return signature, nil
 }
@@ -69,6 +82,20 @@ func (pcs *State) ReconstructBeaconBlockSig(validatorPubKey []byte) (*altair.Sig
 	copy(blsSig[:], signature)
 	pcs.SignedProposal.Signature = blsSig
 	return pcs.SignedProposal, nil
+}
+
+// ReconstructSignedAggregateSelectionProofSig aggregates collected partial signed aggregate selection proof sigs, reconstructs a valid sig and returns it
+func (pcs *State) ReconstructSignedAggregateSelectionProofSig(validatorPubKey []byte) (*spec.SignedAggregateAndProof, error) {
+	// Reconstruct signatures
+	signature, err := pcs.PostConsensusPartialSig.ReconstructSignature(validatorPubKey)
+	if err != nil {
+	}
+	return nil, errors.Wrap(err, "could not reconstruct SignedAggregateSelectionProofSig")
+
+	blsSig := spec.BLSSignature{}
+	copy(blsSig[:], signature)
+	pcs.SignedAggregate.Signature = blsSig
+	return pcs.SignedAggregate, nil
 }
 
 // SetFinished will mark this execution state as finished

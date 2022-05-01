@@ -9,9 +9,10 @@ import (
 
 // ConsensusData holds all relevant duty and data Decided on by consensus
 type ConsensusData struct {
-	Duty            *beacon.Duty
-	AttestationData *phase0.AttestationData
-	BlockData       *altair.BeaconBlock
+	Duty              *beacon.Duty
+	AttestationData   *phase0.AttestationData
+	BlockData         *altair.BeaconBlock
+	AggregateAndProof *phase0.AggregateAndProof
 }
 
 func (cid *ConsensusData) Encode() ([]byte, error) {

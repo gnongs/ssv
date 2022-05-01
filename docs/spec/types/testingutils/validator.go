@@ -15,5 +15,6 @@ var BaseValidator = func() *ssv.Validator {
 	)
 	ret.DutyRunners[beacon.RoleTypeAttester] = AttesterRunner()
 	ret.DutyRunners[beacon.RoleTypeProposer] = ProposerRunner()
+	ret.DutyRunners[beacon.RoleTypeAggregator] = AggregatorRunner()
 	return ret
 }

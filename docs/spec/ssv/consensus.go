@@ -90,6 +90,11 @@ func (dr *Runner) canProcessConsensusMsg(msg *qbft.SignedMessage) error {
 			return errors.New("randao quorum incomplete")
 		}
 		return nil
+	case beacon.RoleTypeAggregator:
+		if !dr.State.SelectionProofPartialSig.HasQuorum() {
+			return errors.New("selection proof quorum incomplete")
+		}
+		return nil
 	default:
 		return errors.New("beacon role not supporter")
 	}

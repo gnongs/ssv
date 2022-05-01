@@ -36,6 +36,10 @@ type BeaconNode interface {
 	GetBeaconBlock(slot phase0.Slot, committeeIndex phase0.CommitteeIndex, graffiti, randao []byte) (*altair.BeaconBlock, error)
 	// SubmitBeaconBlock submit the block to the node
 	SubmitBeaconBlock(block *altair.SignedBeaconBlock) error
+	// SubmitAggregateSelectionProof returns an AggregateAndProof object
+	SubmitAggregateSelectionProof(slot phase0.Slot, committeeIndex phase0.CommitteeIndex, slotSig []byte) (*phase0.AggregateAndProof, error)
+	// SubmitSignedAggregateSelectionProof broadcasts a signed aggregator msg
+	SubmitSignedAggregateSelectionProof(msg *phase0.SignedAggregateAndProof) error
 }
 
 // Available networks.

@@ -15,6 +15,10 @@ var ProposerRunner = func() *ssv.Runner {
 	return baseRunner(beacon.RoleTypeProposer, ssv.BeaconBlockValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
 }
 
+var AggregatorRunner = func() *ssv.Runner {
+	return baseRunner(beacon.RoleTypeAggregator, ssv.AggregatorValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
+}
+
 var baseRunner = func(role beacon.RoleType, valCheck qbft.ProposedValueCheck) *ssv.Runner {
 	return ssv.NewDutyRunner(
 		role,

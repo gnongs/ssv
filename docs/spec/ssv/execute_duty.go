@@ -22,8 +22,48 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 		return v.executeAttestationDuty(duty, dutyRunner)
 	case beacon.RoleTypeProposer:
 		return v.executeBlockProposalDuty(duty, dutyRunner)
+	case beacon.RoleTypeAggregator:
+		return v.executeAggregatorDuty(duty, dutyRunner)
 	default:
 		return errors.Errorf("duty type %s unkwon", duty.Type.String())
+	}
+	return nil
+}
+
+// executeBlockProposalDuty steps:
+// 1) sign a partial selection proof and wait for 2f+1 partial sigs from peers
+// 2) reconstruct selection proof and send SubmitAggregateSelectionProof to BN
+// 3) start consensus on duty + aggregation data
+// 4) Once consensus decides, sign partial aggregation data and broadcast
+// 5) collect 2f+1 partial sigs, reconstruct and broadcast valid SignedAggregateSubmitRequest sig to the BN
+func (v *Validator) executeAggregatorDuty(duty *beacon.Duty, dutyRunner *Runner) error {
+	msg, err := dutyRunner.SignSlotWithSelectionProofPreConsensus(duty.Slot, v.signer)
+	if err != nil {
+		return errors.Wrap(err, "could not sign slot with selection proof for pre-consensus")
+	}
+
+	signature, err := v.signer.SignRoot(msg, types.PartialSignatureType, v.share.SharePubKey)
+	if err != nil {
+		return errors.Wrap(err, "could not sign PartialSignatureMessage for selection proof")
+	}
+	signedPartialMsg := &SignedPartialSignatureMessage{
+		Message:   msg,
+		Signature: signature,
+		Signers:   []types.OperatorID{v.share.OperatorID},
+	}
+
+	// broadcast
+	data, err := signedPartialMsg.Encode()
+	if err != nil {
+		return errors.Wrap(err, "failed to encode selection proof pre-consensus signature msg")
+	}
+	msgToBroadcast := &types.SSVMessage{
+		MsgType: types.SSVPartialSignatureMsgType,
+		MsgID:   types.NewMsgID(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType),
+		Data:    data,
+	}
+	if err := v.network.Broadcast(msgToBroadcast); err != nil {
+		return errors.Wrap(err, "can't broadcast partial selection proof sig")
 	}
 	return nil
 }
@@ -56,7 +96,7 @@ func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Runn
 	// broadcast
 	data, err := signedPartialMsg.Encode()
 	if err != nil {
-		return errors.Wrap(err, "failed to encode post consensus signature msg")
+		return errors.Wrap(err, "failed to encode randao pre-consensus signature msg")
 	}
 	msgToBroadcast := &types.SSVMessage{
 		MsgType: types.SSVPartialSignatureMsgType,
@@ -75,6 +115,8 @@ func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Runn
 // 3) Once consensus decides, sign partial attestation and broadcast
 // 4) collect 2f+1 partial sigs, reconstruct and broadcast valid attestation sig to the BN
 func (v *Validator) executeAttestationDuty(duty *beacon.Duty, dutyRunner *Runner) error {
+	// TODO - waitOneThirdOrValidBlock
+
 	attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)
 	if err != nil {
 		return errors.Wrap(err, "failed to get attestation data")

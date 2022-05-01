@@ -16,6 +16,8 @@ const (
 	PostConsensusPartialSig PartialSigMsgType = iota
 	// RandaoPartialSig is a partial signature over randao reveal
 	RandaoPartialSig
+	// SelectionProofPartialSig is a partial signature for aggregator selection proof
+	SelectionProofPartialSig
 )
 
 // PartialSignatureMessage is a msg for partial beacon chain related signatures (like partial attestation, block, randao sigs)

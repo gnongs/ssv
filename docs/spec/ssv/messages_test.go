@@ -111,7 +111,7 @@ func TestSignedPostConsensusMessage_Marshaling(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		signed := &ssv.SignedPartialSignatureMessage{
 			Message: &ssv.PartialSignatureMessage{
-				Height:           1,
+				Slot:             1,
 				PartialSignature: []byte{1, 2, 3, 4},
 				SigningRoot:      []byte{1, 1, 1, 1},
 				Signers:          []types.OperatorID{1},

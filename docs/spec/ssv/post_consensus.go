@@ -54,7 +54,7 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 	case beacon.RoleTypeProposer:
 		signedBlock, r, err := signer.SignBeaconBlock(decidedValue.BlockData, decidedValue.Duty, dr.Share.SharePubKey)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to sign attestation")
+			return nil, errors.Wrap(err, "failed to sign block")
 		}
 
 		dr.State.DecidedValue = decidedValue
@@ -63,6 +63,19 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 
 		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
 		ret.PartialSignature = dr.State.SignedProposal.Signature[:]
+		return ret, nil
+	case beacon.RoleTypeAggregator:
+		signed, r, err := signer.SignAggregateAndProof(decidedValue.AggregateAndProof, decidedValue.Duty, dr.Share.SharePubKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to sign aggregate and proof")
+		}
+
+		dr.State.DecidedValue = decidedValue
+		dr.State.SignedAggregate = signed
+		dr.State.PostConsensusPartialSig.SigRoot = r
+
+		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
+		ret.PartialSignature = dr.State.SignedAggregate.Signature[:]
 		return ret, nil
 	default:
 		return nil, errors.Errorf("unknown duty %s", decidedValue.Duty.Type.String())

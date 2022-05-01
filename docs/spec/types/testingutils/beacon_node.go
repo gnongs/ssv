@@ -57,6 +57,18 @@ var TestingBeaconBlock = &altair.BeaconBlock{
 var TestingBeaconBlockRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
 var TestingRandaoRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
 
+var TestingAggregateAndProof = &spec.AggregateAndProof{
+	AggregatorIndex: 1,
+	SelectionProof:  spec.BLSSignature{},
+	Aggregate: &spec.Attestation{
+		AggregationBits: bitfield.NewBitlist(128),
+		Signature:       spec.BLSSignature{},
+		Data:            TestingAttestationData,
+	},
+}
+var TestingSignedAggregateAndProofRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
+var TestingSelectionProofRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
+
 var TestingValidatorPubKey = func() spec.BLSPubKey {
 	// sk - 5342fd7051ab252e02acc53c765007817b2dc8bab596862e3f8711513b2092b3
 	pk, _ := hex.DecodeString("948fb44582ce25336fdb17122eac64fe5a1afc39174ce92d6013becac116766dc5a778c880dd47de7dfff6a0f86ba42c")
@@ -157,5 +169,15 @@ func (bn *testingBeaconNode) GetBeaconBlock(slot spec.Slot, committeeIndex spec.
 
 // SubmitBeaconBlock submit the block to the node
 func (bn *testingBeaconNode) SubmitBeaconBlock(block *altair.SignedBeaconBlock) error {
+	return nil
+}
+
+// SubmitAggregateSelectionProof returns an AggregateAndProof object
+func (bn *testingBeaconNode) SubmitAggregateSelectionProof(slot spec.Slot, committeeIndex spec.CommitteeIndex, slotSig []byte) (*spec.AggregateAndProof, error) {
+	return TestingAggregateAndProof, nil
+}
+
+// SubmitSignedAggregateSelectionProof broadcasts a signed aggregator msg
+func (bn *testingBeaconNode) SubmitSignedAggregateSelectionProof(msg *spec.SignedAggregateAndProof) error {
 	return nil
 }

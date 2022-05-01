@@ -2,6 +2,7 @@ package spectest
 
 import (
 	tests2 "github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/valcheck/aggregator"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/valcheck/attestations"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/valcheck/beaconblock"
 )
@@ -45,4 +46,6 @@ var AllTests = []*tests2.SpecTest{
 	//processmsg.WrongBeaconType(),
 
 	beaconblock.HappyFlow(),
+
+	aggregator.HappyFlow(),
 }

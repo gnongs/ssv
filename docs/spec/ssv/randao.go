@@ -59,7 +59,7 @@ func (dr *Runner) canProcessRandaoMsg(msg *SignedPartialSignatureMessage) error 
 	return nil
 }
 
-// randaoSigTimeout returns true if collecting post consensus sigs timed out
+// randaoSigTimeout returns true if collecting randao sigs timed out
 func (dr *Runner) randaoSigTimeout(currentSlot spec.Slot) bool {
 	return dr.partialSigCollectionTimeout(dr.State.RandaoPartialSig, currentSlot)
 }

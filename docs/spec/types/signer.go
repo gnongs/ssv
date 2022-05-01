@@ -34,6 +34,10 @@ type BeaconSigner interface {
 	IsBeaconBlockSlashable(block *altair.BeaconBlock) error
 	// SignBeaconBlock signs the given beacon block
 	SignBeaconBlock(block *altair.BeaconBlock, duty *beacon.Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error)
+	// SignSlotWithSelectionProof signs slot for aggregator selection proof
+	SignSlotWithSelectionProof(slot spec.Slot, pk []byte) (Signature, []byte, error)
+	// SignAggregateAndProof returns a signed aggregate and proof msg
+	SignAggregateAndProof(msg *spec.AggregateAndProof, duty *beacon.Duty, pk []byte) (*spec.SignedAggregateAndProof, []byte, error)
 }
 
 // SSVSigner used for all SSV specific signing
@@ -99,6 +103,16 @@ func (s *SSVKeyManager) IsBeaconBlockSlashable(block *altair.BeaconBlock) error 
 }
 
 func (s *SSVKeyManager) SignBeaconBlock(data *altair.BeaconBlock, duty *beacon.Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error) {
+	panic("implement")
+}
+
+// SignSlotWithSelectionProof signs slot for aggregator selection proof
+func (s *SSVKeyManager) SignSlotWithSelectionProof(slot spec.Slot, pk []byte) (Signature, []byte, error) {
+	panic("implement")
+}
+
+// SignAggregateAndProof returns a signed aggregate and proof msg
+func (s *SSVKeyManager) SignAggregateAndProof(msg *spec.AggregateAndProof, duty *beacon.Duty, pk []byte) (*spec.SignedAggregateAndProof, []byte, error) {
 	panic("implement")
 }
 

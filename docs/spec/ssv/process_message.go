@@ -37,10 +37,13 @@ func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 			return errors.Wrap(err, "could not get post consensus Message from network Message")
 		}
 
-		if signedMsg.Message.Type == PostConsensusPartialSig {
-			return v.processPostConsensusSig(dutyRunner, signedMsg)
+		if signedMsg.Message.Type == RandaoPartialSig {
+			return v.processRandaoPartialSig(dutyRunner, signedMsg)
 		}
-		return v.processRandaoPartialSig(dutyRunner, signedMsg)
+		if signedMsg.Message.Type == SelectionProofPartialSig {
+			return v.processSelectionProofPartialSig(dutyRunner, signedMsg)
+		}
+		return v.processPostConsensusSig(dutyRunner, signedMsg)
 	default:
 		return errors.New("unknown msg")
 	}
@@ -128,6 +131,14 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 		if err := v.beacon.SubmitBeaconBlock(blk); err != nil {
 			return errors.Wrap(err, "could not submit to beacon chain reconstructed signed beacon block")
 		}
+	case beacon.RoleTypeAggregator:
+		msg, err := dutyRunner.State.ReconstructSignedAggregateSelectionProofSig(v.share.ValidatorPubKey)
+		if err != nil {
+			return errors.Wrap(err, "could not reconstruct post consensus sig")
+		}
+		if err := v.beacon.SubmitSignedAggregateSelectionProof(msg); err != nil {
+			return errors.Wrap(err, "could not submit to beacon chain reconstructed signed aggregate")
+		}
 	default:
 		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.BeaconRoleType.String())
 	}
@@ -162,6 +173,43 @@ func (v *Validator) processRandaoPartialSig(dutyRunner *Runner, signedMsg *Signe
 	input := &types.ConsensusData{
 		Duty:      duty,
 		BlockData: blk,
+	}
+
+	if err := dutyRunner.Decide(input); err != nil {
+		return errors.Wrap(err, "can't start new duty runner instance for duty")
+	}
+
+	return nil
+}
+
+func (v *Validator) processSelectionProofPartialSig(dutyRunner *Runner, signedMsg *SignedPartialSignatureMessage) error {
+	quorum, err := dutyRunner.ProcessSelectionProofMessage(signedMsg)
+	if err != nil {
+		return errors.Wrap(err, "failed processing selection proof message")
+	}
+
+	// quorum returns true only once (first time quorum achieved)
+	if !quorum {
+		return nil
+	}
+
+	// reconstruct selection proof sig
+	fullSig, err := dutyRunner.State.ReconstructSelectionProofSig(v.share.ValidatorPubKey)
+	if err != nil {
+		return errors.Wrap(err, "could not reconstruct selection proof sig")
+	}
+
+	duty := dutyRunner.CurrentDuty
+
+	// get block data
+	res, err := v.beacon.SubmitAggregateSelectionProof(duty.Slot, duty.CommitteeIndex, fullSig)
+	if err != nil {
+		return errors.Wrap(err, "failed to submit aggregate and proof")
+	}
+
+	input := &types.ConsensusData{
+		Duty:              duty,
+		AggregateAndProof: res,
 	}
 
 	if err := dutyRunner.Decide(input); err != nil {
