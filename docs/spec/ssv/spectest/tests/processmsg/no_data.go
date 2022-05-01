@@ -9,24 +9,19 @@ import (
 
 // NoData tests a SSVMessage with no data
 func NoData() *tests.SpecTest {
-	dr := testingutils.BaseRunner()
-	startingValue := testingutils.TestAttesterConsensusDataByts
-	dr.NewExecutionState()
-	if err := dr.StartNewConsensusInstance(startingValue); err != nil {
-		panic(err.Error())
-	}
+	dr := testingutils.AttesterRunner()
 
 	msgs := []*types.SSVMessage{
 		{
 			MsgType: types.SSVConsensusMsgType,
-			MsgID:   types.MessageIDForValidatorPKAndRole(testingutils.TestingValidatorPubKey[:], beacon.RoleTypeAttester),
+			MsgID:   types.NewMsgID(testingutils.TestingValidatorPubKey[:], beacon.RoleTypeAttester),
 			Data:    nil,
 		},
 	}
 
 	return &tests.SpecTest{
 		Name:                    "ssv msg no data",
-		DutyRunner:              dr,
+		Runner:                  dr,
 		Messages:                msgs,
 		PostDutyRunnerStateRoot: "c4eb0bb42cc382e468b2362e9d9cc622f388eef6a266901535bb1dfcc51e8868",
 		ExpectedError:           "Message invalid: msg data is invalid",

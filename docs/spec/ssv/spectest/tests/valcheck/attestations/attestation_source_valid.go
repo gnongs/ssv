@@ -10,7 +10,7 @@ import (
 
 // AttestationSourceValid tests attestation source epoch < target epoch
 func AttestationSourceValid() *tests.SpecTest {
-	dr := testingutils.BaseRunner()
+	dr := testingutils.AttesterRunner()
 
 	consensusData := &types.ConsensusData{
 		Duty: testingutils.TestingAttesterDuty,
@@ -31,13 +31,12 @@ func AttestationSourceValid() *tests.SpecTest {
 	startingValue, _ := consensusData.Encode()
 
 	// the starting value is not the same as the actual proposal!
-	dr.NewExecutionState()
-	if err := dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
+	if err := dr.Decide(testingutils.TestAttesterConsensusData); err != nil {
 		panic(err.Error())
 	}
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
+		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.ProposalMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
@@ -48,9 +47,9 @@ func AttestationSourceValid() *tests.SpecTest {
 
 	return &tests.SpecTest{
 		Name:                    "attestation source < target epoch",
-		DutyRunner:              dr,
+		Runner:                  dr,
 		Messages:                msgs,
 		PostDutyRunnerStateRoot: "c4eb0bb42cc382e468b2362e9d9cc622f388eef6a266901535bb1dfcc51e8868",
-		ExpectedError:           "failed to process consensus msg: could not process msg: proposal invalid: proposal not justified: proposal value invalid: attestation data source and target epochs invalid",
+		ExpectedError:           "failed to process valcheck msg: could not process msg: proposal invalid: proposal not justified: proposal value invalid: attestation data source and target epochs invalid",
 	}
 }

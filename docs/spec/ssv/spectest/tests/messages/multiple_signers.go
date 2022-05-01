@@ -14,14 +14,14 @@ func MultipleSigners() *tests.SpecTest {
 	noSignerMsg := testingutils.PostConsensusAttestationMsg(testingutils.TestingSK1, 1, qbft.FirstHeight)
 	noSignerMsg.Signers = []types.OperatorID{1, 2}
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsg(nil, noSignerMsg),
+		testingutils.SSVMsgAttester(nil, noSignerMsg),
 	}
 
 	return &tests.SpecTest{
 		Name:                    ">1 SignedPostConsensusMessage Signers",
-		DutyRunner:              dr,
+		Runner:                  dr,
 		Messages:                msgs,
 		PostDutyRunnerStateRoot: "cbcefe579470d914c3c230bd45cee06e9c5723460044b278a0c629a742551b02",
-		ExpectedError:           "partial post consensus sig invalid: SignedPartialSignatureMessage invalid: no SignedPartialSignatureMessage signers",
+		ExpectedError:           "partial post valcheck sig invalid: SignedPartialSignatureMessage invalid: no SignedPartialSignatureMessage signers",
 	}
 }

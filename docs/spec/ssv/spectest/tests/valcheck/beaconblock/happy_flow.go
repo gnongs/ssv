@@ -7,7 +7,7 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
-// HappyFlow tests a full consensus + post consensus + duty sig reconstruction flow
+// HappyFlow tests a full valcheck + post valcheck + duty sig reconstruction flow
 func HappyFlow() *tests.SpecTest {
 	dr := testingutils.ProposerRunner()
 

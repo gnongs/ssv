@@ -17,9 +17,9 @@ func WrongBeaconChainSig() *tests.SpecTest {
 
 	return &tests.SpecTest{
 		Name:                    "Invalid PostConsensusMessage PartialSignature",
-		DutyRunner:              dr,
+		Runner:                  dr,
 		Messages:                msgs,
 		PostDutyRunnerStateRoot: "cbcefe579470d914c3c230bd45cee06e9c5723460044b278a0c629a742551b02",
-		ExpectedError:           "partial post consensus sig invalid: could not verify beacon partial Signature: could not verify Signature from iBFT member 1",
+		ExpectedError:           "partial post valcheck sig invalid: could not verify beacon partial Signature: could not verify Signature from iBFT member 1",
 	}
 }

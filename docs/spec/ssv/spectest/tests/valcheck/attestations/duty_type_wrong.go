@@ -8,17 +8,17 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
-// DutyCommitteeIndexNotMatchingAttestations tests that a duty committee index == attestation committee index
-func DutyCommitteeIndexNotMatchingAttestations() *tests.SpecTest {
-	dr := testingutils.BaseRunner()
+// DutyTypeWrong tests that a duty type == RoleTypeAttester
+func DutyTypeWrong() *tests.SpecTest {
+	dr := testingutils.AttesterRunner()
 
 	consensusData := &types.ConsensusData{
 		Duty: &beacon.Duty{
-			Type:                    beacon.RoleTypeAttester,
+			Type:                    beacon.RoleTypeAggregator,
 			PubKey:                  testingutils.TestingValidatorPubKey,
-			Slot:                    12,
+			Slot:                    13,
 			ValidatorIndex:          1,
-			CommitteeIndex:          5,
+			CommitteeIndex:          3,
 			CommitteesAtSlot:        36,
 			CommitteeLength:         128,
 			ValidatorCommitteeIndex: 11,
@@ -28,13 +28,12 @@ func DutyCommitteeIndexNotMatchingAttestations() *tests.SpecTest {
 	startingValue, _ := consensusData.Encode()
 
 	// the starting value is not the same as the actual proposal!
-	dr.NewExecutionState()
-	if err := dr.StartNewConsensusInstance(testingutils.TestAttesterConsensusDataByts); err != nil {
+	if err := dr.Decide(testingutils.TestAttesterConsensusData); err != nil {
 		panic(err.Error())
 	}
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsg(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
+		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.ProposalMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
@@ -44,10 +43,10 @@ func DutyCommitteeIndexNotMatchingAttestations() *tests.SpecTest {
 	}
 
 	return &tests.SpecTest{
-		Name:                    "duty committee index matches attestation committee index",
-		DutyRunner:              dr,
+		Name:                    "duty type is RoleTypeAttester",
+		Runner:                  dr,
 		Messages:                msgs,
 		PostDutyRunnerStateRoot: "c4eb0bb42cc382e468b2362e9d9cc622f388eef6a266901535bb1dfcc51e8868",
-		ExpectedError:           "failed to process consensus msg: could not process msg: proposal invalid: proposal not justified: proposal value invalid: attestation data CommitteeIndex != duty CommitteeIndex",
+		ExpectedError:           "failed to process valcheck msg: could not process msg: proposal invalid: proposal not justified: proposal value invalid: duty type != RoleTypeAttester",
 	}
 }

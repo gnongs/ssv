@@ -12,14 +12,14 @@ func NoMessageSigners() *tests.SpecTest {
 	dr := testingutils.DecidedRunner()
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsg(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(testingutils.TestingSK1, 1, qbft.FirstHeight)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(testingutils.TestingSK1, 1, qbft.FirstHeight)),
 	}
 
 	return &tests.SpecTest{
 		Name:                    "NoSigners PostConsensusMessage",
-		DutyRunner:              dr,
+		Runner:                  dr,
 		Messages:                msgs,
 		PostDutyRunnerStateRoot: "cbcefe579470d914c3c230bd45cee06e9c5723460044b278a0c629a742551b02",
-		ExpectedError:           "partial post consensus sig invalid: SignedPartialSignatureMessage invalid: invalid PartialSignatureMessage signers",
+		ExpectedError:           "partial post valcheck sig invalid: SignedPartialSignatureMessage invalid: invalid PartialSignatureMessage signers",
 	}
 }

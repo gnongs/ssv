@@ -2,8 +2,8 @@ package spectest
 
 import (
 	tests2 "github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
-	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/attestations"
-	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/beaconblock"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/valcheck/attestations"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/valcheck/beaconblock"
 )
 
 var AllTests = []*tests2.SpecTest{
@@ -25,7 +25,7 @@ var AllTests = []*tests2.SpecTest{
 	//messages.NoData(),
 	//messages.NoDutyRunner(),
 	//
-	//consensus.WrongDutyPubKey(),
+	//valcheck.WrongDutyPubKey(),
 
 	attestations.HappyFlow(),
 	//attestations.FarFutureDuty(),

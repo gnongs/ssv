@@ -41,9 +41,6 @@ func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 			return v.processPostConsensusSig(dutyRunner, signedMsg)
 		}
 		return v.processRandaoPartialSig(dutyRunner, signedMsg)
-
-	case types.SSVSyncMsgType:
-		panic("implement")
 	default:
 		return errors.New("unknown msg")
 	}
@@ -56,14 +53,6 @@ func (v *Validator) validateMessage(runner *Runner, msg *types.SSVMessage) error
 
 	if !v.share.ValidatorPubKey.MessageIDBelongs(msg.GetID()) {
 		return errors.New("msg ID doesn't match validator ID")
-	}
-
-	if v.DutyRunners.DutyRunnerForMsgID(msg.GetID()) == nil {
-		return errors.New("could not find duty runner for msg ID")
-	}
-
-	if msg.GetType() > 3 {
-		return errors.New("msg type not supported")
 	}
 
 	if len(msg.GetData()) == 0 {

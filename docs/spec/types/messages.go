@@ -59,8 +59,6 @@ const (
 	SSVConsensusMsgType MsgType = iota
 	// SSVDecidedMsgType are all QBFT decided messages
 	SSVDecidedMsgType
-	// SSVSyncMsgType are all QBFT sync messages
-	SSVSyncMsgType
 	// SSVPartialSignatureMsgType are all partial signatures msgs over beacon chain specific signatures
 	SSVPartialSignatureMsgType
 )
