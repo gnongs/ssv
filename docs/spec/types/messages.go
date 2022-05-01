@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/beacon"
 )
 
@@ -17,8 +16,6 @@ const (
 	pubKeyStartPos   = 0
 	roleTypeSize     = 4
 	roleTypeStartPos = pubKeyStartPos + pubKeySize
-	slotSize         = 8
-	slotStartPos     = roleTypeStartPos + roleTypeSize
 )
 
 type Validate interface {
@@ -45,19 +42,10 @@ func (msg MessageID) GetRoleType() beacon.RoleType {
 	return beacon.RoleType(binary.LittleEndian.Uint32(roleByts))
 }
 
-func (msg MessageID) GetSlot() spec.Slot {
-	byts := msg[slotStartPos : slotStartPos+slotSize]
-	return spec.Slot(binary.LittleEndian.Uint64(byts))
-}
-
-func NewMsgID(pk []byte, role beacon.RoleType, slot spec.Slot) MessageID {
+func NewMsgID(pk []byte, role beacon.RoleType) MessageID {
 	roleByts := make([]byte, 4)
 	binary.LittleEndian.PutUint32(roleByts, uint32(role))
-
-	slotByts := make([]byte, 8)
-	binary.LittleEndian.PutUint64(slotByts, uint64(slot))
-
-	return append(append(pk, roleByts...), slotByts...)
+	return append(pk, roleByts...)
 }
 
 func (msgID MessageID) String() string {

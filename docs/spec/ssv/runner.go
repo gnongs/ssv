@@ -113,9 +113,13 @@ func (dr *Runner) Decode(data []byte) error {
 	return json.Unmarshal(data, &dr)
 }
 
-func (dr *Runner) validatePartialSigMsg(msg *SignedPartialSignatureMessage, container *PartialSigContainer) error {
+func (dr *Runner) validatePartialSigMsg(msg *SignedPartialSignatureMessage, container *PartialSigContainer, slot spec.Slot) error {
 	if err := msg.Validate(); err != nil {
 		return errors.Wrap(err, "SignedPartialSignatureMessage invalid")
+	}
+
+	if slot != msg.Message.Slot {
+		return errors.New("wrong slot")
 	}
 
 	if err := msg.GetSignature().VerifyByOperators(msg, dr.Share.DomainType, types.PartialSignatureType, dr.Share.Committee); err != nil {

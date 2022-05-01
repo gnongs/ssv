@@ -33,6 +33,7 @@ func (dr *Runner) ProcessPostConsensusMessage(msg *SignedPartialSignatureMessage
 func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signer types.KeyManager) (*PartialSignatureMessage, error) {
 	ret := &PartialSignatureMessage{
 		Type:    PostConsensusPartialSig,
+		Slot:    decidedValue.Duty.Slot,
 		Signers: []types.OperatorID{dr.Share.OperatorID},
 	}
 
@@ -70,19 +71,16 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 
 // canProcessPostConsensusMsg returns true if it can process post consensus message, false if not
 func (dr *Runner) canProcessPostConsensusMsg(msg *SignedPartialSignatureMessage) error {
-	if err := dr.validatePartialSigMsg(msg, dr.State.PostConsensusPartialSig); err != nil {
-		return errors.Wrap(err, "post consensus msg invalid")
-	}
-
-	switch dr.BeaconRoleType {
-	case beacon.RoleTypeProposer:
-		if !dr.State.RandaoPartialSig.HasQuorum() {
-			return errors.New("randao quorum incomplete")
-		}
+	if dr.State.RunningInstance == nil {
+		return errors.New("no running instance")
 	}
 
 	if decided, _ := dr.State.RunningInstance.IsDecided(); !decided {
 		return errors.New("consensus didn't decide")
+	}
+
+	if err := dr.validatePartialSigMsg(msg, dr.State.PostConsensusPartialSig, dr.State.DecidedValue.Duty.Slot); err != nil {
+		return errors.Wrap(err, "post consensus msg invalid")
 	}
 
 	if dr.postConsensusSigTimeout(dr.BeaconNetwork.EstimatedCurrentSlot()) {

@@ -3,6 +3,7 @@ package ssv
 import (
 	"crypto/sha256"
 	"encoding/json"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
@@ -20,8 +21,9 @@ const (
 // PartialSignatureMessage is a msg for partial beacon chain related signatures (like partial attestation, block, randao sigs)
 type PartialSignatureMessage struct {
 	Type             PartialSigMsgType
-	PartialSignature []byte // The beacon chain partial Signature for a duty
-	SigningRoot      []byte // the root signed in PartialSignature
+	Slot             spec.Slot // Slot represents the slot for which the partial BN signature is for
+	PartialSignature []byte    // The beacon chain partial Signature for a duty
+	SigningRoot      []byte    // the root signed in PartialSignature
 	Signers          []types.OperatorID
 }
 

@@ -8,8 +8,8 @@ import (
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
-var AttesterMsgID = types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeAttester, TestingDutySlot)
-var ProposerMsgID = types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeProposer, TestingDutySlot)
+var AttesterMsgID = types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeAttester)
+var ProposerMsgID = types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeProposer)
 
 var TestAttesterConsensusData = &types.ConsensusData{
 	Duty:            TestingAttesterDuty,
@@ -42,15 +42,15 @@ var TestConsensusWrongDutyPKData = &types.ConsensusData{
 var TestConsensusWrongDutyPKDataByts, _ = TestConsensusWrongDutyPKData.Encode()
 
 var SSVMsgAttester = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
-	return ssvMsg(qbftMsg, postMsg, types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeAttester, TestingDutySlot))
+	return ssvMsg(qbftMsg, postMsg, types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeAttester))
 }
 
 var SSVMsgWrongID = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
-	return ssvMsg(qbftMsg, postMsg, types.NewMsgID(TestingWrongValidatorPubKey[:], beacon.RoleTypeAttester, TestingDutySlot))
+	return ssvMsg(qbftMsg, postMsg, types.NewMsgID(TestingWrongValidatorPubKey[:], beacon.RoleTypeAttester))
 }
 
 var SSVMsgProposer = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
-	return ssvMsg(qbftMsg, postMsg, types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeProposer, TestingDutySlot))
+	return ssvMsg(qbftMsg, postMsg, types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeProposer))
 }
 
 var ssvMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPartialSignatureMessage, msgID types.MessageID) *types.SSVMessage {
@@ -115,6 +115,7 @@ var postConsensusAttestationMsg = func(
 
 	postConsensusMsg := &ssv.PartialSignatureMessage{
 		Type:             ssv.PostConsensusPartialSig,
+		Slot:             TestingDutySlot,
 		PartialSignature: signedAtt.Signature[:],
 		SigningRoot:      root,
 		Signers:          []types.OperatorID{id},
@@ -161,6 +162,7 @@ var postConsensusBeaconBlockMsg = func(
 
 	postConsensusMsg := &ssv.PartialSignatureMessage{
 		Type:             ssv.PostConsensusPartialSig,
+		Slot:             TestingDutySlot,
 		PartialSignature: signedAtt.Signature[:],
 		SigningRoot:      root,
 		Signers:          []types.OperatorID{id},
@@ -198,6 +200,7 @@ var randaoMsg = func(
 
 	randaoMsg := &ssv.PartialSignatureMessage{
 		Type:             ssv.RandaoPartialSig,
+		Slot:             TestingDutySlot,
 		PartialSignature: randaoSig[:],
 		SigningRoot:      root,
 		Signers:          []types.OperatorID{id},

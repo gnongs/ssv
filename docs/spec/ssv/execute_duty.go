@@ -38,7 +38,7 @@ func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Runn
 	// sign partial randao
 	epoch := v.beacon.GetBeaconNetwork().EstimatedEpochAtSlot(duty.Slot)
 
-	msg, err := dutyRunner.SignRandaoPreConsensus(epoch, v.signer)
+	msg, err := dutyRunner.SignRandaoPreConsensus(epoch, duty.Slot, v.signer)
 	if err != nil {
 		return errors.Wrap(err, "could not sign randao for pre-consensus")
 	}
@@ -60,7 +60,7 @@ func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Runn
 	}
 	msgToBroadcast := &types.SSVMessage{
 		MsgType: types.SSVPartialSignatureMsgType,
-		MsgID:   types.NewMsgID(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType, duty.Slot),
+		MsgID:   types.NewMsgID(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType),
 		Data:    data,
 	}
 	if err := v.network.Broadcast(msgToBroadcast); err != nil {

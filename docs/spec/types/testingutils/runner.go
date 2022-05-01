@@ -20,7 +20,7 @@ var baseRunner = func(role beacon.RoleType, valCheck qbft.ProposedValueCheck) *s
 		role,
 		ssv.NowTestNetwork,
 		TestingShare,
-		NewTestingQBFTController(types.NewMsgID(TestingValidatorPubKey[:], role, TestingDutySlot), valCheck),
+		NewTestingQBFTController(types.NewMsgID(TestingValidatorPubKey[:], role), valCheck),
 		NewTestingStorage(),
 		valCheck,
 	)

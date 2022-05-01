@@ -3,7 +3,6 @@ package spectest
 import (
 	"encoding/hex"
 	"encoding/json"
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	tests2 "github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
@@ -37,7 +36,7 @@ func TestJson(t *testing.T) {
 	for _, test := range tests {
 
 		// a little trick we do to instantiate all the internal controller params
-		byts, err := test.DutyRunner.QBFTController.Encode()
+		byts, err := test.Runner.QBFTController.Encode()
 		require.NoError(t, err)
 		newContr := qbft.NewController(
 			[]byte{1, 2, 3, 4},
@@ -49,19 +48,19 @@ func TestJson(t *testing.T) {
 			testingutils.TestingConfig.Network,
 		)
 		require.NoError(t, newContr.Decode(byts))
-		test.DutyRunner.QBFTController = newContr
+		test.Runner.QBFTController = newContr
 
-		for idx, i := range test.DutyRunner.QBFTController.StoredInstances {
+		for idx, i := range test.Runner.QBFTController.StoredInstances {
 			if i == nil {
 				continue
 			}
 			fixedInst := fixQBFTInstanceForRun(t, i)
-			test.DutyRunner.QBFTController.StoredInstances[idx] = fixedInst
+			test.Runner.QBFTController.StoredInstances[idx] = fixedInst
 
-			if test.DutyRunner.DutyExecutionState != nil &&
-				test.DutyRunner.DutyExecutionState.RunningInstance != nil &&
-				test.DutyRunner.DutyExecutionState.RunningInstance.GetHeight() == fixedInst.GetHeight() {
-				test.DutyRunner.DutyExecutionState.RunningInstance = fixedInst
+			if test.Runner.State != nil &&
+				test.Runner.State.RunningInstance != nil &&
+				test.Runner.State.RunningInstance.GetHeight() == fixedInst.GetHeight() {
+				test.Runner.State.RunningInstance = fixedInst
 			}
 		}
 		t.Run(test.Name, func(t *testing.T) {
@@ -72,9 +71,9 @@ func TestJson(t *testing.T) {
 
 func runTest(t *testing.T, test *tests2.SpecTest) {
 	v := testingutils.BaseValidator()
-	v.DutyRunners[beacon.RoleTypeAttester] = test.DutyRunner
+	v.DutyRunners[test.Runner.BeaconRoleType] = test.Runner
 
-	var lastErr error
+	lastErr := v.StartDuty(test.Duty)
 	for _, msg := range test.Messages {
 		err := v.ProcessMessage(msg)
 		if err != nil {
@@ -88,7 +87,7 @@ func runTest(t *testing.T, test *tests2.SpecTest) {
 		require.NoError(t, lastErr)
 	}
 
-	postRoot, err := test.DutyRunner.DutyExecutionState.GetRoot()
+	postRoot, err := test.Runner.State.GetRoot()
 	require.NoError(t, err)
 
 	require.EqualValues(t, test.PostDutyRunnerStateRoot, hex.EncodeToString(postRoot))

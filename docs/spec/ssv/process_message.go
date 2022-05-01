@@ -54,10 +54,6 @@ func (v *Validator) validateMessage(runner *Runner, msg *types.SSVMessage) error
 		return errors.New("no running duty")
 	}
 
-	if runner.CurrentDuty.Slot != msg.MsgID.GetSlot() {
-		return errors.New("msg slot != current duty slot")
-	}
-
 	if !v.share.ValidatorPubKey.MessageIDBelongs(msg.GetID()) {
 		return errors.New("msg ID doesn't match validator ID")
 	}
@@ -105,7 +101,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *Runner, msg *qbft.SignedMess
 
 	msgToBroadcast := &types.SSVMessage{
 		MsgType: types.SSVPartialSignatureMsgType,
-		MsgID:   types.NewMsgID(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType, dutyRunner.CurrentDuty.Slot),
+		MsgID:   types.NewMsgID(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType),
 		Data:    data,
 	}
 

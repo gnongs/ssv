@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (dr *Runner) SignRandaoPreConsensus(epoch spec.Epoch, signer types.KeyManager) (*PartialSignatureMessage, error) {
+func (dr *Runner) SignRandaoPreConsensus(epoch spec.Epoch, slot spec.Slot, signer types.KeyManager) (*PartialSignatureMessage, error) {
 	sig, r, err := signer.SignRandaoReveal(epoch, dr.Share.SharePubKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not sign partial randao reveal")
@@ -17,6 +17,7 @@ func (dr *Runner) SignRandaoPreConsensus(epoch spec.Epoch, signer types.KeyManag
 	// generate partial sig for randao
 	msg := &PartialSignatureMessage{
 		Type:             RandaoPartialSig,
+		Slot:             slot,
 		PartialSignature: sig,
 		SigningRoot:      ensureRoot(r),
 		Signers:          []types.OperatorID{dr.Share.OperatorID},
@@ -47,7 +48,7 @@ func (dr *Runner) ProcessRandaoMessage(msg *SignedPartialSignatureMessage) (bool
 
 // canProcessRandaoMsg returns true if it can process randao message, false if not
 func (dr *Runner) canProcessRandaoMsg(msg *SignedPartialSignatureMessage) error {
-	if err := dr.validatePartialSigMsg(msg, dr.State.RandaoPartialSig); err != nil {
+	if err := dr.validatePartialSigMsg(msg, dr.State.RandaoPartialSig, dr.CurrentDuty.Slot); err != nil {
 		return errors.Wrap(err, "randao msg invalid")
 	}
 
