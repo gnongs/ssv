@@ -1,13 +1,12 @@
 package ssv
 
 import (
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
 // StartDuty starts a duty for the validator
-func (v *Validator) StartDuty(duty *beacon.Duty) error {
+func (v *Validator) StartDuty(duty *types.Duty) error {
 	dutyRunner := v.DutyRunners[duty.Type]
 	if dutyRunner == nil {
 		return errors.Errorf("duty type %s not supported", duty.Type.String())
@@ -18,11 +17,11 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 	}
 
 	switch dutyRunner.BeaconRoleType {
-	case beacon.RoleTypeAttester:
+	case types.BNRoleAttester:
 		return v.executeAttestationDuty(duty, dutyRunner)
-	case beacon.RoleTypeProposer:
+	case types.BNRoleProposer:
 		return v.executeBlockProposalDuty(duty, dutyRunner)
-	case beacon.RoleTypeAggregator:
+	case types.BNRoleAggregator:
 		return v.executeAggregatorDuty(duty, dutyRunner)
 	default:
 		return errors.Errorf("duty type %s unkwon", duty.Type.String())
@@ -30,13 +29,37 @@ func (v *Validator) StartDuty(duty *beacon.Duty) error {
 	return nil
 }
 
-// executeBlockProposalDuty steps:
+// executeSyncCommitteeDuty steps:
+// 1) get sync block root from BN
+// 2) start consensus on duty + block root data
+// 3) Once consensus decides, sign partial block root and broadcast
+// 4) collect 2f+1 partial sigs, reconstruct and broadcast valid sync committee sig to the BN
+func (v *Validator) executeSyncCommitteeDuty(duty *types.Duty, dutyRunner *Runner) error {
+	// TODO - waitOneThirdOrValidBlock
+
+	root, err := v.beacon.GetSyncMessageBlockRoot()
+	if err != nil {
+		return errors.Wrap(err, "failed to get sync committee block root")
+	}
+
+	input := &types.ConsensusData{
+		Duty:                   duty,
+		SyncCommitteeBlockRoot: root,
+	}
+
+	if err := dutyRunner.Decide(input); err != nil {
+		return errors.Wrap(err, "can't start new duty runner instance for duty")
+	}
+	return nil
+}
+
+// executeAggregatorDuty steps:
 // 1) sign a partial selection proof and wait for 2f+1 partial sigs from peers
 // 2) reconstruct selection proof and send SubmitAggregateSelectionProof to BN
 // 3) start consensus on duty + aggregation data
 // 4) Once consensus decides, sign partial aggregation data and broadcast
 // 5) collect 2f+1 partial sigs, reconstruct and broadcast valid SignedAggregateSubmitRequest sig to the BN
-func (v *Validator) executeAggregatorDuty(duty *beacon.Duty, dutyRunner *Runner) error {
+func (v *Validator) executeAggregatorDuty(duty *types.Duty, dutyRunner *Runner) error {
 	msg, err := dutyRunner.SignSlotWithSelectionProofPreConsensus(duty.Slot, v.signer)
 	if err != nil {
 		return errors.Wrap(err, "could not sign slot with selection proof for pre-consensus")
@@ -74,7 +97,7 @@ func (v *Validator) executeAggregatorDuty(duty *beacon.Duty, dutyRunner *Runner)
 // 3) start consensus on duty + block data
 // 4) Once consensus decides, sign partial block and broadcast
 // 5) collect 2f+1 partial sigs, reconstruct and broadcast valid block sig to the BN
-func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Runner) error {
+func (v *Validator) executeBlockProposalDuty(duty *types.Duty, dutyRunner *Runner) error {
 	// sign partial randao
 	epoch := v.beacon.GetBeaconNetwork().EstimatedEpochAtSlot(duty.Slot)
 
@@ -114,7 +137,7 @@ func (v *Validator) executeBlockProposalDuty(duty *beacon.Duty, dutyRunner *Runn
 // 2) start consensus on duty + attestation data
 // 3) Once consensus decides, sign partial attestation and broadcast
 // 4) collect 2f+1 partial sigs, reconstruct and broadcast valid attestation sig to the BN
-func (v *Validator) executeAttestationDuty(duty *beacon.Duty, dutyRunner *Runner) error {
+func (v *Validator) executeAttestationDuty(duty *types.Duty, dutyRunner *Runner) error {
 	// TODO - waitOneThirdOrValidBlock
 
 	attData, err := v.beacon.GetAttestationData(duty.Slot, duty.CommitteeIndex)

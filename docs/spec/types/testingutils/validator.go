@@ -1,8 +1,8 @@
 package testingutils
 
 import (
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/ssv"
+	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
 var BaseValidator = func() *ssv.Validator {
@@ -13,8 +13,8 @@ var BaseValidator = func() *ssv.Validator {
 		TestingShare,
 		NewTestingKeyManager(),
 	)
-	ret.DutyRunners[beacon.RoleTypeAttester] = AttesterRunner()
-	ret.DutyRunners[beacon.RoleTypeProposer] = ProposerRunner()
-	ret.DutyRunners[beacon.RoleTypeAggregator] = AggregatorRunner()
+	ret.DutyRunners[types.BNRoleAttester] = AttesterRunner()
+	ret.DutyRunners[types.BNRoleProposer] = ProposerRunner()
+	ret.DutyRunners[types.BNRoleAggregator] = AggregatorRunner()
 	return ret
 }

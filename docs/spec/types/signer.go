@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	altair "github.com/attestantio/go-eth2-client/spec/altair"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 )
@@ -25,7 +24,7 @@ var (
 
 type BeaconSigner interface {
 	// SignAttestation signs the given attestation
-	SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error)
+	SignAttestation(data *spec.AttestationData, duty *Duty, pk []byte) (*spec.Attestation, []byte, error)
 	// IsAttestationSlashable returns error if attestation is slashable
 	IsAttestationSlashable(data *spec.AttestationData) error
 	// SignRandaoReveal signs randao
@@ -33,11 +32,11 @@ type BeaconSigner interface {
 	// IsBeaconBlockSlashable returns true if the given block is slashable
 	IsBeaconBlockSlashable(block *altair.BeaconBlock) error
 	// SignBeaconBlock signs the given beacon block
-	SignBeaconBlock(block *altair.BeaconBlock, duty *beacon.Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error)
+	SignBeaconBlock(block *altair.BeaconBlock, duty *Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error)
 	// SignSlotWithSelectionProof signs slot for aggregator selection proof
 	SignSlotWithSelectionProof(slot spec.Slot, pk []byte) (Signature, []byte, error)
 	// SignAggregateAndProof returns a signed aggregate and proof msg
-	SignAggregateAndProof(msg *spec.AggregateAndProof, duty *beacon.Duty, pk []byte) (*spec.SignedAggregateAndProof, []byte, error)
+	SignAggregateAndProof(msg *spec.AggregateAndProof, duty *Duty, pk []byte) (*spec.SignedAggregateAndProof, []byte, error)
 }
 
 // SSVSigner used for all SSV specific signing
@@ -68,7 +67,7 @@ func NewSSVKeyManager(domain DomainType) KeyManager {
 }
 
 // SignAttestation signs the given attestation
-func (s *SSVKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
+func (s *SSVKeyManager) SignAttestation(data *spec.AttestationData, duty *Duty, pk []byte) (*spec.Attestation, []byte, error) {
 	if err := s.IsAttestationSlashable(data); err != nil {
 		return nil, nil, errors.Wrap(err, "can't sign slashalbe attestation")
 	}
@@ -102,7 +101,7 @@ func (s *SSVKeyManager) IsBeaconBlockSlashable(block *altair.BeaconBlock) error 
 	panic("implement")
 }
 
-func (s *SSVKeyManager) SignBeaconBlock(data *altair.BeaconBlock, duty *beacon.Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error) {
+func (s *SSVKeyManager) SignBeaconBlock(data *altair.BeaconBlock, duty *Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error) {
 	panic("implement")
 }
 
@@ -112,7 +111,7 @@ func (s *SSVKeyManager) SignSlotWithSelectionProof(slot spec.Slot, pk []byte) (S
 }
 
 // SignAggregateAndProof returns a signed aggregate and proof msg
-func (s *SSVKeyManager) SignAggregateAndProof(msg *spec.AggregateAndProof, duty *beacon.Duty, pk []byte) (*spec.SignedAggregateAndProof, []byte, error) {
+func (s *SSVKeyManager) SignAggregateAndProof(msg *spec.AggregateAndProof, duty *Duty, pk []byte) (*spec.SignedAggregateAndProof, []byte, error) {
 	panic("implement")
 }
 

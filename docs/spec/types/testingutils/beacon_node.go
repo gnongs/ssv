@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	altair "github.com/attestantio/go-eth2-client/spec/altair"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/ssv"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/prysmaticlabs/go-bitfield"
 )
 
@@ -69,6 +69,8 @@ var TestingAggregateAndProof = &spec.AggregateAndProof{
 var TestingSignedAggregateAndProofRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
 var TestingSelectionProofRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
 
+var TestingSyncCommitteeBlockRoot = make([]byte, 32)
+
 var TestingValidatorPubKey = func() spec.BLSPubKey {
 	// sk - 5342fd7051ab252e02acc53c765007817b2dc8bab596862e3f8711513b2092b3
 	pk, _ := hex.DecodeString("948fb44582ce25336fdb17122eac64fe5a1afc39174ce92d6013becac116766dc5a778c880dd47de7dfff6a0f86ba42c")
@@ -85,8 +87,8 @@ var TestingWrongValidatorPubKey = func() spec.BLSPubKey {
 
 const TestingDutySlot = 12
 
-var TestingAttesterDuty = &beacon.Duty{
-	Type:                    beacon.RoleTypeAttester,
+var TestingAttesterDuty = &types.Duty{
+	Type:                    types.BNRoleAttester,
 	PubKey:                  TestingValidatorPubKey,
 	Slot:                    TestingDutySlot,
 	ValidatorIndex:          1,
@@ -96,8 +98,8 @@ var TestingAttesterDuty = &beacon.Duty{
 	ValidatorCommitteeIndex: 11,
 }
 
-var TestingProposerDuty = &beacon.Duty{
-	Type:                    beacon.RoleTypeProposer,
+var TestingProposerDuty = &types.Duty{
+	Type:                    types.BNRoleProposer,
 	PubKey:                  TestingValidatorPubKey,
 	Slot:                    12,
 	ValidatorIndex:          1,
@@ -107,8 +109,8 @@ var TestingProposerDuty = &beacon.Duty{
 	ValidatorCommitteeIndex: 11,
 }
 
-var TestingAggregatorDuty = &beacon.Duty{
-	Type:                    beacon.RoleTypeAggregator,
+var TestingAggregatorDuty = &types.Duty{
+	Type:                    types.BNRoleAggregator,
 	PubKey:                  TestingValidatorPubKey,
 	Slot:                    12,
 	ValidatorIndex:          1,
@@ -118,7 +120,7 @@ var TestingAggregatorDuty = &beacon.Duty{
 	ValidatorCommitteeIndex: 11,
 }
 
-var TestingUnknownDutyType = &beacon.Duty{
+var TestingUnknownDutyType = &types.Duty{
 	Type:                    100,
 	PubKey:                  TestingValidatorPubKey,
 	Slot:                    12,
@@ -129,8 +131,8 @@ var TestingUnknownDutyType = &beacon.Duty{
 	ValidatorCommitteeIndex: 11,
 }
 
-var TestingWrongDutyPK = &beacon.Duty{
-	Type:                    beacon.RoleTypeAttester,
+var TestingWrongDutyPK = &types.Duty{
+	Type:                    types.BNRoleAttester,
 	PubKey:                  TestingWrongValidatorPubKey,
 	Slot:                    12,
 	ValidatorIndex:          1,
@@ -179,5 +181,15 @@ func (bn *testingBeaconNode) SubmitAggregateSelectionProof(slot spec.Slot, commi
 
 // SubmitSignedAggregateSelectionProof broadcasts a signed aggregator msg
 func (bn *testingBeaconNode) SubmitSignedAggregateSelectionProof(msg *spec.SignedAggregateAndProof) error {
+	return nil
+}
+
+// GetSyncMessageBlockRoot returns beacon block root for sync committee
+func (bn *testingBeaconNode) GetSyncMessageBlockRoot() ([]byte, error) {
+	return TestingSyncCommitteeBlockRoot, nil
+}
+
+// SubmitSyncMessage submits a signed sync committee msg
+func (bn *testingBeaconNode) SubmitSyncMessage(msg *altair.SyncCommitteeMessage) error {
 	return nil
 }

@@ -1,7 +1,6 @@
 package ssv
 
 import (
-	beacon2 "github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
@@ -25,7 +24,7 @@ func NewValidator(
 	signer types.KeyManager,
 ) *Validator {
 	return &Validator{
-		DutyRunners: map[beacon2.RoleType]*Runner{},
+		DutyRunners: map[types.BeaconRole]*Runner{},
 		network:     network,
 		beacon:      beacon,
 		storage:     storage,

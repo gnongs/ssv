@@ -1,7 +1,6 @@
 package ssv
 
 import (
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
@@ -115,7 +114,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 	}
 
 	switch dutyRunner.BeaconRoleType {
-	case beacon.RoleTypeAttester:
+	case types.BNRoleAttester:
 		att, err := dutyRunner.State.ReconstructAttestationSig(v.share.ValidatorPubKey)
 		if err != nil {
 			return errors.Wrap(err, "could not reconstruct post consensus sig")
@@ -123,7 +122,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 		if err := v.beacon.SubmitAttestation(att); err != nil {
 			return errors.Wrap(err, "could not submit to beacon chain reconstructed attestation")
 		}
-	case beacon.RoleTypeProposer:
+	case types.BNRoleProposer:
 		blk, err := dutyRunner.State.ReconstructBeaconBlockSig(v.share.ValidatorPubKey)
 		if err != nil {
 			return errors.Wrap(err, "could not reconstruct post consensus sig")
@@ -131,7 +130,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 		if err := v.beacon.SubmitBeaconBlock(blk); err != nil {
 			return errors.Wrap(err, "could not submit to beacon chain reconstructed signed beacon block")
 		}
-	case beacon.RoleTypeAggregator:
+	case types.BNRoleAggregator:
 		msg, err := dutyRunner.State.ReconstructSignedAggregateSelectionProofSig(v.share.ValidatorPubKey)
 		if err != nil {
 			return errors.Wrap(err, "could not reconstruct post consensus sig")

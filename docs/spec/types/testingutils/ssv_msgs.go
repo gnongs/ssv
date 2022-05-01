@@ -1,16 +1,15 @@
 package testingutils
 
 import (
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/ssv"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 )
 
-var AttesterMsgID = types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeAttester)
-var ProposerMsgID = types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeProposer)
-var AggregatorMsgID = types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeAggregator)
+var AttesterMsgID = types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleAttester)
+var ProposerMsgID = types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleProposer)
+var AggregatorMsgID = types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleAggregator)
 
 var TestAttesterConsensusData = &types.ConsensusData{
 	Duty:            TestingAttesterDuty,
@@ -43,19 +42,19 @@ var TestConsensusWrongDutyPKData = &types.ConsensusData{
 var TestConsensusWrongDutyPKDataByts, _ = TestConsensusWrongDutyPKData.Encode()
 
 var SSVMsgAttester = func(qbftMsg *qbft.SignedMessage, partialSigMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
-	return ssvMsg(qbftMsg, partialSigMsg, types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeAttester))
+	return ssvMsg(qbftMsg, partialSigMsg, types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleAttester))
 }
 
 var SSVMsgWrongID = func(qbftMsg *qbft.SignedMessage, partialSigMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
-	return ssvMsg(qbftMsg, partialSigMsg, types.NewMsgID(TestingWrongValidatorPubKey[:], beacon.RoleTypeAttester))
+	return ssvMsg(qbftMsg, partialSigMsg, types.NewMsgID(TestingWrongValidatorPubKey[:], types.BNRoleAttester))
 }
 
 var SSVMsgProposer = func(qbftMsg *qbft.SignedMessage, partialSigMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
-	return ssvMsg(qbftMsg, partialSigMsg, types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeProposer))
+	return ssvMsg(qbftMsg, partialSigMsg, types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleProposer))
 }
 
 var SSVMsgAggregator = func(qbftMsg *qbft.SignedMessage, partialSigMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
-	return ssvMsg(qbftMsg, partialSigMsg, types.NewMsgID(TestingValidatorPubKey[:], beacon.RoleTypeAggregator))
+	return ssvMsg(qbftMsg, partialSigMsg, types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleAggregator))
 }
 
 var ssvMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPartialSignatureMessage, msgID types.MessageID) *types.SSVMessage {

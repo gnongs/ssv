@@ -1,13 +1,12 @@
 package ssv
 
 import (
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
 )
 
-func dutyValueCheck(duty *beacon.Duty, network BeaconNetwork) error {
+func dutyValueCheck(duty *types.Duty, network BeaconNetwork) error {
 	if network.EstimatedEpochAtSlot(duty.Slot) > network.EstimatedCurrentEpoch()+1 {
 		return errors.New("duty epoch is into far future")
 	}
@@ -25,7 +24,7 @@ func BeaconAttestationValueCheck(signer types.BeaconSigner, network BeaconNetwor
 			return errors.Wrap(err, "duty invalid")
 		}
 
-		if cd.Duty.Type != beacon.RoleTypeAttester {
+		if cd.Duty.Type != types.BNRoleAttester {
 			return errors.New("duty type != RoleTypeAttester")
 		}
 
@@ -62,6 +61,12 @@ func BeaconBlockValueCheck(signer types.BeaconSigner, network BeaconNetwork) qbf
 }
 
 func AggregatorValueCheck(signer types.BeaconSigner, network BeaconNetwork) qbft.ProposedValueCheck {
+	return func(data []byte) error {
+		return nil
+	}
+}
+
+func SyncCommitteeValueCheck(signer types.BeaconSigner, network BeaconNetwork) qbft.ProposedValueCheck {
 	return func(data []byte) error {
 		return nil
 	}

@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/bloxapp/ssv/beacon"
 )
 
 // ValidatorPK is an eth2 validator public key
@@ -37,12 +36,12 @@ func (msg MessageID) GetPubKey() []byte {
 	return msg[pubKeyStartPos : pubKeyStartPos+pubKeySize]
 }
 
-func (msg MessageID) GetRoleType() beacon.RoleType {
+func (msg MessageID) GetRoleType() BeaconRole {
 	roleByts := msg[roleTypeStartPos : roleTypeStartPos+roleTypeSize]
-	return beacon.RoleType(binary.LittleEndian.Uint32(roleByts))
+	return BeaconRole(binary.LittleEndian.Uint32(roleByts))
 }
 
-func NewMsgID(pk []byte, role beacon.RoleType) MessageID {
+func NewMsgID(pk []byte, role BeaconRole) MessageID {
 	roleByts := make([]byte, 4)
 	binary.LittleEndian.PutUint32(roleByts, uint32(role))
 	return append(pk, roleByts...)

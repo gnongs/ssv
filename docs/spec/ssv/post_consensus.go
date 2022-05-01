@@ -2,7 +2,6 @@ package ssv
 
 import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
@@ -38,7 +37,7 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 	}
 
 	switch dr.BeaconRoleType {
-	case beacon.RoleTypeAttester:
+	case types.BNRoleAttester:
 		signedAttestation, r, err := signer.SignAttestation(decidedValue.AttestationData, decidedValue.Duty, dr.Share.SharePubKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign attestation")
@@ -51,7 +50,7 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
 		ret.PartialSignature = dr.State.SignedAttestation.Signature[:]
 		return ret, nil
-	case beacon.RoleTypeProposer:
+	case types.BNRoleProposer:
 		signedBlock, r, err := signer.SignBeaconBlock(decidedValue.BlockData, decidedValue.Duty, dr.Share.SharePubKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign block")
@@ -64,7 +63,7 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
 		ret.PartialSignature = dr.State.SignedProposal.Signature[:]
 		return ret, nil
-	case beacon.RoleTypeAggregator:
+	case types.BNRoleAggregator:
 		signed, r, err := signer.SignAggregateAndProof(decidedValue.AggregateAndProof, decidedValue.Duty, dr.Share.SharePubKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign aggregate and proof")
@@ -77,6 +76,8 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
 		ret.PartialSignature = dr.State.SignedAggregate.Signature[:]
 		return ret, nil
+	//case beacon.RoleTypeProposer:
+
 	default:
 		return nil, errors.Errorf("unknown duty %s", decidedValue.Duty.Type.String())
 	}

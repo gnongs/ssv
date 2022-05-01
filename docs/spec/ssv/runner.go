@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
@@ -17,20 +16,20 @@ const DutyExecutionSlotTimeout spec.Slot = 32
 // Runner is manages the execution of a duty from start to finish, it can only execute 1 duty at a time.
 // Prev duty must finish before the next one can start.
 type Runner struct {
-	BeaconRoleType beacon.RoleType
+	BeaconRoleType types.BeaconRole
 	BeaconNetwork  BeaconNetwork
 	Share          *types.Share
 	// State holds all relevant params for a full duty execution (consensus & post consensus)
 	State *State
 	// CurrentDuty is the current executing duty, changes once StartNewDuty is called
-	CurrentDuty    *beacon.Duty
+	CurrentDuty    *types.Duty
 	QBFTController *qbft.Controller
 	storage        Storage
 	valCheck       qbft.ProposedValueCheck
 }
 
 func NewDutyRunner(
-	beaconRoleType beacon.RoleType,
+	beaconRoleType types.BeaconRole,
 	beaconNetwork BeaconNetwork,
 	share *types.Share,
 	qbftController *qbft.Controller,
@@ -47,7 +46,7 @@ func NewDutyRunner(
 	}
 }
 
-func (dr *Runner) StartNewDuty(duty *beacon.Duty) error {
+func (dr *Runner) StartNewDuty(duty *types.Duty) error {
 	if err := dr.CanStartNewDuty(duty); err != nil {
 		return err
 	}
@@ -62,7 +61,7 @@ func (dr *Runner) StartNewDuty(duty *beacon.Duty) error {
 // - a QBFT instance Decided and all post consensus sigs collectd or
 // - a QBFT instance Decided and post consensus timeout
 // else returns an error
-func (dr *Runner) CanStartNewDuty(duty *beacon.Duty) error {
+func (dr *Runner) CanStartNewDuty(duty *types.Duty) error {
 	if dr.State == nil || dr.State.IsFinished() {
 		return nil
 	}
@@ -77,14 +76,14 @@ func (dr *Runner) CanStartNewDuty(duty *beacon.Duty) error {
 
 	// check pre consensus signature collection timeout
 	switch dr.BeaconRoleType {
-	case beacon.RoleTypeProposer:
+	case types.BNRoleProposer:
 		if dr.randaoSigTimeout(duty.Slot) {
 			return nil
 		}
 		if !dr.State.RandaoPartialSig.HasQuorum() {
 			return errors.New("randao consensus sig collection is running")
 		}
-	case beacon.RoleTypeAggregator:
+	case types.BNRoleAggregator:
 		if dr.selectionProofSigTimeout(duty.Slot) {
 			return nil
 		}

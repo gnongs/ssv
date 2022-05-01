@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/bloxapp/ssv/beacon"
 )
 
 // ConsensusData holds all relevant duty and data Decided on by consensus
 type ConsensusData struct {
-	Duty              *beacon.Duty
-	AttestationData   *phase0.AttestationData
-	BlockData         *altair.BeaconBlock
-	AggregateAndProof *phase0.AggregateAndProof
+	Duty                   *Duty
+	AttestationData        *phase0.AttestationData
+	BlockData              *altair.BeaconBlock
+	AggregateAndProof      *phase0.AggregateAndProof
+	SyncCommitteeBlockRoot []byte
 }
 
 func (cid *ConsensusData) Encode() ([]byte, error) {

@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
@@ -30,7 +29,7 @@ func NewTestingKeyManager() types.KeyManager {
 }
 
 // SignAttestation signs the given attestation
-func (km *testingKeyManager) SignAttestation(data *spec.AttestationData, duty *beacon.Duty, pk []byte) (*spec.Attestation, []byte, error) {
+func (km *testingKeyManager) SignAttestation(data *spec.AttestationData, duty *types.Duty, pk []byte) (*spec.Attestation, []byte, error) {
 	if k, found := km.keys[hex.EncodeToString(pk)]; found {
 		sig := k.SignByte(TestingAttestationRoot)
 		blsSig := spec.BLSSignature{}
@@ -83,7 +82,7 @@ func (km *testingKeyManager) IsBeaconBlockSlashable(block *altair.BeaconBlock) e
 }
 
 // SignBeaconBlock signs the given beacon block
-func (km *testingKeyManager) SignBeaconBlock(data *altair.BeaconBlock, duty *beacon.Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error) {
+func (km *testingKeyManager) SignBeaconBlock(data *altair.BeaconBlock, duty *types.Duty, pk []byte) (*altair.SignedBeaconBlock, []byte, error) {
 	if k, found := km.keys[hex.EncodeToString(pk)]; found {
 		sig := k.SignByte(TestingBeaconBlockRoot)
 		blsSig := spec.BLSSignature{}
@@ -110,7 +109,7 @@ func (km *testingKeyManager) SignSlotWithSelectionProof(slot spec.Slot, pk []byt
 }
 
 // SignAggregateAndProof returns a signed aggregate and proof msg
-func (km *testingKeyManager) SignAggregateAndProof(msg *spec.AggregateAndProof, duty *beacon.Duty, pk []byte) (*spec.SignedAggregateAndProof, []byte, error) {
+func (km *testingKeyManager) SignAggregateAndProof(msg *spec.AggregateAndProof, duty *types.Duty, pk []byte) (*spec.SignedAggregateAndProof, []byte, error) {
 	if k, found := km.keys[hex.EncodeToString(pk)]; found {
 		sig := k.SignByte(TestingSignedAggregateAndProofRoot)
 		blsSig := spec.BLSSignature{}

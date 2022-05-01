@@ -1,25 +1,24 @@
 package testingutils
 
 import (
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/ssv"
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
 var AttesterRunner = func() *ssv.Runner {
-	return baseRunner(beacon.RoleTypeAttester, ssv.BeaconAttestationValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
+	return baseRunner(types.BNRoleAttester, ssv.BeaconAttestationValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
 }
 
 var ProposerRunner = func() *ssv.Runner {
-	return baseRunner(beacon.RoleTypeProposer, ssv.BeaconBlockValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
+	return baseRunner(types.BNRoleProposer, ssv.BeaconBlockValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
 }
 
 var AggregatorRunner = func() *ssv.Runner {
-	return baseRunner(beacon.RoleTypeAggregator, ssv.AggregatorValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
+	return baseRunner(types.BNRoleAggregator, ssv.AggregatorValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
 }
 
-var baseRunner = func(role beacon.RoleType, valCheck qbft.ProposedValueCheck) *ssv.Runner {
+var baseRunner = func(role types.BeaconRole, valCheck qbft.ProposedValueCheck) *ssv.Runner {
 	return ssv.NewDutyRunner(
 		role,
 		ssv.NowTestNetwork,
@@ -97,7 +96,7 @@ var decideRunner = func(consensusData []byte, height qbft.Height) *ssv.Runner {
 			}), nil),
 		}
 
-		if err := v.DutyRunners[beacon.RoleTypeAttester].Decide(TestAttesterConsensusData); err != nil {
+		if err := v.DutyRunners[types.BNRoleAttester].Decide(TestAttesterConsensusData); err != nil {
 			panic(err.Error())
 		}
 		for _, msg := range msgs {
@@ -107,5 +106,5 @@ var decideRunner = func(consensusData []byte, height qbft.Height) *ssv.Runner {
 		}
 	}
 
-	return v.DutyRunners[beacon.RoleTypeAttester]
+	return v.DutyRunners[types.BNRoleAttester]
 }

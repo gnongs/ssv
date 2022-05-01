@@ -2,7 +2,6 @@ package ssv
 
 import (
 	"bytes"
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
@@ -82,15 +81,15 @@ func (dr *Runner) validateDecidedConsensusData(val *types.ConsensusData) error {
 
 func (dr *Runner) canProcessConsensusMsg(msg *qbft.SignedMessage) error {
 	switch dr.BeaconRoleType {
-	case beacon.RoleTypeAttester:
+	case types.BNRoleAttester:
 		// no pre-condition for processing consensus msgs
 		return nil
-	case beacon.RoleTypeProposer:
+	case types.BNRoleProposer:
 		if !dr.State.RandaoPartialSig.HasQuorum() {
 			return errors.New("randao quorum incomplete")
 		}
 		return nil
-	case beacon.RoleTypeAggregator:
+	case types.BNRoleAggregator:
 		if !dr.State.SelectionProofPartialSig.HasQuorum() {
 			return errors.New("selection proof quorum incomplete")
 		}

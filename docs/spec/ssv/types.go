@@ -3,13 +3,12 @@ package ssv
 import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"time"
 )
 
 // DutyRunners is a map of duty runners mapped by msg id hex.
-type DutyRunners map[beacon.RoleType]*Runner
+type DutyRunners map[types.BeaconRole]*Runner
 
 // DutyRunnerForMsgID returns a Runner from the provided msg ID, or nil if not found
 func (ci DutyRunners) DutyRunnerForMsgID(msgID types.MessageID) *Runner {
@@ -40,6 +39,10 @@ type BeaconNode interface {
 	SubmitAggregateSelectionProof(slot phase0.Slot, committeeIndex phase0.CommitteeIndex, slotSig []byte) (*phase0.AggregateAndProof, error)
 	// SubmitSignedAggregateSelectionProof broadcasts a signed aggregator msg
 	SubmitSignedAggregateSelectionProof(msg *phase0.SignedAggregateAndProof) error
+	// GetSyncMessageBlockRoot returns beacon block root for sync committee
+	GetSyncMessageBlockRoot() ([]byte, error)
+	// SubmitSyncMessage submits a signed sync committee msg
+	SubmitSyncMessage(msg *altair.SyncCommitteeMessage) error
 }
 
 // Available networks.
