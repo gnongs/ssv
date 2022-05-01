@@ -67,7 +67,7 @@ func (dr *Runner) CanStartNewDuty(duty *beacon.Duty) error {
 		return nil
 	}
 
-	// if running instance hasn't decided yet we always return error
+	// check if instance running first as we can't start new duty if it does
 	if dr.State.RunningInstance != nil {
 		// check consensus decided
 		if decided, _ := dr.State.RunningInstance.IsDecided(); !decided {
@@ -83,6 +83,13 @@ func (dr *Runner) CanStartNewDuty(duty *beacon.Duty) error {
 		}
 		if !dr.State.RandaoPartialSig.HasQuorum() {
 			return errors.New("randao consensus sig collection is running")
+		}
+	case beacon.RoleTypeAggregator:
+		if dr.selectionProofSigTimeout(duty.Slot) {
+			return nil
+		}
+		if !dr.State.SelectionProofPartialSig.HasQuorum() {
+			return errors.New("selection proof sig collection is running")
 		}
 	}
 
