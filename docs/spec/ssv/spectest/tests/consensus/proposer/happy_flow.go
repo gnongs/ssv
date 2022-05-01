@@ -1,4 +1,4 @@
-package beaconblock
+package proposer
 
 import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"

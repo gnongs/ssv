@@ -2,9 +2,9 @@ package spectest
 
 import (
 	tests2 "github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
-	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/valcheck/aggregator"
-	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/valcheck/attestations"
-	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/valcheck/beaconblock"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/aggregator"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/attester"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/proposer"
 )
 
 var AllTests = []*tests2.SpecTest{
@@ -28,7 +28,7 @@ var AllTests = []*tests2.SpecTest{
 	//
 	//valcheck.WrongDutyPubKey(),
 
-	attestations.HappyFlow(),
+	attester.HappyFlow(),
 	//attestations.FarFutureDuty(),
 	//attestations.DutySlotNotMatchingAttestationSlot(),
 	//attestations.DutyCommitteeIndexNotMatchingAttestations(),
@@ -45,7 +45,7 @@ var AllTests = []*tests2.SpecTest{
 	//processmsg.WrongPubKey(),
 	//processmsg.WrongBeaconType(),
 
-	beaconblock.HappyFlow(),
+	proposer.HappyFlow(),
 
 	aggregator.HappyFlow(),
 }

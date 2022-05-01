@@ -1,4 +1,4 @@
-package valcheck
+package attester
 
 import (
 	"github.com/bloxapp/ssv/docs/spec/qbft"
@@ -7,8 +7,8 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
-// WrongDutyPubKey tests decided value with duty validator pubkey != the duty runner's pubkey
-func WrongDutyPubKey() *tests.SpecTest {
+// HappyFlow tests a full valcheck + post valcheck + duty sig reconstruction flow
+func HappyFlow() *tests.SpecTest {
 	dr := testingutils.AttesterRunner()
 
 	msgs := []*types.SSVMessage{
@@ -16,58 +16,62 @@ func WrongDutyPubKey() *tests.SpecTest {
 			MsgType:    qbft.ProposalMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
-			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.ProposalDataBytes(testingutils.TestConsensusWrongDutyPKDataByts, nil, nil),
+			Identifier: testingutils.AttesterMsgID,
+			Data:       testingutils.ProposalDataBytes(testingutils.TestAttesterConsensusDataByts, nil, nil),
 		}), nil),
 		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
-			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Identifier: testingutils.AttesterMsgID,
+			Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
-			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Identifier: testingutils.AttesterMsgID,
+			Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
-			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.PrepareDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Identifier: testingutils.AttesterMsgID,
+			Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
-			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Identifier: testingutils.AttesterMsgID,
+			Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
-			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Identifier: testingutils.AttesterMsgID,
+			Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
-			Identifier: []byte{1, 2, 3, 4},
-			Data:       testingutils.CommitDataBytes(testingutils.TestConsensusWrongDutyPKDataByts),
+			Identifier: testingutils.AttesterMsgID,
+			Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
+
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK1, 1, qbft.FirstHeight)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK2, 2, qbft.FirstHeight)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK3, 3, qbft.FirstHeight)),
 	}
 
 	return &tests.SpecTest{
-		Name:                    "wrong decided value's pubkey",
+		Name:                    "attester happy flow",
 		Runner:                  dr,
+		Duty:                    testingutils.TestAttesterConsensusData.Duty,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "3f82ba9763ce97791e62f6daff599692f82608dbff222e8f6562a48a34f08272",
-		ExpectedError:           "decided value is invalid: decided value's validator pk is wrong",
+		PostDutyRunnerStateRoot: "800afaa247a9399332e94dfc1fc1caba8db5ad5fc84cc393a48387dd246d7e9c",
 	}
 }

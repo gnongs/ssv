@@ -1,4 +1,4 @@
-package valcheck
+package consensus
 
 import "github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
 
