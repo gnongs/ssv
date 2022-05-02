@@ -29,3 +29,21 @@ var TestingSK4 = func() *bls.SecretKey {
 	ret.DeserializeHexStr("344de4028bc9a073185bf5bb8e092f93da0a8f914a2392083ea327248324d257")
 	return ret
 }()
+var TestingSK5 = func() *bls.SecretKey {
+	threshold.Init()
+	ret := &bls.SecretKey{}
+	ret.DeserializeHexStr("222b75157516779b714973c2453b630c777685cc36724ee149ee867ef885e626")
+	return ret
+}()
+var TestingSK6 = func() *bls.SecretKey {
+	threshold.Init()
+	ret := &bls.SecretKey{}
+	ret.DeserializeHexStr("3effd1935df70b12f4aca1db5af7a3fdf31a9232727f61b11f898841f6d84470")
+	return ret
+}()
+var TestingSK7 = func() *bls.SecretKey {
+	threshold.Init()
+	ret := &bls.SecretKey{}
+	ret.DeserializeHexStr("570ab0b0cac365aba180bedd51196d9b67f8ae30a26b87c0dbaaddc86d17487e")
+	return ret
+}()

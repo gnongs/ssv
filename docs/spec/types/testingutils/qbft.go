@@ -15,37 +15,68 @@ var TestingConfig = &qbft.Config{
 	Storage: NewTestingStorage(),
 	Network: NewTestingNetwork(),
 }
-var TestingShare = &types.Share{
-	OperatorID:      1,
-	ValidatorPubKey: TestingValidatorPubKey[:],
-	SharePubKey:     TestingSK1.GetPublicKey().Serialize(),
-	DomainType:      types.PrimusTestnet,
-	Quorum:          3,
-	PartialQuorum:   2,
-	Committee: []*types.Operator{
-		{
-			OperatorID: 1,
-			PubKey:     TestingSK1.GetPublicKey().Serialize(),
-		},
-		{
-			OperatorID: 2,
-			PubKey:     TestingSK2.GetPublicKey().Serialize(),
-		},
-		{
-			OperatorID: 3,
-			PubKey:     TestingSK3.GetPublicKey().Serialize(),
-		},
-		{
-			OperatorID: 4,
-			PubKey:     TestingSK4.GetPublicKey().Serialize(),
-		},
+var TestingShare = testShare(fourOperatorsCommittee, 3, 2)
+var TestingShareSevenOperators = testShare(sevenOperatorsCommittee, 5, 3)
+
+var fourOperatorsCommittee = []*types.Operator{
+	{
+		OperatorID: 1,
+		PubKey:     TestingSK1.GetPublicKey().Serialize(),
+	},
+	{
+		OperatorID: 2,
+		PubKey:     TestingSK2.GetPublicKey().Serialize(),
+	},
+	{
+		OperatorID: 3,
+		PubKey:     TestingSK3.GetPublicKey().Serialize(),
+	},
+	{
+		OperatorID: 4,
+		PubKey:     TestingSK4.GetPublicKey().Serialize(),
 	},
 }
+
+var sevenOperatorsCommittee = append(fourOperatorsCommittee, []*types.Operator{
+	{
+		OperatorID: 5,
+		PubKey:     TestingSK5.GetPublicKey().Serialize(),
+	},
+	{
+		OperatorID: 6,
+		PubKey:     TestingSK6.GetPublicKey().Serialize(),
+	},
+	{
+		OperatorID: 7,
+		PubKey:     TestingSK7.GetPublicKey().Serialize(),
+	},
+}...)
+
+var testShare = func(committee []*types.Operator, quorum, partialQuorum uint64) *types.Share {
+	return &types.Share{
+		OperatorID:      1,
+		ValidatorPubKey: TestingValidatorPubKey[:],
+		SharePubKey:     TestingSK1.GetPublicKey().Serialize(),
+		DomainType:      types.PrimusTestnet,
+		Quorum:          quorum,
+		PartialQuorum:   partialQuorum,
+		Committee:       committee,
+	}
+}
+
 var BaseInstance = func() *qbft.Instance {
+	return baseInstance(TestingShare, []byte{1, 2, 3, 4})
+}
+
+var SevenOperatorsInstance = func() *qbft.Instance {
+	return baseInstance(TestingShareSevenOperators, []byte{1, 2, 3, 4})
+}
+
+var baseInstance = func(share *types.Share, identifier []byte) *qbft.Instance {
 	ret := qbft.NewInstance(TestingConfig, nil, nil)
 	ret.State = &qbft.State{
-		Share:                           TestingShare,
-		ID:                              []byte{1, 2, 3, 4},
+		Share:                           share,
+		ID:                              identifier,
 		Round:                           qbft.FirstRound,
 		Height:                          qbft.FirstHeight,
 		LastPreparedRound:               qbft.NoRound,

@@ -6,7 +6,8 @@ import (
 )
 
 var AllTests = []*tests.SpecTest{
-	tests.HappyFullFlow(),
+	tests.HappyFlow(),
+	tests.SevenOperators(),
 
 	commit.SingleCommit(),
 	commit.MultiSignerWithOverlap(),
