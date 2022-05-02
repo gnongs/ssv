@@ -18,6 +18,10 @@ var AggregatorRunner = func() *ssv.Runner {
 	return baseRunner(types.BNRoleAggregator, ssv.AggregatorValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
 }
 
+var SyncCommitteeRunner = func() *ssv.Runner {
+	return baseRunner(types.BNRoleSyncCommittee, ssv.SyncCommitteeValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
+}
+
 var baseRunner = func(role types.BeaconRole, valCheck qbft.ProposedValueCheck) *ssv.Runner {
 	return ssv.NewDutyRunner(
 		role,

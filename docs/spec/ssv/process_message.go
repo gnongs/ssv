@@ -138,6 +138,14 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 		if err := v.beacon.SubmitSignedAggregateSelectionProof(msg); err != nil {
 			return errors.Wrap(err, "could not submit to beacon chain reconstructed signed aggregate")
 		}
+	case types.BNRoleSyncCommittee:
+		msg, err := dutyRunner.State.ReconstructSyncCommitteeSig(v.share.ValidatorPubKey)
+		if err != nil {
+			return errors.Wrap(err, "could not reconstruct post consensus sig")
+		}
+		if err := v.beacon.SubmitSyncMessage(msg); err != nil {
+			return errors.Wrap(err, "could not submit to beacon chain reconstructed signed sync committee")
+		}
 	default:
 		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.BeaconRoleType.String())
 	}

@@ -123,6 +123,22 @@ func (km *testingKeyManager) SignAggregateAndProof(msg *spec.AggregateAndProof, 
 	return nil, nil, errors.New("pk not found")
 }
 
+// SignSyncCommitteeBlockRoot returns a signed sync committee msg
+func (km *testingKeyManager) SignSyncCommitteeBlockRoot(slot spec.Slot, root spec.Root, validatorIndex spec.ValidatorIndex, pk []byte) (*altair.SyncCommitteeMessage, []byte, error) {
+	if k, found := km.keys[hex.EncodeToString(pk)]; found {
+		sig := k.SignByte(TestingSyncCommitteeBlockRoot[:])
+		blsSig := spec.BLSSignature{}
+		copy(blsSig[:], sig.Serialize())
+
+		return &altair.SyncCommitteeMessage{
+			Slot:            slot,
+			BeaconBlockRoot: TestingSyncCommitteeBlockRoot,
+			Signature:       blsSig,
+		}, TestingSyncCommitteeBlockRoot[:], nil
+	}
+	return nil, nil, errors.New("pk not found")
+}
+
 func (km *testingKeyManager) AddShare(shareKey *bls.SecretKey) error {
 	km.keys[hex.EncodeToString(shareKey.GetPublicKey().Serialize())] = shareKey
 	return nil

@@ -40,7 +40,7 @@ type BeaconNode interface {
 	// SubmitSignedAggregateSelectionProof broadcasts a signed aggregator msg
 	SubmitSignedAggregateSelectionProof(msg *phase0.SignedAggregateAndProof) error
 	// GetSyncMessageBlockRoot returns beacon block root for sync committee
-	GetSyncMessageBlockRoot() ([]byte, error)
+	GetSyncMessageBlockRoot() (phase0.Root, error)
 	// SubmitSyncMessage submits a signed sync committee msg
 	SubmitSyncMessage(msg *altair.SyncCommitteeMessage) error
 }

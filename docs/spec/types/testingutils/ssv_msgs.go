@@ -10,6 +10,7 @@ import (
 var AttesterMsgID = types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleAttester)
 var ProposerMsgID = types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleProposer)
 var AggregatorMsgID = types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleAggregator)
+var SyncCommitteeMsgID = types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleSyncCommittee)
 
 var TestAttesterConsensusData = &types.ConsensusData{
 	Duty:            TestingAttesterDuty,
@@ -28,6 +29,12 @@ var TestProposerConsensusData = &types.ConsensusData{
 	BlockData: TestingBeaconBlock,
 }
 var TestProposerConsensusDataByts, _ = TestProposerConsensusData.Encode()
+
+var TestSyncCommitteeConsensusData = &types.ConsensusData{
+	Duty:                   TestingSyncCommitteeDuty,
+	SyncCommitteeBlockRoot: TestingSyncCommitteeBlockRoot,
+}
+var TestSyncCommitteeConsensusDataByts, _ = TestSyncCommitteeConsensusData.Encode()
 
 var TestConsensusUnkownDutyTypeData = &types.ConsensusData{
 	Duty:            TestingUnknownDutyType,
@@ -55,6 +62,10 @@ var SSVMsgProposer = func(qbftMsg *qbft.SignedMessage, partialSigMsg *ssv.Signed
 
 var SSVMsgAggregator = func(qbftMsg *qbft.SignedMessage, partialSigMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
 	return ssvMsg(qbftMsg, partialSigMsg, types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleAggregator))
+}
+
+var SSVMsgSyncCommittee = func(qbftMsg *qbft.SignedMessage, partialSigMsg *ssv.SignedPartialSignatureMessage) *types.SSVMessage {
+	return ssvMsg(qbftMsg, partialSigMsg, types.NewMsgID(TestingValidatorPubKey[:], types.BNRoleSyncCommittee))
 }
 
 var ssvMsg = func(qbftMsg *qbft.SignedMessage, postMsg *ssv.SignedPartialSignatureMessage, msgID types.MessageID) *types.SSVMessage {
@@ -277,6 +288,53 @@ var postConsensusAggregatorMsg = func(
 		Type:             ssv.PostConsensusPartialSig,
 		Slot:             TestingDutySlot,
 		PartialSignature: signedAtt.Signature[:],
+		SigningRoot:      root,
+		Signers:          []types.OperatorID{id},
+	}
+
+	if noMsgSigners {
+		postConsensusMsg.Signers = []types.OperatorID{}
+	}
+	if multiMsgSigners {
+		postConsensusMsg.Signers = []types.OperatorID{id, 5}
+	}
+
+	sig, _ := signer.SignRoot(postConsensusMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
+	return &ssv.SignedPartialSignatureMessage{
+		Message:   postConsensusMsg,
+		Signature: sig,
+		Signers:   []types.OperatorID{id},
+	}
+}
+
+var PostConsensusSyncCommitteeMsg = func(sk *bls.SecretKey, id types.OperatorID) *ssv.SignedPartialSignatureMessage {
+	return postConsensusSyncCommitteeMsg(sk, id, false, false, false, false)
+}
+
+var postConsensusSyncCommitteeMsg = func(
+	sk *bls.SecretKey,
+	id types.OperatorID,
+	wrongRoot bool,
+	wrongBeaconSig bool,
+	noMsgSigners bool,
+	multiMsgSigners bool,
+) *ssv.SignedPartialSignatureMessage {
+	signer := NewTestingKeyManager()
+	signedRoot, root, _ := signer.SignSyncCommitteeBlockRoot(TestingDutySlot, TestingSyncCommitteeBlockRoot, TestingSyncCommitteeDuty.ValidatorIndex, sk.GetPublicKey().Serialize())
+
+	if wrongBeaconSig {
+		//signedAtt, _, _ = signer.SignAttestation(TestingAttestationData, TestingAttesterDuty, TestingWrongSK.GetPublicKey().Serialize())
+		panic("implement")
+	}
+
+	if wrongRoot {
+		root = []byte{1, 2, 3, 4}
+	}
+
+	postConsensusMsg := &ssv.PartialSignatureMessage{
+		Type:             ssv.PostConsensusPartialSig,
+		Slot:             TestingDutySlot,
+		PartialSignature: signedRoot.Signature[:],
 		SigningRoot:      root,
 		Signers:          []types.OperatorID{id},
 	}

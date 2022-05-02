@@ -76,8 +76,19 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
 		ret.PartialSignature = dr.State.SignedAggregate.Signature[:]
 		return ret, nil
-	//case beacon.RoleTypeProposer:
+	case types.BNRoleSyncCommittee:
+		signed, r, err := signer.SignSyncCommitteeBlockRoot(decidedValue.Duty.Slot, decidedValue.SyncCommitteeBlockRoot, decidedValue.Duty.ValidatorIndex, dr.Share.SharePubKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to sign aggregate and proof")
+		}
 
+		dr.State.DecidedValue = decidedValue
+		dr.State.SignedSyncCommittee = signed
+		dr.State.PostConsensusPartialSig.SigRoot = r
+
+		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
+		ret.PartialSignature = dr.State.SignedSyncCommittee.Signature[:]
+		return ret, nil
 	default:
 		return nil, errors.Errorf("unknown duty %s", decidedValue.Duty.Type.String())
 	}

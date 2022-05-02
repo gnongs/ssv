@@ -23,6 +23,8 @@ func (v *Validator) StartDuty(duty *types.Duty) error {
 		return v.executeBlockProposalDuty(duty, dutyRunner)
 	case types.BNRoleAggregator:
 		return v.executeAggregatorDuty(duty, dutyRunner)
+	case types.BNRoleSyncCommittee:
+		return v.executeSyncCommitteeDuty(duty, dutyRunner)
 	default:
 		return errors.Errorf("duty type %s unkwon", duty.Type.String())
 	}

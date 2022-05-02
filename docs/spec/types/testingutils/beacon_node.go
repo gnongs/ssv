@@ -69,7 +69,7 @@ var TestingAggregateAndProof = &spec.AggregateAndProof{
 var TestingSignedAggregateAndProofRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
 var TestingSelectionProofRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
 
-var TestingSyncCommitteeBlockRoot = make([]byte, 32)
+var TestingSyncCommitteeBlockRoot = spec.Root{}
 
 var TestingValidatorPubKey = func() spec.BLSPubKey {
 	// sk - 5342fd7051ab252e02acc53c765007817b2dc8bab596862e3f8711513b2092b3
@@ -115,6 +115,17 @@ var TestingAggregatorDuty = &types.Duty{
 	Slot:                    12,
 	ValidatorIndex:          1,
 	CommitteeIndex:          22,
+	CommitteesAtSlot:        36,
+	CommitteeLength:         128,
+	ValidatorCommitteeIndex: 11,
+}
+
+var TestingSyncCommitteeDuty = &types.Duty{
+	Type:                    types.BNRoleSyncCommittee,
+	PubKey:                  TestingValidatorPubKey,
+	Slot:                    TestingDutySlot,
+	ValidatorIndex:          1,
+	CommitteeIndex:          3,
 	CommitteesAtSlot:        36,
 	CommitteeLength:         128,
 	ValidatorCommitteeIndex: 11,
@@ -185,7 +196,7 @@ func (bn *testingBeaconNode) SubmitSignedAggregateSelectionProof(msg *spec.Signe
 }
 
 // GetSyncMessageBlockRoot returns beacon block root for sync committee
-func (bn *testingBeaconNode) GetSyncMessageBlockRoot() ([]byte, error) {
+func (bn *testingBeaconNode) GetSyncMessageBlockRoot() (spec.Root, error) {
 	return TestingSyncCommitteeBlockRoot, nil
 }
 

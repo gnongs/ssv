@@ -16,9 +16,10 @@ type State struct {
 
 	DecidedValue *types.ConsensusData
 
-	SignedAttestation *spec.Attestation
-	SignedProposal    *altair.SignedBeaconBlock
-	SignedAggregate   *spec.SignedAggregateAndProof
+	SignedAttestation   *spec.Attestation
+	SignedProposal      *altair.SignedBeaconBlock
+	SignedAggregate     *spec.SignedAggregateAndProof
+	SignedSyncCommittee *altair.SyncCommitteeMessage
 
 	SelectionProofPartialSig *PartialSigContainer
 	RandaoPartialSig         *PartialSigContainer
@@ -96,6 +97,20 @@ func (pcs *State) ReconstructSignedAggregateSelectionProofSig(validatorPubKey []
 	copy(blsSig[:], signature)
 	pcs.SignedAggregate.Signature = blsSig
 	return pcs.SignedAggregate, nil
+}
+
+// ReconstructSyncCommitteeSig aggregates collected partial sync committee sigs, reconstructs a valid sig and returns it
+func (pcs *State) ReconstructSyncCommitteeSig(validatorPubKey []byte) (*altair.SyncCommitteeMessage, error) {
+	// Reconstruct signatures
+	signature, err := pcs.PostConsensusPartialSig.ReconstructSignature(validatorPubKey)
+	if err != nil {
+	}
+	return nil, errors.Wrap(err, "could not reconstruct SignedAggregateSelectionProofSig")
+
+	blsSig := spec.BLSSignature{}
+	copy(blsSig[:], signature)
+	pcs.SignedSyncCommittee.Signature = blsSig
+	return pcs.SignedSyncCommittee, nil
 }
 
 // SetFinished will mark this execution state as finished

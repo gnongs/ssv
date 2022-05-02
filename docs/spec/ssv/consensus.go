@@ -94,6 +94,9 @@ func (dr *Runner) canProcessConsensusMsg(msg *qbft.SignedMessage) error {
 			return errors.New("selection proof quorum incomplete")
 		}
 		return nil
+	case types.BNRoleSyncCommittee:
+		// no pre-condition for processing consensus msgs
+		return nil
 	default:
 		return errors.New("beacon role not supporter")
 	}

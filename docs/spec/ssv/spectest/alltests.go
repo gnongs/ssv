@@ -5,6 +5,7 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/aggregator"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/attester"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/proposer"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/synccommittee"
 )
 
 var AllTests = []*tests2.SpecTest{
@@ -48,4 +49,6 @@ var AllTests = []*tests2.SpecTest{
 	proposer.HappyFlow(),
 
 	aggregator.HappyFlow(),
+
+	synccommittee.HappyFlow(),
 }

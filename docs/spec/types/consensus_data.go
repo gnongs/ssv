@@ -12,7 +12,7 @@ type ConsensusData struct {
 	AttestationData        *phase0.AttestationData
 	BlockData              *altair.BeaconBlock
 	AggregateAndProof      *phase0.AggregateAndProof
-	SyncCommitteeBlockRoot []byte
+	SyncCommitteeBlockRoot phase0.Root
 }
 
 func (cid *ConsensusData) Encode() ([]byte, error) {
