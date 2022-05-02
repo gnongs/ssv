@@ -208,6 +208,8 @@ func (v *Validator) processSelectionProofPartialSig(dutyRunner *Runner, signedMs
 
 	duty := dutyRunner.CurrentDuty
 
+	// TODO waitToSlotTwoThirds
+
 	// get block data
 	res, err := v.beacon.SubmitAggregateSelectionProof(duty.Slot, duty.CommitteeIndex, fullSig)
 	if err != nil {
