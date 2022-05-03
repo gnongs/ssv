@@ -3,7 +3,6 @@ package qbft
 import (
 	"encoding/json"
 	"github.com/bloxapp/ssv/docs/spec/types"
-	"github.com/bloxapp/ssv/docs/spec/utils"
 	"github.com/pkg/errors"
 	"sync"
 )
@@ -16,7 +15,7 @@ type Instance struct {
 	State  *State
 	config IConfig
 
-	processMsgF *utils.ThreadSafeF
+	processMsgF *types.ThreadSafeF
 	startOnce   sync.Once
 	StartValue  []byte
 }
@@ -36,7 +35,7 @@ func NewInstance(
 			RoundChangeContainer: NewMsgContainer(),
 		},
 		config:      config,
-		processMsgF: utils.NewThreadSafeF(),
+		processMsgF: types.NewThreadSafeF(),
 	}
 }
 

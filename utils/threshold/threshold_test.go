@@ -1,6 +1,7 @@
 package threshold
 
 import (
+	"fmt"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -29,6 +30,65 @@ func generateShares(n uint64, k uint64, message string) (*shareSet, error) {
 	set.shares = shares
 	return &set, err
 }
+
+func TestSplitAndReconstruct13(t *testing.T) {
+	Init()
+	shareSet, err := generateShares(13, 9, "bloxRocks!")
+	require.NoError(t, err)
+
+	// partial sigs
+	sigVec := make(map[uint64][]byte)
+	for i, s := range shareSet.shares {
+		fmt.Printf("%d %s\n", i, s.SerializeToHexStr())
+		partialSig := s.SignByte(shareSet.message)
+		sigVec[i] = partialSig.Serialize()
+	}
+
+	// reconstruct
+	sig, _ := ReconstructSignatures(sigVec)
+	require.True(t, shareSet.skSig.IsEqual(sig))
+	require.NoError(t, shareSet.skSig.Deserialize(sig.Serialize()))
+	require.True(t, shareSet.skSig.VerifyByte(shareSet.sk.GetPublicKey(), shareSet.message))
+}
+
+func TestSplitAndReconstruct10(t *testing.T) {
+	Init()
+	shareSet, err := generateShares(10, 7, "bloxRocks!")
+	require.NoError(t, err)
+
+	// partial sigs
+	sigVec := make(map[uint64][]byte)
+	for i, s := range shareSet.shares {
+		partialSig := s.SignByte(shareSet.message)
+		sigVec[i] = partialSig.Serialize()
+	}
+
+	// reconstruct
+	sig, _ := ReconstructSignatures(sigVec)
+	require.True(t, shareSet.skSig.IsEqual(sig))
+	require.NoError(t, shareSet.skSig.Deserialize(sig.Serialize()))
+	require.True(t, shareSet.skSig.VerifyByte(shareSet.sk.GetPublicKey(), shareSet.message))
+}
+
+func TestSplitAndReconstruct7(t *testing.T) {
+	Init()
+	shareSet, err := generateShares(7, 5, "bloxRocks!")
+	require.NoError(t, err)
+
+	// partial sigs
+	sigVec := make(map[uint64][]byte)
+	for i, s := range shareSet.shares {
+		partialSig := s.SignByte(shareSet.message)
+		sigVec[i] = partialSig.Serialize()
+	}
+
+	// reconstruct
+	sig, _ := ReconstructSignatures(sigVec)
+	require.True(t, shareSet.skSig.IsEqual(sig))
+	require.NoError(t, shareSet.skSig.Deserialize(sig.Serialize()))
+	require.True(t, shareSet.skSig.VerifyByte(shareSet.sk.GetPublicKey(), shareSet.message))
+}
+
 func TestSplitAndReconstruct(t *testing.T) {
 	Init()
 	shareSet, err := generateShares(4, 3, "bloxRocks!")
