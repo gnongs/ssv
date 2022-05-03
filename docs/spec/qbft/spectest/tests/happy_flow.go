@@ -63,7 +63,7 @@ func HappyFlow() *SpecTest {
 	return &SpecTest{
 		Name:     "happy flow",
 		Pre:      pre,
-		PostRoot: "b1fc65e0eb8f8626e5dd78515bc456121f2d05577bacfefb17917d97baa9683a",
+		PostRoot: "b7b0951c8ab0f266bc79c1ec39c2f7976e9e0da654abfb833eaca7f2fd8435a3",
 		Messages: msgs,
 	}
 }

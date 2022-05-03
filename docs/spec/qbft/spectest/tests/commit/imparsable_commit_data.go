@@ -50,7 +50,7 @@ func ImparsableCommitData() *tests.SpecTest {
 	return &tests.SpecTest{
 		Name:          "imparsable commit data",
 		Pre:           pre,
-		PostRoot:      "a35c30905e199f647a8702210fd04a69a6049527cae31e256b0b5b75395a5750",
+		PostRoot:      "0698ff119222fa4b828651aa920264959e9ba505d6a8e52534a85ec3e614b80c",
 		Messages:      msgs,
 		ExpectedError: "commit msg invalid: could not get msg commit data: could not decode commit data from message: invalid character '\\x01' looking for beginning of value",
 	}
