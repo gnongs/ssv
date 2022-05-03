@@ -97,10 +97,10 @@ var baseInstance = func(share *types.Share, identifier []byte) *qbft.Instance {
 	return ret
 }
 
-func NewTestingQBFTController(identifier []byte, valCheck qbft.ProposedValueCheck) *qbft.Controller {
+func NewTestingQBFTController(identifier []byte, valCheck qbft.ProposedValueCheck, share *types.Share) *qbft.Controller {
 	ret := qbft.NewController(
 		identifier,
-		TestingShare,
+		share,
 		types.PrimusTestnet,
 		NewTestingKeyManager(),
 		valCheck,

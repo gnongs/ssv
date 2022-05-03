@@ -24,8 +24,13 @@ func (dr *Runner) ProcessPostConsensusMessage(msg *SignedPartialSignatureMessage
 		return false, nil
 	}
 
-	dr.State.SetFinished()
-	return dr.State.PostConsensusPartialSig.HasQuorum(), nil
+	quorum := dr.State.PostConsensusPartialSig.HasQuorum()
+
+	if quorum {
+		dr.State.SetFinished()
+	}
+
+	return quorum, nil
 }
 
 // SignDutyPostConsensus sets the Decided duty and partially signs the Decided data, returns a PartialSignatureMessage to be broadcasted or error

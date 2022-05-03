@@ -7,27 +7,36 @@ import (
 )
 
 var AttesterRunner = func() *ssv.Runner {
-	return baseRunner(types.BNRoleAttester, ssv.BeaconAttestationValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
+	return baseRunner(types.BNRoleAttester, ssv.BeaconAttestationValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork), 4)
+}
+
+var AttesterRunner7Operators = func() *ssv.Runner {
+	return baseRunner(types.BNRoleAttester, ssv.BeaconAttestationValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork), 7)
 }
 
 var ProposerRunner = func() *ssv.Runner {
-	return baseRunner(types.BNRoleProposer, ssv.BeaconBlockValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
+	return baseRunner(types.BNRoleProposer, ssv.BeaconBlockValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork), 4)
 }
 
 var AggregatorRunner = func() *ssv.Runner {
-	return baseRunner(types.BNRoleAggregator, ssv.AggregatorValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
+	return baseRunner(types.BNRoleAggregator, ssv.AggregatorValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork), 4)
 }
 
 var SyncCommitteeRunner = func() *ssv.Runner {
-	return baseRunner(types.BNRoleSyncCommittee, ssv.SyncCommitteeValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork))
+	return baseRunner(types.BNRoleSyncCommittee, ssv.SyncCommitteeValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork), 4)
 }
 
-var baseRunner = func(role types.BeaconRole, valCheck qbft.ProposedValueCheck) *ssv.Runner {
+var baseRunner = func(role types.BeaconRole, valCheck qbft.ProposedValueCheck, operatorsCnt int) *ssv.Runner {
+	share := TestingShare
+	if operatorsCnt == 7 {
+		share = TestingShareSevenOperators
+	}
+
 	return ssv.NewDutyRunner(
 		role,
 		ssv.NowTestNetwork,
-		TestingShare,
-		NewTestingQBFTController(types.NewMsgID(TestingValidatorPubKey[:], role), valCheck),
+		share,
+		NewTestingQBFTController(types.NewMsgID(TestingValidatorPubKey[:], role), valCheck, share),
 		NewTestingStorage(),
 		valCheck,
 	)
