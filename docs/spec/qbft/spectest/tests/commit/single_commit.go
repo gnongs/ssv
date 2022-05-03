@@ -50,7 +50,7 @@ func SingleCommit() *tests.SpecTest {
 	return &tests.SpecTest{
 		Name:     "single signer",
 		Pre:      pre,
-		PostRoot: "ee5ba616000c7b4aff5b026cd9824feec3e031e2a89107c2318434a0a5127698",
+		PostRoot: "4d72d31737ba39fdeae13267ba8f964d5cfa55a7c564a7810a946dc24d2b33c7",
 		Messages: msgs,
 	}
 }
