@@ -50,7 +50,7 @@ func WrongSignature() *tests.SpecTest {
 	return &tests.SpecTest{
 		Name:          "wrong commit signature",
 		Pre:           pre,
-		PostRoot:      "68ded5fc0006fc28431209687af07bbda634bb7e2a482864e2650ddd8e81bce0",
+		PostRoot:      "1d5de6fb6cbd6ba8b1ac20b935cc9bd3df470b62b1479253b310da9de20840e8",
 		Messages:      msgs,
 		ExpectedError: "commit msg invalid: commit msg signature invalid: failed to verify signature",
 	}

@@ -58,7 +58,7 @@ func MultiSignerNoOverlap() *tests.SpecTest {
 	return &tests.SpecTest{
 		Name:     "multi signer, no overlap",
 		Pre:      pre,
-		PostRoot: "f3c0ea766e6d4aea5735985691960cf8bb74860c31a851dea5ec5ec23066bdce",
+		PostRoot: "9c3a8e0f7e595fee7ee80470b4519813e8b886a6666eaf2132637b7558e415b5",
 		Messages: msgs,
 	}
 }
