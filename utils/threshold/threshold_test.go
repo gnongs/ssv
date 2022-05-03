@@ -1,7 +1,6 @@
 package threshold
 
 import (
-	"fmt"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -39,7 +38,6 @@ func TestSplitAndReconstruct13(t *testing.T) {
 	// partial sigs
 	sigVec := make(map[uint64][]byte)
 	for i, s := range shareSet.shares {
-		fmt.Printf("%d %s\n", i, s.SerializeToHexStr())
 		partialSig := s.SignByte(shareSet.message)
 		sigVec[i] = partialSig.Serialize()
 	}

@@ -91,7 +91,7 @@ func SevenOperators() *SpecTest {
 	return &SpecTest{
 		Name:     "happy flow seven operators",
 		Pre:      pre,
-		PostRoot: "bab91bf4474560bdea1300eafbb89728c6bd78346b7bafd2542711076784ab03",
+		PostRoot: "73e8286f6b328ba8e5f724e29348c9fb49a867897c406aa65208c73e63e37d0f",
 		Messages: msgs,
 	}
 }
