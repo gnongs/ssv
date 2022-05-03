@@ -50,7 +50,7 @@ func WrongRound() *tests.SpecTest {
 	return &tests.SpecTest{
 		Name:          "wrong commit round",
 		Pre:           pre,
-		PostRoot:      "0698ff119222fa4b828651aa920264959e9ba505d6a8e52534a85ec3e614b80c",
+		PostRoot:      "68ded5fc0006fc28431209687af07bbda634bb7e2a482864e2650ddd8e81bce0",
 		Messages:      msgs,
 		ExpectedError: "commit msg invalid: commit round is wrong",
 	}
