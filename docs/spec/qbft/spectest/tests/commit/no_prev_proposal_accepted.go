@@ -12,7 +12,7 @@ func NoPrevAcceptedProposal() *tests.SpecTest {
 	pre := testingutils.BaseInstance()
 	pre.State.ProposalAcceptedForCurrentRound = nil
 	msgs := []*qbft.SignedMessage{
-		testingutils.SignQBFTMsg(testingutils.TestingSK1, types.OperatorID(1), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[1], types.OperatorID(1), &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
@@ -23,7 +23,7 @@ func NoPrevAcceptedProposal() *tests.SpecTest {
 	return &tests.SpecTest{
 		Name:          "no previous accepted proposal",
 		Pre:           pre,
-		PostRoot:      "3b449de57666313053c21d7ec45ae8b43eaa5360df0b1f8fb6bef6d50928acf2",
+		PostRoot:      "fad062fff2a49530bbe8c99ba812b7c01a274b0980e915aee341bd22aefd582a",
 		Messages:      msgs,
 		ExpectedError: "did not receive proposal for this round",
 	}

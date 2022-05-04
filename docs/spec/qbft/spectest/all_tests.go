@@ -8,6 +8,8 @@ import (
 var AllTests = []*tests.SpecTest{
 	tests.HappyFlow(),
 	tests.SevenOperators(),
+	tests.TenOperators(),
+	tests.ThirteenOperators(),
 
 	commit.SingleCommit(),
 	commit.MultiSignerWithOverlap(),

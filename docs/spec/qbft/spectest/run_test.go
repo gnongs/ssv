@@ -39,7 +39,7 @@ func TestJson(t *testing.T) {
 		byts, _ := test.Pre.Encode()
 
 		// a little trick we do to instantiate all the internal instance params
-		pre := qbft.NewInstance(testingutils.TestingConfig, test.Pre.State.Share, test.Pre.State.ID)
+		pre := qbft.NewInstance(testingutils.TestingConfig(testingutils.Testing4SharesSet()), test.Pre.State.Share, test.Pre.State.ID, qbft.FirstHeight)
 		pre.Decode(byts)
 		test.Pre = pre
 		t.Run(test.Name, func(t *testing.T) {

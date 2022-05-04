@@ -11,35 +11,35 @@ import (
 func SingleCommit() *tests.SpecTest {
 	pre := testingutils.BaseInstance()
 	msgs := []*qbft.SignedMessage{
-		testingutils.SignQBFTMsg(testingutils.TestingSK1, types.OperatorID(1), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[1], types.OperatorID(1), &qbft.Message{
 			MsgType:    qbft.ProposalMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.ProposalDataBytes([]byte{1, 2, 3, 4}, nil, nil),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK1, types.OperatorID(1), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[1], types.OperatorID(1), &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.PrepareDataBytes([]byte{1, 2, 3, 4}),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK2, types.OperatorID(2), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[2], types.OperatorID(2), &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.PrepareDataBytes([]byte{1, 2, 3, 4}),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK3, types.OperatorID(3), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[3], types.OperatorID(3), &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.PrepareDataBytes([]byte{1, 2, 3, 4}),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK1, types.OperatorID(1), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[1], types.OperatorID(1), &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
@@ -50,7 +50,7 @@ func SingleCommit() *tests.SpecTest {
 	return &tests.SpecTest{
 		Name:     "single signer",
 		Pre:      pre,
-		PostRoot: "4d72d31737ba39fdeae13267ba8f964d5cfa55a7c564a7810a946dc24d2b33c7",
+		PostRoot: "0c64c50ebb227d4b9a3ecb643bc5423290cdd574e2fbd4049319b32358ac0386",
 		Messages: msgs,
 	}
 }

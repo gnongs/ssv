@@ -6,107 +6,61 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
-var TestingConfig = &qbft.Config{
-	Signer:     NewTestingKeyManager(),
-	SigningPK:  TestingSK1.GetPublicKey().Serialize(),
-	Domain:     types.PrimusTestnet,
-	ValueCheck: ssv.BeaconAttestationValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork),
-	Storage:    NewTestingStorage(),
-	Network:    NewTestingNetwork(),
-}
-var TestingShare = testShare(fourOperatorsCommittee, 3, 2)
-var TestingShareSevenOperators = testShare(sevenOperatorsCommittee, 5, 3)
-
-var fourOperatorsCommittee = []*types.Operator{
-	{
-		OperatorID: 1,
-		PubKey:     TestingSK1.GetPublicKey().Serialize(),
-	},
-	{
-		OperatorID: 2,
-		PubKey:     TestingSK2.GetPublicKey().Serialize(),
-	},
-	{
-		OperatorID: 3,
-		PubKey:     TestingSK3.GetPublicKey().Serialize(),
-	},
-	{
-		OperatorID: 4,
-		PubKey:     TestingSK4.GetPublicKey().Serialize(),
-	},
+var TestingConfig = func(keySet *TestKeySet) *qbft.Config {
+	return &qbft.Config{
+		Signer:    NewTestingKeyManager(keySet),
+		SigningPK: keySet.Shares[1].GetPublicKey().Serialize(),
+		Domain:    types.PrimusTestnet,
+		ValueCheck: func(data []byte) error {
+			return nil
+		},
+		Storage: NewTestingStorage(),
+		Network: NewTestingNetwork(),
+	}
 }
 
-var sevenOperatorsCommittee = append(fourOperatorsCommittee, []*types.Operator{
-	{
-		OperatorID: 5,
-		PubKey:     TestingSK5.GetPublicKey().Serialize(),
-	},
-	{
-		OperatorID: 6,
-		PubKey:     TestingSK6.GetPublicKey().Serialize(),
-	},
-	{
-		OperatorID: 7,
-		PubKey:     TestingSK7.GetPublicKey().Serialize(),
-	},
-}...)
-
-var testShare = func(committee []*types.Operator, quorum, partialQuorum uint64) *types.Share {
+var testShare = func(keysSet *TestKeySet) *types.Share {
 	return &types.Share{
 		OperatorID:      1,
-		ValidatorPubKey: TestingValidatorPubKey[:],
-		SharePubKey:     TestingSK1.GetPublicKey().Serialize(),
+		ValidatorPubKey: keysSet.PK.Serialize(),
+		SharePubKey:     keysSet.Shares[1].GetPublicKey().Serialize(),
 		DomainType:      types.PrimusTestnet,
-		Quorum:          quorum,
-		PartialQuorum:   partialQuorum,
-		Committee:       committee,
+		Quorum:          keysSet.Threshold,
+		PartialQuorum:   keysSet.PartialThreshold,
+		Committee:       keysSet.Committee(),
 	}
 }
 
 var BaseInstance = func() *qbft.Instance {
-	return baseInstance(TestingShare, []byte{1, 2, 3, 4})
+	return baseInstance(testShare(Testing4SharesSet()), Testing4SharesSet(), []byte{1, 2, 3, 4})
 }
 
 var SevenOperatorsInstance = func() *qbft.Instance {
-	return baseInstance(TestingShareSevenOperators, []byte{1, 2, 3, 4})
+	return baseInstance(testShare(Testing7SharesSet()), Testing7SharesSet(), []byte{1, 2, 3, 4})
 }
 
-var baseInstance = func(share *types.Share, identifier []byte) *qbft.Instance {
-	ret := qbft.NewInstance(TestingConfig, nil, nil)
-	ret.State = &qbft.State{
-		Share:                           share,
-		ID:                              identifier,
-		Round:                           qbft.FirstRound,
-		Height:                          qbft.FirstHeight,
-		LastPreparedRound:               qbft.NoRound,
-		LastPreparedValue:               nil,
-		ProposalAcceptedForCurrentRound: nil,
-	}
-	ret.State.ProposeContainer = &qbft.MsgContainer{
-		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
-	}
-	ret.State.PrepareContainer = &qbft.MsgContainer{
-		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
-	}
-	ret.State.CommitContainer = &qbft.MsgContainer{
-		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
-	}
-	ret.State.RoundChangeContainer = &qbft.MsgContainer{
-		Msgs: map[qbft.Round][]*qbft.SignedMessage{},
-	}
-	return ret
+var TenOperatorsInstance = func() *qbft.Instance {
+	return baseInstance(testShare(Testing10SharesSet()), Testing10SharesSet(), []byte{1, 2, 3, 4})
 }
 
-func NewTestingQBFTController(identifier []byte, valCheck qbft.ProposedValueCheck, share *types.Share) *qbft.Controller {
-	ret := qbft.NewController(
+var ThirteenOperatorsInstance = func() *qbft.Instance {
+	return baseInstance(testShare(Testing13SharesSet()), Testing13SharesSet(), []byte{1, 2, 3, 4})
+}
+
+var baseInstance = func(share *types.Share, keySet *TestKeySet, identifier []byte) *qbft.Instance {
+	return qbft.NewInstance(TestingConfig(keySet), share, identifier, qbft.FirstHeight)
+}
+
+func NewTestingQBFTController(identifier []byte, share *types.Share, keySet *TestKeySet) *qbft.Controller {
+	return qbft.NewController(
 		identifier,
 		share,
 		types.PrimusTestnet,
-		NewTestingKeyManager(),
-		valCheck,
+		NewTestingKeyManager(keySet),
+		func(data []byte) error {
+			return nil
+		},
 		NewTestingStorage(),
 		NewTestingNetwork(),
 	)
-	ret.Domain = types.PrimusTestnet
-	return ret
 }
