@@ -24,11 +24,15 @@ func NewInstance(
 	config IConfig,
 	share *types.Share,
 	identifier []byte,
+	height Height,
 ) *Instance {
 	return &Instance{
 		State: &State{
 			Share:                share,
 			ID:                   identifier,
+			Round:                FirstRound,
+			Height:               height,
+			LastPreparedRound:    NoRound,
 			ProposeContainer:     NewMsgContainer(),
 			PrepareContainer:     NewMsgContainer(),
 			CommitContainer:      NewMsgContainer(),

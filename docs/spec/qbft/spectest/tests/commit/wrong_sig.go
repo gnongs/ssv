@@ -11,35 +11,35 @@ import (
 func WrongSignature() *tests.SpecTest {
 	pre := testingutils.BaseInstance()
 	msgs := []*qbft.SignedMessage{
-		testingutils.SignQBFTMsg(testingutils.TestingSK1, types.OperatorID(1), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[1], types.OperatorID(1), &qbft.Message{
 			MsgType:    qbft.ProposalMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.ProposalDataBytes([]byte{1, 2, 3, 4}, nil, nil),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK1, types.OperatorID(1), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[1], types.OperatorID(1), &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.PrepareDataBytes([]byte{1, 2, 3, 4}),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK2, types.OperatorID(2), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[2], types.OperatorID(2), &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.PrepareDataBytes([]byte{1, 2, 3, 4}),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK3, types.OperatorID(3), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[3], types.OperatorID(3), &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.PrepareDataBytes([]byte{1, 2, 3, 4}),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK1, types.OperatorID(2), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[1], types.OperatorID(2), &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
@@ -50,7 +50,7 @@ func WrongSignature() *tests.SpecTest {
 	return &tests.SpecTest{
 		Name:          "wrong commit signature",
 		Pre:           pre,
-		PostRoot:      "1d5de6fb6cbd6ba8b1ac20b935cc9bd3df470b62b1479253b310da9de20840e8",
+		PostRoot:      "5ba2e1ecb944c452a17d32c0ec16efb96ddcda6ed85ecd7150ca4b8b1eb9d9e5",
 		Messages:      msgs,
 		ExpectedError: "commit msg invalid: commit msg signature invalid: failed to verify signature",
 	}

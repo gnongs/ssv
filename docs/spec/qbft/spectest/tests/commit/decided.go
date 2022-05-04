@@ -12,42 +12,42 @@ import (
 func Decided() *tests.SpecTest {
 	pre := testingutils.BaseInstance()
 	msgs := []*qbft.SignedMessage{
-		testingutils.SignQBFTMsg(testingutils.TestingSK1, types.OperatorID(1), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[1], types.OperatorID(1), &qbft.Message{
 			MsgType:    qbft.ProposalMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.ProposalDataBytes([]byte{1, 2, 3, 4}, nil, nil),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK1, types.OperatorID(1), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[1], types.OperatorID(1), &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.PrepareDataBytes([]byte{1, 2, 3, 4}),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK2, types.OperatorID(2), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[2], types.OperatorID(2), &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.PrepareDataBytes([]byte{1, 2, 3, 4}),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK3, types.OperatorID(3), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[3], types.OperatorID(3), &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.PrepareDataBytes([]byte{1, 2, 3, 4}),
 		}),
-		testingutils.SignQBFTMsg(testingutils.TestingSK1, types.OperatorID(1), &qbft.Message{
+		testingutils.SignQBFTMsg(testingutils.Testing4SharesSet().Shares[1], types.OperatorID(1), &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: []byte{1, 2, 3, 4},
 			Data:       testingutils.CommitDataBytes([]byte{1, 2, 3, 4}),
 		}),
-		testingutils.MultiSignQBFTMsg([]*bls.SecretKey{testingutils.TestingSK1, testingutils.TestingSK2, testingutils.TestingSK3}, []types.OperatorID{1, 2, 3}, &qbft.Message{
+		testingutils.MultiSignQBFTMsg([]*bls.SecretKey{testingutils.Testing4SharesSet().Shares[1], testingutils.Testing4SharesSet().Shares[2], testingutils.Testing4SharesSet().Shares[3]}, []types.OperatorID{1, 2, 3}, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
@@ -58,7 +58,7 @@ func Decided() *tests.SpecTest {
 	return &tests.SpecTest{
 		Name:     "decided, with overlap",
 		Pre:      pre,
-		PostRoot: "de818e6f60c19ea5374678f3350d931adea464524e52f0dd7273a252d98a773e",
+		PostRoot: "8f5385deff4e83bef4234760b896aabc58cef756ed7bbd56da6418edc35a67b8",
 		Messages: msgs,
 	}
 }

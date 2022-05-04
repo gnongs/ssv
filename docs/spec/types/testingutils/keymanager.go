@@ -15,15 +15,15 @@ type testingKeyManager struct {
 	domain types.DomainType
 }
 
-func NewTestingKeyManager() types.KeyManager {
+func NewTestingKeyManager(keySet *TestKeySet) types.KeyManager {
 	ret := &testingKeyManager{
 		keys:   map[string]*bls.SecretKey{},
 		domain: types.PrimusTestnet,
 	}
-	ret.AddShare(TestingSK1)
-	ret.AddShare(TestingSK2)
-	ret.AddShare(TestingSK3)
-	ret.AddShare(TestingSK4)
+
+	for _, s := range keySet.Shares {
+		ret.AddShare(s)
+	}
 	return ret
 }
 

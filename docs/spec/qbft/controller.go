@@ -142,7 +142,7 @@ func (c *Controller) GetIdentifier() []byte {
 
 // addAndStoreNewInstance returns creates a new QBFT instance, stores it in an array and returns it
 func (c *Controller) addAndStoreNewInstance() *Instance {
-	i := NewInstance(c.generateConfig(), c.Share, c.Identifier)
+	i := NewInstance(c.generateConfig(), c.Share, c.Identifier, c.Height)
 	c.StoredInstances.addNewInstance(i)
 	return i
 }
