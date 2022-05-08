@@ -9,10 +9,11 @@ import (
 
 // WrongMsgID tests a SSVMessage ID which doesn't belong to the validator
 func WrongMsgID() *tests.SpecTest {
-	dr := testingutils.AttesterRunner()
+	ks := testingutils.Testing4SharesSet()
+	dr := testingutils.AttesterRunner(ks)
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsgWrongID(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(testingutils.TestingSK1, 1, qbft.FirstHeight)),
+		testingutils.SSVMsgWrongID(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(ks.Shares[1], 1, qbft.FirstHeight)),
 	}
 
 	return &tests.SpecTest{

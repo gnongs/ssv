@@ -9,52 +9,53 @@ import (
 
 // HappyFlow tests a full valcheck + post valcheck + duty sig reconstruction flow
 func HappyFlow() *tests.SpecTest {
-	dr := testingutils.AttesterRunner()
+	ks := testingutils.Testing4SharesSet()
+	dr := testingutils.AttesterRunner(ks)
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
+		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(ks.Shares[1], 1, &qbft.Message{
 			MsgType:    qbft.ProposalMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: testingutils.AttesterMsgID,
 			Data:       testingutils.ProposalDataBytes(testingutils.TestAttesterConsensusDataByts, nil, nil),
 		}), nil),
-		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
+		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(ks.Shares[1], 1, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: testingutils.AttesterMsgID,
 			Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
-		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
+		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(ks.Shares[2], 2, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: testingutils.AttesterMsgID,
 			Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
-		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
+		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(ks.Shares[3], 3, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: testingutils.AttesterMsgID,
 			Data:       testingutils.PrepareDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
-		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
+		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(ks.Shares[1], 1, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: testingutils.AttesterMsgID,
 			Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
-		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK2, 2, &qbft.Message{
+		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(ks.Shares[2], 2, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
 			Identifier: testingutils.AttesterMsgID,
 			Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
-		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK3, 3, &qbft.Message{
+		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(ks.Shares[3], 3, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
@@ -62,9 +63,9 @@ func HappyFlow() *tests.SpecTest {
 			Data:       testingutils.CommitDataBytes(testingutils.TestAttesterConsensusDataByts),
 		}), nil),
 
-		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK1, 1, qbft.FirstHeight)),
-		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK2, 2, qbft.FirstHeight)),
-		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK3, 3, qbft.FirstHeight)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(ks.Shares[1], 1, qbft.FirstHeight)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(ks.Shares[2], 2, qbft.FirstHeight)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(ks.Shares[3], 3, qbft.FirstHeight)),
 	}
 
 	return &tests.SpecTest{
@@ -72,6 +73,6 @@ func HappyFlow() *tests.SpecTest {
 		Runner:                  dr,
 		Duty:                    testingutils.TestAttesterConsensusData.Duty,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "eeba1ca64624ba7504089dde1868988ddb94189b0109441142eb3357a0dae75e",
+		PostDutyRunnerStateRoot: "4368bab5aed03dfb6a62ee59faf9078912588a892ed21cae551dd51719cc2f4f",
 	}
 }

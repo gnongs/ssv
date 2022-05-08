@@ -11,7 +11,7 @@ import (
 func NoData() *tests.SpecTest {
 	dr := testingutils.AttesterRunner()
 
-	msg := testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(testingutils.TestingSK1, 1, qbft.FirstHeight))
+	msg := testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(ks.Shares[1], 1, qbft.FirstHeight))
 	msg.Data = []byte{}
 	msgs := []*types.SSVMessage{
 		msg,

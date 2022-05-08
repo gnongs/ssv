@@ -2,7 +2,10 @@ package spectest
 
 import (
 	tests2 "github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/aggregator"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/attester"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/proposer"
+	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests/consensus/synccommittee"
 )
 
 var AllTests = []*tests2.SpecTest{
@@ -26,7 +29,7 @@ var AllTests = []*tests2.SpecTest{
 	//
 	//valcheck.WrongDutyPubKey(),
 
-	//attester.HappyFlow(),
+	attester.HappyFlow(),
 	attester.SevenOperators(),
 	//attestations.FarFutureDuty(),
 	//attestations.DutySlotNotMatchingAttestationSlot(),
@@ -44,9 +47,12 @@ var AllTests = []*tests2.SpecTest{
 	//processmsg.WrongPubKey(),
 	//processmsg.WrongBeaconType(),
 
-	//proposer.HappyFlow(),
-	//
-	//aggregator.HappyFlow(),
-	//
-	//synccommittee.HappyFlow(),
+	proposer.HappyFlow(),
+	proposer.SevenOperators(),
+
+	aggregator.HappyFlow(),
+	aggregator.SevenOperators(),
+
+	synccommittee.HappyFlow(),
+	synccommittee.SevenOperators(),
 }

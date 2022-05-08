@@ -9,10 +9,11 @@ import (
 
 // MultipleMessageSigners tests >1 PostConsensusMessage Signers
 func MultipleMessageSigners() *tests.SpecTest {
-	dr := testingutils.DecidedRunner()
+	ks := testingutils.Testing4SharesSet()
+	dr := testingutils.DecidedRunner(ks)
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsgWithMsgMultiSigners(testingutils.TestingSK1, 1, qbft.FirstHeight)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsgWithMsgMultiSigners(ks.Shares[1], 1, qbft.FirstHeight)),
 	}
 
 	return &tests.SpecTest{

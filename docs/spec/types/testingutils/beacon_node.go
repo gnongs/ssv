@@ -23,19 +23,120 @@ var TestingAttestationData = &spec.AttestationData{
 	},
 }
 var TestingAttestationRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f") //[]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2}
-var TestingDuty = func(keySet *TestKeySet) *beacon.Duty {
-	pk := spec.BLSPubKey{}
-	copy(pk[:], keySet.PK.Serialize()[:])
 
-	return &beacon.Duty{
-		Type:                    beacon.RoleTypeAttester,
-		PubKey:                  pk,
-		Slot:                    12,
-		ValidatorIndex:          1,
-		CommitteeIndex:          22,
-		CommitteesAtSlot:        36,
-		ValidatorCommitteeIndex: 11,
-	}
+var TestingBeaconBlock = &altair.BeaconBlock{
+	Slot:          12,
+	ProposerIndex: 10,
+	ParentRoot:    spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
+	StateRoot:     spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
+	Body: &altair.BeaconBlockBody{
+		RANDAOReveal: spec.BLSSignature{},
+		ETH1Data: &spec.ETH1Data{
+			DepositRoot:  spec.Root{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
+			DepositCount: 100,
+			BlockHash:    []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
+		},
+		Graffiti:          []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2},
+		ProposerSlashings: []*spec.ProposerSlashing{},
+		AttesterSlashings: []*spec.AttesterSlashing{},
+		Attestations: []*spec.Attestation{
+			{
+				AggregationBits: bitfield.NewBitlist(122),
+				Data:            TestingAttestationData,
+				Signature:       spec.BLSSignature{},
+			},
+		},
+		Deposits:       []*spec.Deposit{},
+		VoluntaryExits: []*spec.SignedVoluntaryExit{},
+		SyncAggregate: &altair.SyncAggregate{
+			SyncCommitteeBits:      bitfield.NewBitvector512(),
+			SyncCommitteeSignature: spec.BLSSignature{},
+		},
+	},
+}
+var TestingBeaconBlockRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
+var TestingRandaoRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
+
+var TestingAggregateAndProof = &spec.AggregateAndProof{
+	AggregatorIndex: 1,
+	SelectionProof:  spec.BLSSignature{},
+	Aggregate: &spec.Attestation{
+		AggregationBits: bitfield.NewBitlist(128),
+		Signature:       spec.BLSSignature{},
+		Data:            TestingAttestationData,
+	},
+}
+var TestingSignedAggregateAndProofRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
+var TestingSelectionProofRoot, _ = hex.DecodeString("81451c58b079c5af84ebe4b92900d3e9c5a346678cb6dc3c4b7eea2c9cb3565f")
+
+const TestingDutySlot = 12
+
+var TestingSyncCommitteeBlockRoot = spec.Root{}
+
+var TestingAttesterDuty = &types.Duty{
+	Type:                    types.BNRoleAttester,
+	PubKey:                  TestingValidatorPubKey,
+	Slot:                    TestingDutySlot,
+	ValidatorIndex:          1,
+	CommitteeIndex:          3,
+	CommitteesAtSlot:        36,
+	CommitteeLength:         128,
+	ValidatorCommitteeIndex: 11,
+}
+
+var TestingProposerDuty = &types.Duty{
+	Type:                    types.BNRoleProposer,
+	PubKey:                  TestingValidatorPubKey,
+	Slot:                    12,
+	ValidatorIndex:          1,
+	CommitteeIndex:          3,
+	CommitteesAtSlot:        36,
+	CommitteeLength:         128,
+	ValidatorCommitteeIndex: 11,
+}
+
+var TestingAggregatorDuty = &types.Duty{
+	Type:                    types.BNRoleAggregator,
+	PubKey:                  TestingValidatorPubKey,
+	Slot:                    12,
+	ValidatorIndex:          1,
+	CommitteeIndex:          22,
+	CommitteesAtSlot:        36,
+	CommitteeLength:         128,
+	ValidatorCommitteeIndex: 11,
+}
+
+var TestingSyncCommitteeDuty = &types.Duty{
+	Type:                    types.BNRoleSyncCommittee,
+	PubKey:                  TestingValidatorPubKey,
+	Slot:                    TestingDutySlot,
+	ValidatorIndex:          1,
+	CommitteeIndex:          3,
+	CommitteesAtSlot:        36,
+	CommitteeLength:         128,
+	ValidatorCommitteeIndex: 11,
+}
+
+var TestingUnknownDutyType = &types.Duty{
+	Type:                    100,
+	PubKey:                  TestingValidatorPubKey,
+	Slot:                    12,
+	ValidatorIndex:          1,
+	CommitteeIndex:          22,
+	CommitteesAtSlot:        36,
+	CommitteeLength:         128,
+	ValidatorCommitteeIndex: 11,
+}
+
+var TestingWrongDutyPK = &types.Duty{
+	Type:                    types.BNRoleAttester,
+	PubKey:                  TestingWrongValidatorPubKey,
+	Slot:                    12,
+	ValidatorIndex:          1,
+	CommitteeIndex:          3,
+	CommitteesAtSlot:        36,
+	CommitteeLength:         128,
+	ValidatorCommitteeIndex: 11,
 }
 
 type testingBeaconNode struct {

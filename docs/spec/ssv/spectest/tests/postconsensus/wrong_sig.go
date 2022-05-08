@@ -12,7 +12,7 @@ func InvaliSignature() *tests.SpecTest {
 	dr := testingutils.DecidedRunner()
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK1, 2, qbft.FirstHeight)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(ks.Shares[1], 2, qbft.FirstHeight)),
 	}
 
 	return &tests.SpecTest{

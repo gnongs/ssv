@@ -121,7 +121,7 @@ var postConsensusAttestationMsg = func(
 	signedAtt, root, _ := signer.SignAttestation(TestingAttestationData, TestingAttesterDuty, sk.GetPublicKey().Serialize())
 
 	if wrongBeaconSig {
-		signedAtt, _, _ = signer.SignAttestation(TestingAttestationData, TestingAttesterDuty, TestingWrongSK.GetPublicKey().Serialize())
+		signedAtt, _, _ = signer.SignAttestation(TestingAttestationData, TestingAttesterDuty, TestingWrongValidatorPubKey[:])
 	}
 
 	if wrongRoot {

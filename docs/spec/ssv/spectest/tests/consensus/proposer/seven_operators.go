@@ -7,15 +7,17 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
-// HappyFlow tests a full valcheck + post valcheck + duty sig reconstruction flow
-func HappyFlow() *tests.SpecTest {
-	ks := testingutils.Testing4SharesSet()
+// SevenOperators tests a full valcheck + post valcheck + duty sig reconstruction flow for 7 operators
+func SevenOperators() *tests.SpecTest {
+	ks := testingutils.Testing7SharesSet()
 	dr := testingutils.ProposerRunner(ks)
 
 	msgs := []*types.SSVMessage{
 		testingutils.SSVMsgProposer(nil, testingutils.PreConsensusRandaoMsg(ks.Shares[1], 1)),
 		testingutils.SSVMsgProposer(nil, testingutils.PreConsensusRandaoMsg(ks.Shares[2], 2)),
 		testingutils.SSVMsgProposer(nil, testingutils.PreConsensusRandaoMsg(ks.Shares[3], 3)),
+		testingutils.SSVMsgProposer(nil, testingutils.PreConsensusRandaoMsg(ks.Shares[4], 4)),
+		testingutils.SSVMsgProposer(nil, testingutils.PreConsensusRandaoMsg(ks.Shares[5], 5)),
 
 		testingutils.SSVMsgProposer(testingutils.SignQBFTMsg(ks.Shares[1], 1, &qbft.Message{
 			MsgType:    qbft.ProposalMsgType,
@@ -24,6 +26,7 @@ func HappyFlow() *tests.SpecTest {
 			Identifier: testingutils.ProposerMsgID,
 			Data:       testingutils.ProposalDataBytes(testingutils.TestProposerConsensusDataByts, nil, nil),
 		}), nil),
+
 		testingutils.SSVMsgProposer(testingutils.SignQBFTMsg(ks.Shares[1], 1, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
@@ -45,6 +48,21 @@ func HappyFlow() *tests.SpecTest {
 			Identifier: testingutils.ProposerMsgID,
 			Data:       testingutils.PrepareDataBytes(testingutils.TestProposerConsensusDataByts),
 		}), nil),
+		testingutils.SSVMsgProposer(testingutils.SignQBFTMsg(ks.Shares[4], 4, &qbft.Message{
+			MsgType:    qbft.PrepareMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: testingutils.ProposerMsgID,
+			Data:       testingutils.PrepareDataBytes(testingutils.TestProposerConsensusDataByts),
+		}), nil),
+		testingutils.SSVMsgProposer(testingutils.SignQBFTMsg(ks.Shares[5], 5, &qbft.Message{
+			MsgType:    qbft.PrepareMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: testingutils.ProposerMsgID,
+			Data:       testingutils.PrepareDataBytes(testingutils.TestProposerConsensusDataByts),
+		}), nil),
+
 		testingutils.SSVMsgProposer(testingutils.SignQBFTMsg(ks.Shares[1], 1, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
@@ -60,6 +78,20 @@ func HappyFlow() *tests.SpecTest {
 			Data:       testingutils.CommitDataBytes(testingutils.TestProposerConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsgProposer(testingutils.SignQBFTMsg(ks.Shares[3], 3, &qbft.Message{
+			MsgType:    qbft.CommitMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: testingutils.ProposerMsgID,
+			Data:       testingutils.CommitDataBytes(testingutils.TestProposerConsensusDataByts),
+		}), nil),
+		testingutils.SSVMsgProposer(testingutils.SignQBFTMsg(ks.Shares[4], 4, &qbft.Message{
+			MsgType:    qbft.CommitMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: testingutils.ProposerMsgID,
+			Data:       testingutils.CommitDataBytes(testingutils.TestProposerConsensusDataByts),
+		}), nil),
+		testingutils.SSVMsgProposer(testingutils.SignQBFTMsg(ks.Shares[5], 5, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
@@ -70,13 +102,15 @@ func HappyFlow() *tests.SpecTest {
 		testingutils.SSVMsgProposer(nil, testingutils.PostConsensusProposerMsg(ks.Shares[1], 1)),
 		testingutils.SSVMsgProposer(nil, testingutils.PostConsensusProposerMsg(ks.Shares[2], 2)),
 		testingutils.SSVMsgProposer(nil, testingutils.PostConsensusProposerMsg(ks.Shares[3], 3)),
+		testingutils.SSVMsgProposer(nil, testingutils.PostConsensusProposerMsg(ks.Shares[4], 4)),
+		testingutils.SSVMsgProposer(nil, testingutils.PostConsensusProposerMsg(ks.Shares[5], 5)),
 	}
 
 	return &tests.SpecTest{
-		Name:                    "proposer happy flow",
+		Name:                    "proposer 7 operators happy flow",
 		Runner:                  dr,
 		Duty:                    testingutils.TestProposerConsensusData.Duty,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "0ce229ec99df7f4643c616a01726eb4fa556803e019b419dace06b200653a955",
+		PostDutyRunnerStateRoot: "a636e991b33ce9e4f4e35cd5e9024a861c75d683a4f3eadb93d57c2b0d81fcb7",
 	}
 }

@@ -1,7 +1,6 @@
 package messages
 
 import (
-	"github.com/bloxapp/ssv/beacon"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
 	"github.com/bloxapp/ssv/docs/spec/types"
@@ -10,10 +9,11 @@ import (
 
 // NoDutyRunner tests an SSVMessage ID that doesn't belong to any duty runner
 func NoDutyRunner() *tests.SpecTest {
-	dr := testingutils.AttesterRunner()
+	ks := testingutils.Testing4SharesSet()
+	dr := testingutils.AttesterRunner(ks)
 
-	msg := testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(testingutils.TestingSK1, 1, qbft.FirstHeight))
-	msg.MsgID = types.NewMsgID(testingutils.TestingValidatorPubKey[:], beacon.RoleTypeAggregator)
+	msg := testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(ks.Shares[1], 1, qbft.FirstHeight))
+	msg.MsgID = types.NewMsgID(testingutils.TestingValidatorPubKey[:], types.BNRoleAggregator)
 	msgs := []*types.SSVMessage{
 		msg,
 	}

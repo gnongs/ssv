@@ -7,15 +7,17 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 )
 
-// HappyFlow tests a full valcheck + post valcheck + duty sig reconstruction flow
-func HappyFlow() *tests.SpecTest {
-	ks := testingutils.Testing4SharesSet()
+// SevenOperators tests a full valcheck + post valcheck + duty sig reconstruction flow for 7 operators
+func SevenOperators() *tests.SpecTest {
+	ks := testingutils.Testing7SharesSet()
 	dr := testingutils.AggregatorRunner(ks)
 
 	msgs := []*types.SSVMessage{
 		testingutils.SSVMsgAggregator(nil, testingutils.PreConsensusSelectionProofMsg(ks.Shares[1], 1)),
 		testingutils.SSVMsgAggregator(nil, testingutils.PreConsensusSelectionProofMsg(ks.Shares[2], 2)),
 		testingutils.SSVMsgAggregator(nil, testingutils.PreConsensusSelectionProofMsg(ks.Shares[3], 3)),
+		testingutils.SSVMsgAggregator(nil, testingutils.PreConsensusSelectionProofMsg(ks.Shares[4], 4)),
+		testingutils.SSVMsgAggregator(nil, testingutils.PreConsensusSelectionProofMsg(ks.Shares[5], 5)),
 
 		testingutils.SSVMsgAggregator(testingutils.SignQBFTMsg(ks.Shares[1], 1, &qbft.Message{
 			MsgType:    qbft.ProposalMsgType,
@@ -24,6 +26,7 @@ func HappyFlow() *tests.SpecTest {
 			Identifier: testingutils.AggregatorMsgID,
 			Data:       testingutils.ProposalDataBytes(testingutils.TestAggregatorConsensusDataByts, nil, nil),
 		}), nil),
+
 		testingutils.SSVMsgAggregator(testingutils.SignQBFTMsg(ks.Shares[1], 1, &qbft.Message{
 			MsgType:    qbft.PrepareMsgType,
 			Height:     qbft.FirstHeight,
@@ -45,6 +48,21 @@ func HappyFlow() *tests.SpecTest {
 			Identifier: testingutils.AggregatorMsgID,
 			Data:       testingutils.PrepareDataBytes(testingutils.TestAggregatorConsensusDataByts),
 		}), nil),
+		testingutils.SSVMsgAggregator(testingutils.SignQBFTMsg(ks.Shares[4], 4, &qbft.Message{
+			MsgType:    qbft.PrepareMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: testingutils.AggregatorMsgID,
+			Data:       testingutils.PrepareDataBytes(testingutils.TestAggregatorConsensusDataByts),
+		}), nil),
+		testingutils.SSVMsgAggregator(testingutils.SignQBFTMsg(ks.Shares[5], 5, &qbft.Message{
+			MsgType:    qbft.PrepareMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: testingutils.AggregatorMsgID,
+			Data:       testingutils.PrepareDataBytes(testingutils.TestAggregatorConsensusDataByts),
+		}), nil),
+
 		testingutils.SSVMsgAggregator(testingutils.SignQBFTMsg(ks.Shares[1], 1, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
@@ -60,6 +78,20 @@ func HappyFlow() *tests.SpecTest {
 			Data:       testingutils.CommitDataBytes(testingutils.TestAggregatorConsensusDataByts),
 		}), nil),
 		testingutils.SSVMsgAggregator(testingutils.SignQBFTMsg(ks.Shares[3], 3, &qbft.Message{
+			MsgType:    qbft.CommitMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: testingutils.AggregatorMsgID,
+			Data:       testingutils.CommitDataBytes(testingutils.TestAggregatorConsensusDataByts),
+		}), nil),
+		testingutils.SSVMsgAggregator(testingutils.SignQBFTMsg(ks.Shares[4], 4, &qbft.Message{
+			MsgType:    qbft.CommitMsgType,
+			Height:     qbft.FirstHeight,
+			Round:      qbft.FirstRound,
+			Identifier: testingutils.AggregatorMsgID,
+			Data:       testingutils.CommitDataBytes(testingutils.TestAggregatorConsensusDataByts),
+		}), nil),
+		testingutils.SSVMsgAggregator(testingutils.SignQBFTMsg(ks.Shares[5], 5, &qbft.Message{
 			MsgType:    qbft.CommitMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,
@@ -70,13 +102,15 @@ func HappyFlow() *tests.SpecTest {
 		testingutils.SSVMsgAggregator(nil, testingutils.PostConsensusAggregatorMsg(ks.Shares[1], 1)),
 		testingutils.SSVMsgAggregator(nil, testingutils.PostConsensusAggregatorMsg(ks.Shares[2], 2)),
 		testingutils.SSVMsgAggregator(nil, testingutils.PostConsensusAggregatorMsg(ks.Shares[3], 3)),
+		testingutils.SSVMsgAggregator(nil, testingutils.PostConsensusAggregatorMsg(ks.Shares[4], 4)),
+		testingutils.SSVMsgAggregator(nil, testingutils.PostConsensusAggregatorMsg(ks.Shares[5], 5)),
 	}
 
 	return &tests.SpecTest{
-		Name:                    "aggregator happy flow",
+		Name:                    "aggregator 7 operator happy flow",
 		Runner:                  dr,
 		Duty:                    testingutils.TestAggregatorConsensusData.Duty,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "82c0a7109fb072eb66930ddc09dcb0f648628fcbd76902da24848c70c9f65650",
+		PostDutyRunnerStateRoot: "b693d0620c841ccd85a483fd206790e2c2d3dccc4bf413fd8eaf8e106dc432ad",
 	}
 }

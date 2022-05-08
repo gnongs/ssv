@@ -33,7 +33,7 @@ func DutySlotNotMatchingAttestationSlot() *tests.SpecTest {
 	}
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(testingutils.TestingSK1, 1, &qbft.Message{
+		testingutils.SSVMsgAttester(testingutils.SignQBFTMsg(ks.Shares[1], 1, &qbft.Message{
 			MsgType:    qbft.ProposalMsgType,
 			Height:     qbft.FirstHeight,
 			Round:      qbft.FirstRound,

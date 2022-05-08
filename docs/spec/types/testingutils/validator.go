@@ -5,17 +5,17 @@ import (
 	"github.com/bloxapp/ssv/docs/spec/types"
 )
 
-var BaseValidator = func() *ssv.Validator {
+var BaseValidator = func(keySet *TestKeySet) *ssv.Validator {
 	ret := ssv.NewValidator(
 		NewTestingNetwork(),
 		NewTestingBeaconNode(),
 		NewTestingStorage(),
-		TestingShare,
+		testShare(keySet),
 		NewTestingKeyManager(),
 	)
-	ret.DutyRunners[types.BNRoleAttester] = AttesterRunner()
-	ret.DutyRunners[types.BNRoleProposer] = ProposerRunner()
-	ret.DutyRunners[types.BNRoleAggregator] = AggregatorRunner()
-	ret.DutyRunners[types.BNRoleSyncCommittee] = SyncCommitteeRunner()
+	ret.DutyRunners[types.BNRoleAttester] = AttesterRunner(keySet)
+	ret.DutyRunners[types.BNRoleProposer] = ProposerRunner(keySet)
+	ret.DutyRunners[types.BNRoleAggregator] = AggregatorRunner(keySet)
+	ret.DutyRunners[types.BNRoleSyncCommittee] = SyncCommitteeRunner(keySet)
 	return ret
 }

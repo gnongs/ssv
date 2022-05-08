@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	tests2 "github.com/bloxapp/ssv/docs/spec/ssv/spectest/tests"
+	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/bloxapp/ssv/docs/spec/types/testingutils"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -38,14 +39,17 @@ func TestJson(t *testing.T) {
 		// a little trick we do to instantiate all the internal controller params
 		byts, err := test.Runner.QBFTController.Encode()
 		require.NoError(t, err)
+
+		ks := keySetForShare(test.Runner.QBFTController.Share)
+
 		newContr := qbft.NewController(
 			[]byte{1, 2, 3, 4},
-			testingutils.TestingShare,
-			testingutils.TestingConfig.Domain,
-			testingutils.TestingConfig.Signer,
-			testingutils.TestingConfig.ValueCheck,
-			testingutils.TestingConfig.Storage,
-			testingutils.TestingConfig.Network,
+			test.Runner.QBFTController.Share,
+			testingutils.TestingConfig(ks).Domain,
+			testingutils.TestingConfig(ks).Signer,
+			testingutils.TestingConfig(ks).ValueCheck,
+			testingutils.TestingConfig(ks).Storage,
+			testingutils.TestingConfig(ks).Network,
 		)
 		require.NoError(t, newContr.Decode(byts))
 		test.Runner.QBFTController = newContr
@@ -54,7 +58,7 @@ func TestJson(t *testing.T) {
 			if i == nil {
 				continue
 			}
-			fixedInst := fixQBFTInstanceForRun(t, i)
+			fixedInst := fixQBFTInstanceForRun(t, i, ks)
 			test.Runner.QBFTController.StoredInstances[idx] = fixedInst
 
 			if test.Runner.State != nil &&
@@ -70,7 +74,7 @@ func TestJson(t *testing.T) {
 }
 
 func runTest(t *testing.T, test *tests2.SpecTest) {
-	v := testingutils.BaseValidator()
+	v := testingutils.BaseValidator(keySetForShare(test.Runner.Share))
 	v.DutyRunners[test.Runner.BeaconRoleType] = test.Runner
 
 	lastErr := v.StartDuty(test.Duty)
@@ -93,13 +97,26 @@ func runTest(t *testing.T, test *tests2.SpecTest) {
 	require.EqualValues(t, test.PostDutyRunnerStateRoot, hex.EncodeToString(postRoot))
 }
 
-func fixQBFTInstanceForRun(t *testing.T, i *qbft.Instance) *qbft.Instance {
+func fixQBFTInstanceForRun(t *testing.T, i *qbft.Instance, ks *testingutils.TestKeySet) *qbft.Instance {
 	// a little trick we do to instantiate all the internal instance params
 	if i == nil {
 		return nil
 	}
 	byts, _ := i.Encode()
-	newInst := qbft.NewInstance(testingutils.TestingConfig, i.State.Share, i.State.ID)
+	newInst := qbft.NewInstance(testingutils.TestingConfig(ks), i.State.Share, i.State.ID, qbft.FirstHeight)
 	require.NoError(t, newInst.Decode(byts))
 	return newInst
+}
+
+func keySetForShare(share *types.Share) *testingutils.TestKeySet {
+	if share.Quorum == 5 {
+		return testingutils.Testing7SharesSet()
+	}
+	if share.Quorum == 7 {
+		return testingutils.Testing10SharesSet()
+	}
+	if share.Quorum == 9 {
+		return testingutils.Testing13SharesSet()
+	}
+	return testingutils.Testing4SharesSet()
 }

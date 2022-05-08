@@ -9,10 +9,11 @@ import (
 
 // NoMessageSigners tests an empty PostConsensusMessage Signers
 func NoMessageSigners() *tests.SpecTest {
-	dr := testingutils.DecidedRunner()
+	ks := testingutils.Testing4SharesSet()
+	dr := testingutils.DecidedRunner(ks)
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(testingutils.TestingSK1, 1, qbft.FirstHeight)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsgWithNoMsgSigners(ks.Shares[1], 1, qbft.FirstHeight)),
 	}
 
 	return &tests.SpecTest{

@@ -8,10 +8,11 @@ import (
 
 // FutureConsensusState tests msg for a future valcheck state
 func FutureConsensusState() *tests.SpecTest {
-	dr := testingutils.DecidedRunner()
+	ks := testingutils.Testing4SharesSet()
+	dr := testingutils.DecidedRunner(ks)
 
 	msgs := []*types.SSVMessage{
-		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(testingutils.TestingSK1, 1, 10)),
+		testingutils.SSVMsgAttester(nil, testingutils.PostConsensusAttestationMsg(ks.Shares[1], 1, 10)),
 	}
 
 	return &tests.SpecTest{
