@@ -140,10 +140,10 @@ Constants:
 **Sync Committee Aggregator Duty Full Cycle:**\
 -> Received new beacon chain duty\
 &nbsp;&nbsp;&nbsp;-> Check can start a new consensus instance\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Locally get sync sub-committee index for slot\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Partial sign index and wait for other signatures\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Locally get sync subcommittee indexes for slot\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Partial sign contribution proofs (for each subcommittee) and wait for other signatures\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> wait to slot 2/3\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Come to consensus on duty + sync committee contribution\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Come to consensus on duty + contribution (for each subcommittee)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Broadcast and collect partial signature to reconstruct signature\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Reconstruct signature, broadcast to BN
 
@@ -197,10 +197,11 @@ Share1 = f(NodeID1)\
 The [spec tests](./spectest) are a generated as a json file that can be run in any implementation. They test the various flows within the SSV package, treating the consensus protocol as as black box.
 
 ## TODO
-- [//] Proposal duty execution + spec test
-- [//] Aggregator duty execution + spec test 
-- [//] Sync committee duty execution + spec test
+- [//] Proposal duty execution + spec test + consensus validator
+- [//] Aggregator duty execution + spec test + consensus validator
+- [//] Sync committee duty execution + spec test + consensus validator
 - [ ] Sync committee aggregator duty
 - [ ] Duty data validation (how do we ensure malicious leader doesn't proposer a non slashable attestation/ block but with invalid data)
 - [ ] Wait 1/3 or 2/3 of slot during duty execution? how else?
 - [ ] implement 7,10,13 committee sizes
+- [ ] improve pre-consensus partial sigs to support signed roots which are not necessarily what the local node signed (example: node 1 signed randao/ selection proof root X but nodes 2,3,4 signed Y)
