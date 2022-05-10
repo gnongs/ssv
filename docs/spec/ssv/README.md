@@ -203,6 +203,6 @@ The [spec tests](./spectest) are a generated as a json file that can be run in a
 - [ ] Sync committee aggregator duty
 - [ ] Duty data validation (how do we ensure malicious leader doesn't proposer a non slashable attestation/ block but with invalid data)
 - [ ] Wait 1/3 or 2/3 of slot during duty execution? how else?
-- [ ] implement 7,10,13 committee sizes
-- [ ] improve pre-consensus partial sigs to support signed roots which are not necessarily what the local node signed (example: node 1 signed randao/ selection proof root X but nodes 2,3,4 signed Y)
-- [ ] pre and post consensus timeout redesign as 32 slot timeout can cause the next duty not to start (if it starts in less than 32 slots)
+- [X] implement 7,10,13 committee sizes
+- [X] improve pre-consensus partial sigs to support signed roots which are not necessarily what the local node signed (example: node 1 signed randao/ selection proof root X but nodes 2,3,4 signed Y)
+- [X] pre and post consensus timeout redesign as 32 slot timeout can cause the next duty not to start (if it starts in less than 32 slots)
