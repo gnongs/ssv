@@ -140,6 +140,12 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 		pubsub.WithValidateQueueSize(pubsubQueueSize),
 		pubsub.WithFloodPublish(true),
 		pubsub.WithGossipSubParams(pubsubGossipParam()),
+		pubsub.WithPeerFilter(func(pid peer.ID, topic string) bool {
+			if pid.String() == n.host.ID().String() {
+				return false
+			}
+			return true
+		}),
 	}
 	if len(cfg.ExporterPeerID) > 0 {
 		exporterPeerID, err := peerFromString(cfg.ExporterPeerID)
