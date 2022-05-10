@@ -105,6 +105,6 @@ func SevenOperators() *tests.SpecTest {
 		Runner:                  dr,
 		Duty:                    testingutils.TestingSyncCommitteeDuty,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "82d2d1787358f78e30043586166d906479da3238c6258ef8d962b4601b16e8c0",
+		PostDutyRunnerStateRoot: "c8a4a388c51c3b49ca0a4ebf629ee03124052968ad954a7ebbe4df55c865404c",
 	}
 }

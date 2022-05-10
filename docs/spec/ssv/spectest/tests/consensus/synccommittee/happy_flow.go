@@ -73,6 +73,6 @@ func HappyFlow() *tests.SpecTest {
 		Runner:                  dr,
 		Duty:                    testingutils.TestingSyncCommitteeDuty,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "dcf2f1e1ce34b0c27ece5a14646f620a09276449a911e51466ac02061a8767e2",
+		PostDutyRunnerStateRoot: "8b9176df5ca869c5a7762fe99dd96d30d04580721279dd0d9ca55ad4cdccda23",
 	}
 }

@@ -103,6 +103,6 @@ func SevenOperators() *tests.SpecTest {
 		Runner:                  dr,
 		Duty:                    testingutils.TestAttesterConsensusData.Duty,
 		Messages:                msgs,
-		PostDutyRunnerStateRoot: "63c1ec3e5c2959d595d3655414ccc5c671eaca5180caf204421dbf3f81d2619c",
+		PostDutyRunnerStateRoot: "5691f44255eaf9881e6c095fef4918720fbd5e8fa7339bce729f06ffa543ddc5",
 	}
 }
