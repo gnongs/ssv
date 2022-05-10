@@ -55,5 +55,5 @@ func (dr *Runner) ProcessRandaoMessage(signedMsg *SignedPartialSignatureMessage)
 
 // canProcessRandaoMsg returns true if it can process randao message, false if not
 func (dr *Runner) canProcessRandaoMsg(msg *SignedPartialSignatureMessage) error {
-	return dr.validatePartialSigMsg(msg, dr.State.RandaoPartialSig, dr.CurrentDuty.Slot)
+	return dr.validatePartialSigMsg(msg, dr.CurrentDuty.Slot)
 }

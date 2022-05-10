@@ -122,6 +122,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 			if err := v.beacon.SubmitAttestation(att); err != nil {
 				return errors.Wrap(err, "could not submit to beacon chain reconstructed attestation")
 			}
+			dutyRunner.State.Finished = true
 		case types.BNRoleProposer:
 			if len(roots) != 1 {
 				return errors.New("BNRoleAttester can only have 1 root")
@@ -134,6 +135,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 			if err := v.beacon.SubmitBeaconBlock(blk); err != nil {
 				return errors.Wrap(err, "could not submit to beacon chain reconstructed signed beacon block")
 			}
+			dutyRunner.State.Finished = true
 		case types.BNRoleAggregator:
 			if len(roots) != 1 {
 				return errors.New("BNRoleAttester can only have 1 root")
@@ -146,6 +148,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 			if err := v.beacon.SubmitSignedAggregateSelectionProof(msg); err != nil {
 				return errors.Wrap(err, "could not submit to beacon chain reconstructed signed aggregate")
 			}
+			dutyRunner.State.Finished = true
 		case types.BNRoleSyncCommittee:
 			if len(roots) != 1 {
 				return errors.New("BNRoleAttester can only have 1 root")
@@ -158,6 +161,7 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 			if err := v.beacon.SubmitSyncMessage(msg); err != nil {
 				return errors.Wrap(err, "could not submit to beacon chain reconstructed signed sync committee")
 			}
+			dutyRunner.State.Finished = true
 		default:
 			return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.BeaconRoleType.String())
 		}

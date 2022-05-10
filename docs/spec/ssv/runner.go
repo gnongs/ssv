@@ -87,7 +87,7 @@ func (dr *Runner) Decode(data []byte) error {
 	return json.Unmarshal(data, &dr)
 }
 
-func (dr *Runner) validatePartialSigMsg(signedMsg *SignedPartialSignatureMessage, container *PartialSigContainer, slot spec.Slot) error {
+func (dr *Runner) validatePartialSigMsg(signedMsg *SignedPartialSignatureMessage, slot spec.Slot) error {
 	if err := signedMsg.Validate(); err != nil {
 		return errors.Wrap(err, "SignedPartialSignatureMessage invalid")
 	}

@@ -55,5 +55,5 @@ func (dr *Runner) ProcessSelectionProofMessage(signedMsg *SignedPartialSignature
 
 // canProcessRandaoMsg returns true if it can process selection proof message, false if not
 func (dr *Runner) canProcessSelectionProofMsg(msg *SignedPartialSignatureMessage) error {
-	return dr.validatePartialSigMsg(msg, dr.State.SelectionProofPartialSig, dr.CurrentDuty.Slot)
+	return dr.validatePartialSigMsg(msg, dr.CurrentDuty.Slot)
 }

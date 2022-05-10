@@ -142,10 +142,11 @@ var postConsensusAttestationMsg = func(
 		postConsensusMsg.Signers = []types.OperatorID{id, 5}
 	}
 
-	sig, _ := signer.SignRoot(postConsensusMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
+	msgs := ssv.PartialSignatureMessages{postConsensusMsg}
+	sig, _ := signer.SignRoot(msgs, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
 		Type:      ssv.PostConsensusPartialSig,
-		Messages:  ssv.PartialSignatureMessages{postConsensusMsg},
+		Messages:  msgs,
 		Signature: sig,
 		Signers:   []types.OperatorID{id},
 	}
@@ -189,10 +190,11 @@ var postConsensusBeaconBlockMsg = func(
 		postConsensusMsg.Signers = []types.OperatorID{id, 5}
 	}
 
-	sig, _ := signer.SignRoot(postConsensusMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
+	msgs := ssv.PartialSignatureMessages{postConsensusMsg}
+	sig, _ := signer.SignRoot(msgs, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
 		Type:      ssv.PostConsensusPartialSig,
-		Messages:  ssv.PartialSignatureMessages{postConsensusMsg},
+		Messages:  msgs,
 		Signature: sig,
 		Signers:   []types.OperatorID{id},
 	}
@@ -220,10 +222,11 @@ var randaoMsg = func(
 		Signers:          []types.OperatorID{id},
 	}
 
-	sig, _ := signer.SignRoot(randaoMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
+	msgs := ssv.PartialSignatureMessages{randaoMsg}
+	sig, _ := signer.SignRoot(msgs, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
 		Type:      ssv.RandaoPartialSig,
-		Messages:  ssv.PartialSignatureMessages{randaoMsg},
+		Messages:  msgs,
 		Signature: sig,
 		Signers:   []types.OperatorID{id},
 	}
@@ -251,10 +254,11 @@ var selectionProofMsg = func(
 		Signers:          []types.OperatorID{id},
 	}
 
-	msgSig, _ := signer.SignRoot(msg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
+	msgs := ssv.PartialSignatureMessages{msg}
+	msgSig, _ := signer.SignRoot(msgs, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
 		Type:      ssv.SelectionProofPartialSig,
-		Messages:  ssv.PartialSignatureMessages{msg},
+		Messages:  msgs,
 		Signature: msgSig,
 		Signers:   []types.OperatorID{id},
 	}
@@ -298,10 +302,11 @@ var postConsensusAggregatorMsg = func(
 		postConsensusMsg.Signers = []types.OperatorID{id, 5}
 	}
 
-	sig, _ := signer.SignRoot(postConsensusMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
+	msgs := ssv.PartialSignatureMessages{postConsensusMsg}
+	sig, _ := signer.SignRoot(msgs, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
 		Type:      ssv.PostConsensusPartialSig,
-		Messages:  ssv.PartialSignatureMessages{postConsensusMsg},
+		Messages:  msgs,
 		Signature: sig,
 		Signers:   []types.OperatorID{id},
 	}
@@ -345,10 +350,11 @@ var postConsensusSyncCommitteeMsg = func(
 		postConsensusMsg.Signers = []types.OperatorID{id, 5}
 	}
 
-	sig, _ := signer.SignRoot(postConsensusMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
+	msgs := ssv.PartialSignatureMessages{postConsensusMsg}
+	sig, _ := signer.SignRoot(msgs, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
 		Type:      ssv.PostConsensusPartialSig,
-		Messages:  ssv.PartialSignatureMessages{postConsensusMsg},
+		Messages:  msgs,
 		Signature: sig,
 		Signers:   []types.OperatorID{id},
 	}

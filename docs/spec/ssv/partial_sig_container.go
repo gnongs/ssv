@@ -30,7 +30,8 @@ func (ps *PartialSigContainer) AddSignature(sigMsg *PartialSignatureMessage) err
 	m := ps.Signatures[rootHex(sigMsg.SigningRoot)]
 
 	if m[sigMsg.Signers[0]] == nil {
-		m[sigMsg.Signers[0]] = sigMsg.PartialSignature
+		m[sigMsg.Signers[0]] = make([]byte, 96)
+		copy(m[sigMsg.Signers[0]], sigMsg.PartialSignature)
 	}
 	return nil
 }

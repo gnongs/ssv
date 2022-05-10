@@ -24,6 +24,8 @@ type State struct {
 	SelectionProofPartialSig *PartialSigContainer
 	RandaoPartialSig         *PartialSigContainer
 	PostConsensusPartialSig  *PartialSigContainer
+
+	Finished bool
 }
 
 func NewDutyExecutionState(quorum uint64) *State {
@@ -31,6 +33,7 @@ func NewDutyExecutionState(quorum uint64) *State {
 		SelectionProofPartialSig: NewPartialSigContainer(quorum),
 		RandaoPartialSig:         NewPartialSigContainer(quorum),
 		PostConsensusPartialSig:  NewPartialSigContainer(quorum),
+		Finished:                 false,
 	}
 }
 

@@ -107,14 +107,16 @@ func TestSignedPostConsensusMessage_MatchedSigners(t *testing.T) {
 //	})
 //}
 
-func TestSignedPostConsensusMessage_Marshaling(t *testing.T) {
+func TestSignedPartialSignatureMessage_Marshaling(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		signed := &ssv.SignedPartialSignatureMessage{
-			Messages: &ssv.PartialSignatureMessage{
-				Slot:             1,
-				PartialSignature: []byte{1, 2, 3, 4},
-				SigningRoot:      []byte{1, 1, 1, 1},
-				Signers:          []types.OperatorID{1},
+			Messages: ssv.PartialSignatureMessages{
+				&ssv.PartialSignatureMessage{
+					Slot:             1,
+					PartialSignature: []byte{1, 2, 3, 4},
+					SigningRoot:      []byte{1, 1, 1, 1},
+					Signers:          []types.OperatorID{1},
+				},
 			},
 			Signers:   []types.OperatorID{1},
 			Signature: []byte{1, 2, 3, 4},
@@ -128,7 +130,7 @@ func TestSignedPostConsensusMessage_Marshaling(t *testing.T) {
 	})
 }
 
-func TestPostConsensusMessage_Validate(t *testing.T) {
+func TestPartialSignatureMessage_Validate(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		m := &ssv.PartialSignatureMessage{
 			PartialSignature: make([]byte, 96),
@@ -184,15 +186,17 @@ func TestPostConsensusMessage_Validate(t *testing.T) {
 	})
 }
 
-func TestSignedPostConsensusMessage_Validate(t *testing.T) {
+func TestSignedPartialSignatureMessage_Validate(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		m := &ssv.SignedPartialSignatureMessage{
 			Signature: make([]byte, 96),
 			Signers:   []types.OperatorID{1},
-			Messages: &ssv.PartialSignatureMessage{
-				PartialSignature: make([]byte, 96),
-				SigningRoot:      make([]byte, 32),
-				Signers:          []types.OperatorID{1},
+			Messages: ssv.PartialSignatureMessages{
+				&ssv.PartialSignatureMessage{
+					PartialSignature: make([]byte, 96),
+					SigningRoot:      make([]byte, 32),
+					Signers:          []types.OperatorID{1},
+				},
 			},
 		}
 		require.NoError(t, m.Validate())
@@ -202,10 +206,12 @@ func TestSignedPostConsensusMessage_Validate(t *testing.T) {
 		m := &ssv.SignedPartialSignatureMessage{
 			Signature: make([]byte, 95),
 			Signers:   []types.OperatorID{1},
-			Messages: &ssv.PartialSignatureMessage{
-				PartialSignature: make([]byte, 96),
-				SigningRoot:      make([]byte, 32),
-				Signers:          []types.OperatorID{1},
+			Messages: ssv.PartialSignatureMessages{
+				&ssv.PartialSignatureMessage{
+					PartialSignature: make([]byte, 96),
+					SigningRoot:      make([]byte, 32),
+					Signers:          []types.OperatorID{1},
+				},
 			},
 		}
 		require.EqualError(t, m.Validate(), "SignedPartialSignatureMessage sig invalid")
@@ -221,10 +227,12 @@ func TestSignedPostConsensusMessage_Validate(t *testing.T) {
 		m := &ssv.SignedPartialSignatureMessage{
 			Signature: make([]byte, 95),
 			Signers:   []types.OperatorID{},
-			Messages: &ssv.PartialSignatureMessage{
-				PartialSignature: make([]byte, 96),
-				SigningRoot:      make([]byte, 32),
-				Signers:          []types.OperatorID{1},
+			Messages: ssv.PartialSignatureMessages{
+				&ssv.PartialSignatureMessage{
+					PartialSignature: make([]byte, 96),
+					SigningRoot:      make([]byte, 32),
+					Signers:          []types.OperatorID{1},
+				},
 			},
 		}
 		require.EqualError(t, m.Validate(), "SignedPartialSignatureMessage sig invalid")
@@ -240,12 +248,14 @@ func TestSignedPostConsensusMessage_Validate(t *testing.T) {
 		m := &ssv.SignedPartialSignatureMessage{
 			Signature: make([]byte, 96),
 			Signers:   []types.OperatorID{1},
-			Messages: &ssv.PartialSignatureMessage{
-				PartialSignature: make([]byte, 95),
-				SigningRoot:      make([]byte, 32),
-				Signers:          []types.OperatorID{1},
+			Messages: ssv.PartialSignatureMessages{
+				&ssv.PartialSignatureMessage{
+					PartialSignature: make([]byte, 95),
+					SigningRoot:      make([]byte, 32),
+					Signers:          []types.OperatorID{1},
+				},
 			},
 		}
-		require.EqualError(t, m.Validate(), "PartialSignatureMessage sig invalid")
+		require.EqualError(t, m.Validate(), "message invalid: PartialSignatureMessage sig invalid")
 	})
 }

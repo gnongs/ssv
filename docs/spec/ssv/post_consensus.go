@@ -113,7 +113,7 @@ func (dr *Runner) canProcessPostConsensusMsg(msg *SignedPartialSignatureMessage)
 		return errors.New("consensus didn't decide")
 	}
 
-	if err := dr.validatePartialSigMsg(msg, dr.State.PostConsensusPartialSig, dr.State.DecidedValue.Duty.Slot); err != nil {
+	if err := dr.validatePartialSigMsg(msg, dr.State.DecidedValue.Duty.Slot); err != nil {
 		return errors.Wrap(err, "post consensus msg invalid")
 	}
 

@@ -109,12 +109,7 @@ func (spcsm *SignedPartialSignatureMessage) GetSigners() []types.OperatorID {
 }
 
 func (spcsm *SignedPartialSignatureMessage) GetRoot() ([]byte, error) {
-	marshaledRoot, err := spcsm.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not encode SignedPartialSignatureMessage")
-	}
-	ret := sha256.Sum256(marshaledRoot)
-	return ret[:], nil
+	return spcsm.Messages.GetRoot()
 }
 
 func (spcsm *SignedPartialSignatureMessage) Aggregate(signedMsg types.MessageSignature) error {
