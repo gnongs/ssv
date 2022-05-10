@@ -20,9 +20,30 @@ const (
 	SelectionProofPartialSig
 )
 
+type PartialSignatureMessages []*PartialSignatureMessage
+
+// Encode returns a msg encoded bytes or error
+func (msgs *PartialSignatureMessages) Encode() ([]byte, error) {
+	return json.Marshal(msgs)
+}
+
+// Decode returns error if decoding failed
+func (msgs *PartialSignatureMessages) Decode(data []byte) error {
+	return json.Unmarshal(data, msgs)
+}
+
+// GetRoot returns the root used for signing and verification
+func (msgs PartialSignatureMessages) GetRoot() ([]byte, error) {
+	marshaledRoot, err := msgs.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not encode PartialSignatureMessages")
+	}
+	ret := sha256.Sum256(marshaledRoot)
+	return ret[:], nil
+}
+
 // PartialSignatureMessage is a msg for partial beacon chain related signatures (like partial attestation, block, randao sigs)
 type PartialSignatureMessage struct {
-	Type             PartialSigMsgType
 	Slot             spec.Slot // Slot represents the slot for which the partial BN signature is for
 	PartialSignature []byte    // The beacon chain partial Signature for a duty
 	SigningRoot      []byte    // the root signed in PartialSignature
@@ -63,7 +84,8 @@ func (pcsm *PartialSignatureMessage) Validate() error {
 
 // SignedPartialSignatureMessage is an operator's signature over PartialSignatureMessage
 type SignedPartialSignatureMessage struct {
-	Message   *PartialSignatureMessage
+	Type      PartialSigMsgType
+	Messages  PartialSignatureMessages
 	Signature types.Signature
 	Signers   []types.OperatorID
 }
@@ -87,7 +109,12 @@ func (spcsm *SignedPartialSignatureMessage) GetSigners() []types.OperatorID {
 }
 
 func (spcsm *SignedPartialSignatureMessage) GetRoot() ([]byte, error) {
-	return spcsm.Message.GetRoot()
+	marshaledRoot, err := spcsm.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not encode SignedPartialSignatureMessage")
+	}
+	ret := sha256.Sum256(marshaledRoot)
+	return ret[:], nil
 }
 
 func (spcsm *SignedPartialSignatureMessage) Aggregate(signedMsg types.MessageSignature) error {
@@ -159,5 +186,13 @@ func (spcsm *SignedPartialSignatureMessage) Validate() error {
 	if len(spcsm.Signers) != 1 {
 		return errors.New("no SignedPartialSignatureMessage signers")
 	}
-	return spcsm.Message.Validate()
+	if len(spcsm.Messages) == 0 {
+		return errors.New("no SignedPartialSignatureMessage messages")
+	}
+	for _, m := range spcsm.Messages {
+		if err := m.Validate(); err != nil {
+			return errors.Wrap(err, "message invalid")
+		}
+	}
+	return nil
 }

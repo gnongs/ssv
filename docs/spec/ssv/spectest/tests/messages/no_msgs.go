@@ -22,6 +22,6 @@ func NoData() *tests.SpecTest {
 		Runner:                  dr,
 		Messages:                msgs,
 		PostDutyRunnerStateRoot: "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-		ExpectedError:           "Message invalid: msg data is invalid",
+		ExpectedError:           "Messages invalid: msg data is invalid",
 	}
 }

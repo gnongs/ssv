@@ -12,11 +12,8 @@ func (dr *Runner) SignSlotWithSelectionProofPreConsensus(slot spec.Slot, signer 
 		return nil, errors.Wrap(err, "could not sign partial selection proof")
 	}
 
-	dr.State.SelectionProofPartialSig.SigRoot = ensureRoot(r)
-
 	// generate partial sig for randao
 	msg := &PartialSignatureMessage{
-		Type:             SelectionProofPartialSig,
 		Slot:             slot,
 		PartialSignature: sig,
 		SigningRoot:      ensureRoot(r),
@@ -28,38 +25,35 @@ func (dr *Runner) SignSlotWithSelectionProofPreConsensus(slot spec.Slot, signer 
 
 // ProcessSelectionProofMessage process selection proof msg, returns true if it has quorum for partial signatures.
 // returns true only once (first time quorum achieved)
-func (dr *Runner) ProcessSelectionProofMessage(msg *SignedPartialSignatureMessage) (bool, error) {
-	if err := dr.canProcessSelectionProofMsg(msg); err != nil {
-		return false, errors.Wrap(err, "can't process selection proof message")
+func (dr *Runner) ProcessSelectionProofMessage(signedMsg *SignedPartialSignatureMessage) (bool, [][]byte, error) {
+	if err := dr.canProcessSelectionProofMsg(signedMsg); err != nil {
+		return false, nil, errors.Wrap(err, "can't process selection proof message")
 	}
 
-	prevQuorum := dr.State.SelectionProofPartialSig.HasQuorum()
+	roots := make([][]byte, 0)
+	anyQuorum := false
+	for _, msg := range signedMsg.Messages {
+		prevQuorum := dr.State.SelectionProofPartialSig.HasQuorum(msg.SigningRoot)
 
-	if err := dr.State.SelectionProofPartialSig.AddSignature(msg.Message); err != nil {
-		return false, errors.Wrap(err, "could not add partial selection proof signature")
+		if err := dr.State.SelectionProofPartialSig.AddSignature(msg); err != nil {
+			return false, nil, errors.Wrap(err, "could not add partial selection proof signature")
+		}
+
+		if prevQuorum {
+			continue
+		}
+
+		quorum := dr.State.SelectionProofPartialSig.HasQuorum(msg.SigningRoot)
+		if quorum {
+			roots = append(roots, msg.SigningRoot)
+			anyQuorum = true
+		}
 	}
 
-	if prevQuorum {
-		return false, nil
-	}
-
-	return dr.State.SelectionProofPartialSig.HasQuorum(), nil
+	return anyQuorum, roots, nil
 }
 
 // canProcessRandaoMsg returns true if it can process selection proof message, false if not
 func (dr *Runner) canProcessSelectionProofMsg(msg *SignedPartialSignatureMessage) error {
-	if err := dr.validatePartialSigMsg(msg, dr.State.SelectionProofPartialSig, dr.CurrentDuty.Slot); err != nil {
-		return errors.Wrap(err, "selection proof msg invalid")
-	}
-
-	if dr.selectionProofSigTimeout(dr.BeaconNetwork.EstimatedCurrentSlot()) {
-		return errors.New("selection proof sig collection timeout")
-	}
-
-	return nil
-}
-
-// selectionProofSigTimeout returns true if collecting selection proof sigs timed out
-func (dr *Runner) selectionProofSigTimeout(currentSlot spec.Slot) bool {
-	return dr.partialSigCollectionTimeout(dr.State.SelectionProofPartialSig, currentSlot)
+	return dr.validatePartialSigMsg(msg, dr.State.SelectionProofPartialSig, dr.CurrentDuty.Slot)
 }

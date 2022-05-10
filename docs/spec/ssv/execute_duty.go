@@ -72,7 +72,8 @@ func (v *Validator) executeAggregatorDuty(duty *types.Duty, dutyRunner *Runner) 
 		return errors.Wrap(err, "could not sign PartialSignatureMessage for selection proof")
 	}
 	signedPartialMsg := &SignedPartialSignatureMessage{
-		Message:   msg,
+		Type:      SelectionProofPartialSig,
+		Messages:  PartialSignatureMessages{msg},
 		Signature: signature,
 		Signers:   []types.OperatorID{v.share.OperatorID},
 	}
@@ -113,7 +114,8 @@ func (v *Validator) executeBlockProposalDuty(duty *types.Duty, dutyRunner *Runne
 		return errors.Wrap(err, "could not sign PartialSignatureMessage for RandaoPartialSig")
 	}
 	signedPartialMsg := &SignedPartialSignatureMessage{
-		Message:   msg,
+		Type:      RandaoPartialSig,
+		Messages:  PartialSignatureMessages{msg},
 		Signature: signature,
 		Signers:   []types.OperatorID{v.share.OperatorID},
 	}

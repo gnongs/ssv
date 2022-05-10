@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ProcessMessage processes network Message of all types
+// ProcessMessage processes network Messages of all types
 func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 	dutyRunner := v.DutyRunners.DutyRunnerForMsgID(msg.GetID())
 	if dutyRunner == nil {
@@ -14,32 +14,32 @@ func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 	}
 
 	if err := v.validateMessage(dutyRunner, msg); err != nil {
-		return errors.Wrap(err, "Message invalid")
+		return errors.Wrap(err, "Messages invalid")
 	}
 
 	switch msg.GetType() {
 	case types.SSVConsensusMsgType:
 		signedMsg := &qbft.SignedMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
-			return errors.Wrap(err, "could not get consensus Message from network Message")
+			return errors.Wrap(err, "could not get consensus Messages from network Messages")
 		}
 		return v.processConsensusMsg(dutyRunner, signedMsg)
 	case types.SSVDecidedMsgType:
 		decidedMsg := &qbft.DecidedMessage{}
 		if err := decidedMsg.Decode(msg.GetData()); err != nil {
-			return errors.Wrap(err, "could not get decided Message from network Message")
+			return errors.Wrap(err, "could not get decided Messages from network Messages")
 		}
 		return v.processConsensusMsg(dutyRunner, decidedMsg.SignedMessage)
 	case types.SSVPartialSignatureMsgType:
 		signedMsg := &SignedPartialSignatureMessage{}
 		if err := signedMsg.Decode(msg.GetData()); err != nil {
-			return errors.Wrap(err, "could not get post consensus Message from network Message")
+			return errors.Wrap(err, "could not get post consensus Messages from network Messages")
 		}
 
-		if signedMsg.Message.Type == RandaoPartialSig {
+		if signedMsg.Type == RandaoPartialSig {
 			return v.processRandaoPartialSig(dutyRunner, signedMsg)
 		}
-		if signedMsg.Message.Type == SelectionProofPartialSig {
+		if signedMsg.Type == SelectionProofPartialSig {
 			return v.processSelectionProofPartialSig(dutyRunner, signedMsg)
 		}
 		return v.processPostConsensusSig(dutyRunner, signedMsg)
@@ -80,7 +80,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *Runner, msg *qbft.SignedMess
 		return errors.Wrap(err, "failed to decide duty at runner")
 	}
 
-	signedMsg, err := v.signPostConsensusMsg(postConsensusMsg)
+	signedMsg, err := v.signPostConsensusMsg(PartialSignatureMessages{postConsensusMsg})
 	if err != nil {
 		return errors.Wrap(err, "could not sign post consensus msg")
 	}
@@ -103,57 +103,70 @@ func (v *Validator) processConsensusMsg(dutyRunner *Runner, msg *qbft.SignedMess
 }
 
 func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *SignedPartialSignatureMessage) error {
-	quorum, err := dutyRunner.ProcessPostConsensusMessage(signedMsg)
+	quorum, roots, err := dutyRunner.ProcessPostConsensusMessage(signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing post consensus message")
 	}
 
-	// quorum returns true only once (first time quorum achieved)
 	if !quorum {
 		return nil
 	}
 
-	switch dutyRunner.BeaconRoleType {
-	case types.BNRoleAttester:
-		att, err := dutyRunner.State.ReconstructAttestationSig(v.share.ValidatorPubKey)
-		if err != nil {
-			return errors.Wrap(err, "could not reconstruct post consensus sig")
+	for _, r := range roots {
+		switch dutyRunner.BeaconRoleType {
+		case types.BNRoleAttester:
+			att, err := dutyRunner.State.ReconstructAttestationSig(r, v.share.ValidatorPubKey)
+			if err != nil {
+				return errors.Wrap(err, "could not reconstruct post consensus sig")
+			}
+			if err := v.beacon.SubmitAttestation(att); err != nil {
+				return errors.Wrap(err, "could not submit to beacon chain reconstructed attestation")
+			}
+		case types.BNRoleProposer:
+			if len(roots) != 1 {
+				return errors.New("BNRoleAttester can only have 1 root")
+			}
+
+			blk, err := dutyRunner.State.ReconstructBeaconBlockSig(r, v.share.ValidatorPubKey)
+			if err != nil {
+				return errors.Wrap(err, "could not reconstruct post consensus sig")
+			}
+			if err := v.beacon.SubmitBeaconBlock(blk); err != nil {
+				return errors.Wrap(err, "could not submit to beacon chain reconstructed signed beacon block")
+			}
+		case types.BNRoleAggregator:
+			if len(roots) != 1 {
+				return errors.New("BNRoleAttester can only have 1 root")
+			}
+
+			msg, err := dutyRunner.State.ReconstructSignedAggregateSelectionProofSig(r, v.share.ValidatorPubKey)
+			if err != nil {
+				return errors.Wrap(err, "could not reconstruct post consensus sig")
+			}
+			if err := v.beacon.SubmitSignedAggregateSelectionProof(msg); err != nil {
+				return errors.Wrap(err, "could not submit to beacon chain reconstructed signed aggregate")
+			}
+		case types.BNRoleSyncCommittee:
+			if len(roots) != 1 {
+				return errors.New("BNRoleAttester can only have 1 root")
+			}
+
+			msg, err := dutyRunner.State.ReconstructSyncCommitteeSig(r, v.share.ValidatorPubKey)
+			if err != nil {
+				return errors.Wrap(err, "could not reconstruct post consensus sig")
+			}
+			if err := v.beacon.SubmitSyncMessage(msg); err != nil {
+				return errors.Wrap(err, "could not submit to beacon chain reconstructed signed sync committee")
+			}
+		default:
+			return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.BeaconRoleType.String())
 		}
-		if err := v.beacon.SubmitAttestation(att); err != nil {
-			return errors.Wrap(err, "could not submit to beacon chain reconstructed attestation")
-		}
-	case types.BNRoleProposer:
-		blk, err := dutyRunner.State.ReconstructBeaconBlockSig(v.share.ValidatorPubKey)
-		if err != nil {
-			return errors.Wrap(err, "could not reconstruct post consensus sig")
-		}
-		if err := v.beacon.SubmitBeaconBlock(blk); err != nil {
-			return errors.Wrap(err, "could not submit to beacon chain reconstructed signed beacon block")
-		}
-	case types.BNRoleAggregator:
-		msg, err := dutyRunner.State.ReconstructSignedAggregateSelectionProofSig(v.share.ValidatorPubKey)
-		if err != nil {
-			return errors.Wrap(err, "could not reconstruct post consensus sig")
-		}
-		if err := v.beacon.SubmitSignedAggregateSelectionProof(msg); err != nil {
-			return errors.Wrap(err, "could not submit to beacon chain reconstructed signed aggregate")
-		}
-	case types.BNRoleSyncCommittee:
-		msg, err := dutyRunner.State.ReconstructSyncCommitteeSig(v.share.ValidatorPubKey)
-		if err != nil {
-			return errors.Wrap(err, "could not reconstruct post consensus sig")
-		}
-		if err := v.beacon.SubmitSyncMessage(msg); err != nil {
-			return errors.Wrap(err, "could not submit to beacon chain reconstructed signed sync committee")
-		}
-	default:
-		return errors.Errorf("unknown duty post consensus sig %s", dutyRunner.BeaconRoleType.String())
 	}
 	return nil
 }
 
 func (v *Validator) processRandaoPartialSig(dutyRunner *Runner, signedMsg *SignedPartialSignatureMessage) error {
-	quorum, err := dutyRunner.ProcessRandaoMessage(signedMsg)
+	quorum, roots, err := dutyRunner.ProcessRandaoMessage(signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing randao message")
 	}
@@ -163,34 +176,36 @@ func (v *Validator) processRandaoPartialSig(dutyRunner *Runner, signedMsg *Signe
 		return nil
 	}
 
-	// randao is relevant only for block proposals, no need to check type
-	fullSig, err := dutyRunner.State.ReconstructRandaoSig(v.share.ValidatorPubKey)
-	if err != nil {
-		return errors.Wrap(err, "could not reconstruct randao sig")
-	}
+	for _, r := range roots {
+		// randao is relevant only for block proposals, no need to check type
+		fullSig, err := dutyRunner.State.ReconstructRandaoSig(r, v.share.ValidatorPubKey)
+		if err != nil {
+			return errors.Wrap(err, "could not reconstruct randao sig")
+		}
 
-	duty := dutyRunner.CurrentDuty
+		duty := dutyRunner.CurrentDuty
 
-	// get block data
-	blk, err := v.beacon.GetBeaconBlock(duty.Slot, duty.CommitteeIndex, v.share.Graffiti, fullSig)
-	if err != nil {
-		return errors.Wrap(err, "failed to get beacon block")
-	}
+		// get block data
+		blk, err := v.beacon.GetBeaconBlock(duty.Slot, duty.CommitteeIndex, v.share.Graffiti, fullSig)
+		if err != nil {
+			return errors.Wrap(err, "failed to get beacon block")
+		}
 
-	input := &types.ConsensusData{
-		Duty:      duty,
-		BlockData: blk,
-	}
+		input := &types.ConsensusData{
+			Duty:      duty,
+			BlockData: blk,
+		}
 
-	if err := dutyRunner.Decide(input); err != nil {
-		return errors.Wrap(err, "can't start new duty runner instance for duty")
+		if err := dutyRunner.Decide(input); err != nil {
+			return errors.Wrap(err, "can't start new duty runner instance for duty")
+		}
 	}
 
 	return nil
 }
 
 func (v *Validator) processSelectionProofPartialSig(dutyRunner *Runner, signedMsg *SignedPartialSignatureMessage) error {
-	quorum, err := dutyRunner.ProcessSelectionProofMessage(signedMsg)
+	quorum, roots, err := dutyRunner.ProcessSelectionProofMessage(signedMsg)
 	if err != nil {
 		return errors.Wrap(err, "failed processing selection proof message")
 	}
@@ -200,42 +215,45 @@ func (v *Validator) processSelectionProofPartialSig(dutyRunner *Runner, signedMs
 		return nil
 	}
 
-	// reconstruct selection proof sig
-	fullSig, err := dutyRunner.State.ReconstructSelectionProofSig(v.share.ValidatorPubKey)
-	if err != nil {
-		return errors.Wrap(err, "could not reconstruct selection proof sig")
-	}
+	for _, r := range roots {
+		// reconstruct selection proof sig
+		fullSig, err := dutyRunner.State.ReconstructSelectionProofSig(r, v.share.ValidatorPubKey)
+		if err != nil {
+			return errors.Wrap(err, "could not reconstruct selection proof sig")
+		}
 
-	duty := dutyRunner.CurrentDuty
+		duty := dutyRunner.CurrentDuty
 
-	// TODO waitToSlotTwoThirds
+		// TODO waitToSlotTwoThirds
 
-	// get block data
-	res, err := v.beacon.SubmitAggregateSelectionProof(duty.Slot, duty.CommitteeIndex, fullSig)
-	if err != nil {
-		return errors.Wrap(err, "failed to submit aggregate and proof")
-	}
+		// get block data
+		res, err := v.beacon.SubmitAggregateSelectionProof(duty.Slot, duty.CommitteeIndex, fullSig)
+		if err != nil {
+			return errors.Wrap(err, "failed to submit aggregate and proof")
+		}
 
-	input := &types.ConsensusData{
-		Duty:              duty,
-		AggregateAndProof: res,
-	}
+		input := &types.ConsensusData{
+			Duty:              duty,
+			AggregateAndProof: res,
+		}
 
-	if err := dutyRunner.Decide(input); err != nil {
-		return errors.Wrap(err, "can't start new duty runner instance for duty")
+		if err := dutyRunner.Decide(input); err != nil {
+			return errors.Wrap(err, "can't start new duty runner instance for duty")
+		}
 	}
 
 	return nil
 }
 
-func (v *Validator) signPostConsensusMsg(msg *PartialSignatureMessage) (*SignedPartialSignatureMessage, error) {
+func (v *Validator) signPostConsensusMsg(msg PartialSignatureMessages) (*SignedPartialSignatureMessage, error) {
 	signature, err := v.signer.SignRoot(msg, types.PartialSignatureType, v.share.SharePubKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not sign PartialSignatureMessage for PostConsensusPartialSig")
 	}
 
 	return &SignedPartialSignatureMessage{
-		Message:   msg,
+		Type:      PostConsensusPartialSig,
+		Messages:  msg,
 		Signature: signature,
 		Signers:   []types.OperatorID{v.share.OperatorID},
 	}, nil

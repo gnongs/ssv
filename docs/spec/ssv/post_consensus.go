@@ -1,7 +1,6 @@
 package ssv
 
 import (
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
@@ -9,34 +8,39 @@ import (
 
 // ProcessPostConsensusMessage process post consensus msg, returns true if it has quorum for partial signatures.
 // returns true only once (first time quorum achieved)
-func (dr *Runner) ProcessPostConsensusMessage(msg *SignedPartialSignatureMessage) (bool, error) {
-	if err := dr.canProcessPostConsensusMsg(msg); err != nil {
-		return false, errors.Wrap(err, "can't process post consensus message")
+// returns signed message roots for which there is a quorum
+func (dr *Runner) ProcessPostConsensusMessage(signedMsg *SignedPartialSignatureMessage) (bool, [][]byte, error) {
+	if err := dr.canProcessPostConsensusMsg(signedMsg); err != nil {
+		return false, nil, errors.Wrap(err, "can't process post consensus message")
 	}
 
-	prevQuorum := dr.State.PostConsensusPartialSig.HasQuorum()
+	roots := make([][]byte, 0)
+	anyQuorum := false
+	for _, msg := range signedMsg.Messages {
+		prevQuorum := dr.State.PostConsensusPartialSig.HasQuorum(msg.SigningRoot)
 
-	if err := dr.State.PostConsensusPartialSig.AddSignature(msg.Message); err != nil {
-		return false, errors.Wrap(err, "could not add partial post consensus signature")
+		if err := dr.State.PostConsensusPartialSig.AddSignature(msg); err != nil {
+			return false, nil, errors.Wrap(err, "could not add partial post consensus signature")
+		}
+
+		if prevQuorum {
+			continue
+		}
+
+		quorum := dr.State.PostConsensusPartialSig.HasQuorum(msg.SigningRoot)
+
+		if quorum {
+			roots = append(roots, msg.SigningRoot)
+			anyQuorum = true
+		}
 	}
 
-	if prevQuorum {
-		return false, nil
-	}
-
-	quorum := dr.State.PostConsensusPartialSig.HasQuorum()
-
-	if quorum {
-		dr.State.SetFinished()
-	}
-
-	return quorum, nil
+	return anyQuorum, roots, nil
 }
 
 // SignDutyPostConsensus sets the Decided duty and partially signs the Decided data, returns a PartialSignatureMessage to be broadcasted or error
 func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signer types.KeyManager) (*PartialSignatureMessage, error) {
 	ret := &PartialSignatureMessage{
-		Type:    PostConsensusPartialSig,
 		Slot:    decidedValue.Duty.Slot,
 		Signers: []types.OperatorID{dr.Share.OperatorID},
 	}
@@ -50,10 +54,10 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 
 		dr.State.DecidedValue = decidedValue
 		dr.State.SignedAttestation = signedAttestation
-		dr.State.PostConsensusPartialSig.SigRoot = r
 
-		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
+		ret.SigningRoot = r
 		ret.PartialSignature = dr.State.SignedAttestation.Signature[:]
+		dr.State.PostConsensusPartialSig.AddSignature(ret)
 		return ret, nil
 	case types.BNRoleProposer:
 		signedBlock, r, err := signer.SignBeaconBlock(decidedValue.BlockData, decidedValue.Duty, dr.Share.SharePubKey)
@@ -63,10 +67,10 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 
 		dr.State.DecidedValue = decidedValue
 		dr.State.SignedProposal = signedBlock
-		dr.State.PostConsensusPartialSig.SigRoot = r
 
-		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
+		ret.SigningRoot = r
 		ret.PartialSignature = dr.State.SignedProposal.Signature[:]
+		dr.State.PostConsensusPartialSig.AddSignature(ret)
 		return ret, nil
 	case types.BNRoleAggregator:
 		signed, r, err := signer.SignAggregateAndProof(decidedValue.AggregateAndProof, decidedValue.Duty, dr.Share.SharePubKey)
@@ -76,10 +80,10 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 
 		dr.State.DecidedValue = decidedValue
 		dr.State.SignedAggregate = signed
-		dr.State.PostConsensusPartialSig.SigRoot = r
 
-		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
+		ret.SigningRoot = r
 		ret.PartialSignature = dr.State.SignedAggregate.Signature[:]
+		dr.State.PostConsensusPartialSig.AddSignature(ret)
 		return ret, nil
 	case types.BNRoleSyncCommittee:
 		signed, r, err := signer.SignSyncCommitteeBlockRoot(decidedValue.Duty.Slot, decidedValue.SyncCommitteeBlockRoot, decidedValue.Duty.ValidatorIndex, dr.Share.SharePubKey)
@@ -89,10 +93,10 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 
 		dr.State.DecidedValue = decidedValue
 		dr.State.SignedSyncCommittee = signed
-		dr.State.PostConsensusPartialSig.SigRoot = r
 
-		ret.SigningRoot = dr.State.PostConsensusPartialSig.SigRoot
+		ret.SigningRoot = r
 		ret.PartialSignature = dr.State.SignedSyncCommittee.Signature[:]
+		dr.State.PostConsensusPartialSig.AddSignature(ret)
 		return ret, nil
 	default:
 		return nil, errors.Errorf("unknown duty %s", decidedValue.Duty.Type.String())
@@ -111,10 +115,6 @@ func (dr *Runner) canProcessPostConsensusMsg(msg *SignedPartialSignatureMessage)
 
 	if err := dr.validatePartialSigMsg(msg, dr.State.PostConsensusPartialSig, dr.State.DecidedValue.Duty.Slot); err != nil {
 		return errors.Wrap(err, "post consensus msg invalid")
-	}
-
-	if dr.postConsensusSigTimeout(dr.BeaconNetwork.EstimatedCurrentSlot()) {
-		return errors.New("post consensus sig collection timeout")
 	}
 
 	return nil
@@ -150,11 +150,6 @@ func (dr *Runner) verifyBeaconPartialSignature(msg *PartialSignatureMessage) err
 		}
 	}
 	return errors.New("beacon partial Signature signer not found")
-}
-
-// postConsensusSigTimeout returns true if collecting post consensus sigs timed out
-func (dr *Runner) postConsensusSigTimeout(currentSlot spec.Slot) bool {
-	return dr.partialSigCollectionTimeout(dr.State.PostConsensusPartialSig, currentSlot)
 }
 
 // ensureRoot ensures that SigningRoot will have sufficient allocated memory

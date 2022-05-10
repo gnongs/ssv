@@ -129,7 +129,6 @@ var postConsensusAttestationMsg = func(
 	}
 
 	postConsensusMsg := &ssv.PartialSignatureMessage{
-		Type:             ssv.PostConsensusPartialSig,
 		Slot:             TestingDutySlot,
 		PartialSignature: signedAtt.Signature[:],
 		SigningRoot:      root,
@@ -145,7 +144,8 @@ var postConsensusAttestationMsg = func(
 
 	sig, _ := signer.SignRoot(postConsensusMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
-		Message:   postConsensusMsg,
+		Type:      ssv.PostConsensusPartialSig,
+		Messages:  ssv.PartialSignatureMessages{postConsensusMsg},
 		Signature: sig,
 		Signers:   []types.OperatorID{id},
 	}
@@ -176,7 +176,6 @@ var postConsensusBeaconBlockMsg = func(
 	}
 
 	postConsensusMsg := &ssv.PartialSignatureMessage{
-		Type:             ssv.PostConsensusPartialSig,
 		Slot:             TestingDutySlot,
 		PartialSignature: signedAtt.Signature[:],
 		SigningRoot:      root,
@@ -192,7 +191,8 @@ var postConsensusBeaconBlockMsg = func(
 
 	sig, _ := signer.SignRoot(postConsensusMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
-		Message:   postConsensusMsg,
+		Type:      ssv.PostConsensusPartialSig,
+		Messages:  ssv.PartialSignatureMessages{postConsensusMsg},
 		Signature: sig,
 		Signers:   []types.OperatorID{id},
 	}
@@ -214,7 +214,6 @@ var randaoMsg = func(
 	randaoSig, root, _ := signer.SignRandaoReveal(TestingDutySlot, sk.GetPublicKey().Serialize())
 
 	randaoMsg := &ssv.PartialSignatureMessage{
-		Type:             ssv.RandaoPartialSig,
 		Slot:             TestingDutySlot,
 		PartialSignature: randaoSig[:],
 		SigningRoot:      root,
@@ -223,7 +222,8 @@ var randaoMsg = func(
 
 	sig, _ := signer.SignRoot(randaoMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
-		Message:   randaoMsg,
+		Type:      ssv.RandaoPartialSig,
+		Messages:  ssv.PartialSignatureMessages{randaoMsg},
 		Signature: sig,
 		Signers:   []types.OperatorID{id},
 	}
@@ -245,7 +245,6 @@ var selectionProofMsg = func(
 	sig, root, _ := signer.SignSlotWithSelectionProof(TestingDutySlot, sk.GetPublicKey().Serialize())
 
 	msg := &ssv.PartialSignatureMessage{
-		Type:             ssv.SelectionProofPartialSig,
 		Slot:             TestingDutySlot,
 		PartialSignature: sig[:],
 		SigningRoot:      root,
@@ -254,7 +253,8 @@ var selectionProofMsg = func(
 
 	msgSig, _ := signer.SignRoot(msg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
-		Message:   msg,
+		Type:      ssv.SelectionProofPartialSig,
+		Messages:  ssv.PartialSignatureMessages{msg},
 		Signature: msgSig,
 		Signers:   []types.OperatorID{id},
 	}
@@ -285,7 +285,6 @@ var postConsensusAggregatorMsg = func(
 	}
 
 	postConsensusMsg := &ssv.PartialSignatureMessage{
-		Type:             ssv.PostConsensusPartialSig,
 		Slot:             TestingDutySlot,
 		PartialSignature: signedAtt.Signature[:],
 		SigningRoot:      root,
@@ -301,7 +300,8 @@ var postConsensusAggregatorMsg = func(
 
 	sig, _ := signer.SignRoot(postConsensusMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
-		Message:   postConsensusMsg,
+		Type:      ssv.PostConsensusPartialSig,
+		Messages:  ssv.PartialSignatureMessages{postConsensusMsg},
 		Signature: sig,
 		Signers:   []types.OperatorID{id},
 	}
@@ -332,7 +332,6 @@ var postConsensusSyncCommitteeMsg = func(
 	}
 
 	postConsensusMsg := &ssv.PartialSignatureMessage{
-		Type:             ssv.PostConsensusPartialSig,
 		Slot:             TestingDutySlot,
 		PartialSignature: signedRoot.Signature[:],
 		SigningRoot:      root,
@@ -348,7 +347,8 @@ var postConsensusSyncCommitteeMsg = func(
 
 	sig, _ := signer.SignRoot(postConsensusMsg, types.PartialSignatureType, sk.GetPublicKey().Serialize())
 	return &ssv.SignedPartialSignatureMessage{
-		Message:   postConsensusMsg,
+		Type:      ssv.PostConsensusPartialSig,
+		Messages:  ssv.PartialSignatureMessages{postConsensusMsg},
 		Signature: sig,
 		Signers:   []types.OperatorID{id},
 	}
