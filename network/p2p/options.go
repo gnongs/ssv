@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"time"
+	"github.com/kevinms/leakybucket-go"
 )
 
 const (
@@ -131,6 +132,7 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 	// due to libp2p's gossipsub implementation not taking into
 	// account previously added peers when creating the gossipsub
 	// object.
+	limiter := leakybucket.NewCollector(4, 8, true)
 	bl := pubsub.NewMapBlacklist()
 	bl.Add(n.host.ID())
 	psOpts := []pubsub.Option{
@@ -148,7 +150,13 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 			if spid == n.host.ID().String() {
 				return false
 			}
-			n.logger.Debug("PUBSUB: peer filter", zap.String("id", spid))
+			remaining := limiter.Remaining(spid)
+			if remaining <= 0 {
+				n.logger.Debug("PUBSUB: peer was filtered", zap.String("id", spid))
+				return false
+			}
+			limiter.Add(spid, 1)
+			n.logger.Debug("PUBSUB: peer filter ok", zap.String("id", spid))
 			return true
 		}),
 	}
