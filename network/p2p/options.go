@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"fmt"
+	"github.com/kevinms/leakybucket-go"
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/peer"
 	noise "github.com/libp2p/go-libp2p-noise"
@@ -11,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"time"
-	"github.com/kevinms/leakybucket-go"
 )
 
 const (
@@ -140,7 +140,7 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 		//pubsub.WithNoAuthor(),
 		//pubsub.WithMessageIdFn(n.msgId),
 		//pubsub.WithSubscriptionFilter(s),
-		pubsub.WithPeerOutboundQueueSize(pubsubQueueSize),
+		//pubsub.WithPeerOutboundQueueSize(pubsubQueueSize),
 		pubsub.WithValidateQueueSize(pubsubQueueSize),
 		pubsub.WithFloodPublish(true),
 		pubsub.WithGossipSubParams(pubsubGossipParam()),
@@ -152,11 +152,11 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 			}
 			remaining := limiter.Remaining(spid)
 			if remaining <= 0 {
-				n.logger.Debug("PUBSUB: peer was filtered", zap.String("id", spid))
+				n.logger.Debug("PUBSUB: peer filter false", zap.String("id", spid))
 				return false
 			}
 			limiter.Add(spid, 1)
-			n.logger.Debug("PUBSUB: peer filter ok", zap.String("id", spid))
+			n.logger.Debug("PUBSUB: peer filter true", zap.String("id", spid))
 			return true
 		}),
 	}

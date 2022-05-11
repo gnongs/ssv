@@ -104,6 +104,7 @@ var StartExporterNodeCmd = &cobra.Command{
 		// TODO add fork interface for exporter or use the same forks as in operator
 		cfg.P2pNetworkConfig.Fork = networkForkV0.New()
 		cfg.P2pNetworkConfig.NodeType = p2p.Exporter
+		cfg.P2pNetworkConfig.ExporterPeerID = ""
 		network, err := p2p.New(cmd.Context(), Logger, &cfg.P2pNetworkConfig)
 		if err != nil {
 			Logger.Fatal("failed to create network", zap.Error(err))

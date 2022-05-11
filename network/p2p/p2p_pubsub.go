@@ -205,14 +205,14 @@ func (pst *psTracer) Trace(evt *ps_pb.TraceEvent) {
 	if atomic.LoadUint32(&pst.state) < psTraceStateWithLogging {
 		return
 	}
-	pid := ""
-	id, err := peer.IDFromBytes(evt.PeerID)
-	if err != nil {
-		pst.logger.Debug("could not convert peer.ID", zap.Error(err))
-	} else {
-		pid = id.String()
-	}
+	//pid := ""
+	//id, err := peer.IDFromBytes(evt.PeerID)
+	//if err != nil {
+	//	pst.logger.Debug("could not convert peer.ID", zap.Error(err))
+	//} else {
+	//	pid = id.String()
+	//}
 	pst.logger.Debug("pubsub event",
 		zap.String("type", evt.GetType().String()),
-		zap.String("peer", pid))
+		zap.Any("evt", evt))
 }
