@@ -212,6 +212,6 @@ func (pst *psTracer) Trace(evt *ps_pb.TraceEvent) {
 	//	pid = id.String()
 	//}
 	pst.logger.Debug("pubsub event",
-		zap.String("type", evt.GetType().String()),
-		zap.Any("evt", evt))
+		zap.String("type", evt.GetType().String()))
+		//zap.Any("evt", evt))
 }

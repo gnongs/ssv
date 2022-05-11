@@ -132,7 +132,7 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 	// due to libp2p's gossipsub implementation not taking into
 	// account previously added peers when creating the gossipsub
 	// object.
-	limiter := leakybucket.NewCollector(4, 8, true)
+	limiter := leakybucket.NewCollector(1, 2, true)
 	bl := pubsub.NewMapBlacklist()
 	bl.Add(n.host.ID())
 	psOpts := []pubsub.Option{
@@ -150,9 +150,14 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 			if spid == n.host.ID().String() {
 				return false
 			}
+			if bl.Contains(pid) {
+				n.logger.Debug("PUBSUB: peer filter false (blacklisted)", zap.String("id", spid))
+				return false
+			}
 			remaining := limiter.Remaining(spid)
 			if remaining <= 0 {
-				n.logger.Debug("PUBSUB: peer filter false", zap.String("id", spid))
+				bl.Add(pid)
+				n.logger.Debug("PUBSUB: peer filter false (limited)", zap.String("id", spid))
 				return false
 			}
 			limiter.Add(spid, 1)
