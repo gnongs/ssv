@@ -141,7 +141,7 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 		//pubsub.WithMessageIdFn(n.msgId),
 		//pubsub.WithSubscriptionFilter(s),
 		//pubsub.WithPeerOutboundQueueSize(pubsubQueueSize),
-		pubsub.WithValidateQueueSize(pubsubQueueSize),
+		//pubsub.WithValidateQueueSize(pubsubQueueSize),
 		pubsub.WithFloodPublish(true),
 		pubsub.WithGossipSubParams(pubsubGossipParam()),
 		pubsub.WithBlacklist(bl),
