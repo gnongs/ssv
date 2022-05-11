@@ -131,6 +131,8 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 	// due to libp2p's gossipsub implementation not taking into
 	// account previously added peers when creating the gossipsub
 	// object.
+	bl := pubsub.NewMapBlacklist()
+	bl.Add(n.host.ID())
 	psOpts := []pubsub.Option{
 		//pubsub.WithMessageSignaturePolicy(pubsub.StrictNoSign),
 		//pubsub.WithNoAuthor(),
@@ -140,10 +142,13 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 		pubsub.WithValidateQueueSize(pubsubQueueSize),
 		pubsub.WithFloodPublish(true),
 		pubsub.WithGossipSubParams(pubsubGossipParam()),
+		pubsub.WithBlacklist(bl),
 		pubsub.WithPeerFilter(func(pid peer.ID, topic string) bool {
-			if pid.String() == n.host.ID().String() {
+			spid := pid.String()
+			if spid == n.host.ID().String() {
 				return false
 			}
+			n.logger.Debug("PUBSUB: peer filter", zap.String("id", spid))
 			return true
 		}),
 	}
