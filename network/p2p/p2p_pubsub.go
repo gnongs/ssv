@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -211,7 +212,12 @@ func (pst *psTracer) Trace(evt *ps_pb.TraceEvent) {
 	//} else {
 	//	pid = id.String()
 	//}
+	bytes, err := json.Marshal(evt)
+	if err != nil {
+		return
+	}
 	pst.logger.Debug("pubsub event",
-		zap.String("type", evt.GetType().String()))
+		zap.String("type", evt.GetType().String()), zap.ByteString("evt", bytes))
+
 		//zap.Any("evt", evt))
 }
