@@ -178,12 +178,6 @@ func (exp *exporter) Start() error {
 	go exp.decidedReadersQueue.Start()
 	go exp.networkReadersQueue.Start()
 
-	if exp.ws == nil {
-		return nil
-	}
-
-	exp.ws.UseQueryHandler(exp.handleQueryRequests)
-
 	go exp.triggerAllValidators()
 
 	go func() {
@@ -197,6 +191,12 @@ func (exp *exporter) Start() error {
 	exp.startNetworkMediators()
 
 	go exp.reportOperators()
+
+	if exp.ws == nil {
+		return nil
+	}
+
+	exp.ws.UseQueryHandler(exp.handleQueryRequests)
 
 	return exp.ws.Start(fmt.Sprintf(":%d", exp.wsAPIPort))
 }
