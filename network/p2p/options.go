@@ -146,8 +146,8 @@ func (n *p2pNetwork) newGossipPubsub(cfg *Config) (*pubsub.PubSub, error) {
 		pubsub.WithGossipSubParams(pubsubGossipParam()),
 		pubsub.WithBlacklist(bl),
 		pubsub.WithPeerFilter(func(pid peer.ID, topic string) bool {
-			spid := pid.String()
-			if spid == n.host.ID().String() {
+			spid := fmt.Sprintf("%s/%s", pid.String(), topic)
+			if pid.String() == n.host.ID().String() {
 				return false
 			}
 			if bl.Contains(pid) {
