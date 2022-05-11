@@ -5,7 +5,6 @@ import (
 	"github.com/bloxapp/ssv/exporter/ibft"
 	"github.com/bloxapp/ssv/validator"
 	validatorstorage "github.com/bloxapp/ssv/validator/storage"
-	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"time"
@@ -45,18 +44,18 @@ func (exp *exporter) updateValidatorsMetadata(shares []*validatorstorage.Share, 
 		pks = append(pks, share.PublicKey.Serialize())
 	}
 	onUpdated := func(pk string, meta *beacon.ValidatorMetadata) {
-		logger := exp.logger.With(zap.String("pk", pk))
-		validator.ReportValidatorStatus(pk, meta, exp.logger)
-		pubKey := bls.PublicKey{}
-		if err := pubKey.DeserializeHexStr(pk); err != nil {
-			logger.Error("could not desrialize public key", zap.Error(err))
-			return
-		}
-		if started, err := exp.triggerValidator(&pubKey); err != nil {
-			logger.Error("could not setup validator share")
-		} else if !started {
-			logger.Debug("validator didn't started")
-		}
+		//logger := exp.logger.With(zap.String("pk", pk))
+		//validator.ReportValidatorStatus(pk, meta, exp.logger)
+		//pubKey := bls.PublicKey{}
+		//if err := pubKey.DeserializeHexStr(pk); err != nil {
+		//	logger.Error("could not desrialize public key", zap.Error(err))
+		//	return
+		//}
+		//if started, err := exp.triggerValidator(&pubKey); err != nil {
+		//	logger.Error("could not setup validator share")
+		//} else if !started {
+		//	logger.Debug("validator didn't started")
+		//}
 	}
 	beacon.UpdateValidatorsMetadataBatch(pks, exp.metaDataReadersQueue, exp, exp.beacon, onUpdated, batchSize)
 }
