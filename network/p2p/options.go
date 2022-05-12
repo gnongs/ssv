@@ -16,13 +16,13 @@ import (
 
 const (
 	// overlay parameters
-	gossipSubD   = 8 // topic stable mesh target count
-	gossipSubDlo = 6 // topic stable mesh low watermark
+	gossipSubD   = 4 // topic stable mesh target count
+	gossipSubDlo = 3 // topic stable mesh low watermark
 	//gossipSubDhi = 12 // topic stable mesh high watermark
 
 	// gossipMaxIHaveLength is max number fo ihave messages to send
 	// lower the maximum (default is 5000) to avoid ihave floods
-	gossipMaxIHaveLength = 2000
+	gossipMaxIHaveLength = 1000
 
 	// gossip parameters
 	gossipSubMcacheLen    = 4 // number of windows to retain full messages in cache for `IWANT` responses
