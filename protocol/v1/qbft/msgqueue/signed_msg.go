@@ -3,6 +3,8 @@ package msgqueue
 import (
 	"fmt"
 	"github.com/bloxapp/ssv/protocol/v1/message"
+	"github.com/bloxapp/ssv/utils/logex"
+	"go.uber.org/zap"
 	"strconv"
 	"strings"
 )
@@ -54,7 +56,13 @@ func SignedMsgIndexer() Indexer {
 func SignedMsgIndex(msgType message.MsgType, mid message.Identifier, h message.Height, cmt ...message.ConsensusMessageType) []string {
 	var res []string
 	for _, mt := range cmt {
-		res = append(res, fmt.Sprintf("/%s/id/%x/height/%d/qbft_msg_type/%s", msgType.String(), mid, h, mt.String()))
+		var b strings.Builder
+		if _, err := fmt.Fprintf(&b, fmt.Sprintf("/%s/id/%s/height/%d/qbft_msg_type/%s", msgType.String(), mid.String(), h, mt.String())); err != nil {
+			logex.GetLogger().Warn("failed to write index", zap.Error(err))
+			continue
+		}
+		res = append(res, b.String())
+		//res = append(res, fmt.Sprintf("/%s/id/%s/height/%d/qbft_msg_type/%s", msgType.String(), mid.String(), h, mt.String()))
 	}
 	return res
 }

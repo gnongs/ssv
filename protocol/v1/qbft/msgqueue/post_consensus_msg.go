@@ -3,6 +3,8 @@ package msgqueue
 import (
 	"fmt"
 	"github.com/bloxapp/ssv/protocol/v1/message"
+	"github.com/bloxapp/ssv/utils/logex"
+	"go.uber.org/zap"
 	"strings"
 )
 
@@ -51,5 +53,11 @@ func SignedPostConsensusMsgIndexer() Indexer {
 
 // SignedPostConsensusMsgIndex indexes a message.SignedPostConsensusMessage by identifier and height
 func SignedPostConsensusMsgIndex(mid message.Identifier, h message.Height) string {
-	return fmt.Sprintf("/%s/id/%x/height/%d", message.SSVPostConsensusMsgType.String(), mid, h)
+	var b strings.Builder
+	if _, err := fmt.Fprintf(&b, "/%s/id/%s/height/%d", message.SSVPostConsensusMsgType.String(), mid.String(), h); err != nil {
+		logex.GetLogger().Warn("failed to write index", zap.Error(err))
+		return ""
+	}
+	return b.String()
+	//return fmt.Sprintf("/%s/id/%s/height/%d", message.SSVPostConsensusMsgType.String(), mid.String(), h)
 }
