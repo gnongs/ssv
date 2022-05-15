@@ -49,7 +49,7 @@ func ToV1Message(msgV0 *network.Message) (*message.SSVMessage, error) {
 				syncMsg.Status = message.StatusNotFound
 			}
 			if err := msgV0.SyncMessage.Error; len(err) > 0 {
-				logex.GetLogger().Warn("sync message error", zap.String("err", err))
+				//logex.GetLogger().Warn("sync message error", zap.String("err", err))
 				syncMsg.Status = message.StatusError
 			}
 			switch msgV0.SyncMessage.Type {
