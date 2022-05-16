@@ -2,11 +2,13 @@ package controller
 
 import (
 	"context"
+	"time"
+
+	"go.uber.org/zap"
+
 	"github.com/bloxapp/ssv/protocol/v1/message"
 	"github.com/bloxapp/ssv/protocol/v1/qbft"
 	"github.com/bloxapp/ssv/protocol/v1/qbft/msgqueue"
-	"go.uber.org/zap"
-	"time"
 )
 
 func (c *Controller) startQueueConsumer() {
@@ -90,7 +92,11 @@ func (c *Controller) processByState() bool {
 		if msg == nil {
 			return false // no msg found
 		}
-		c.logger.Debug("queue found message for state", zap.Int32("stage", currentState.Stage.Load()), zap.Int32("seq", int32(currentState.GetHeight())), zap.Int32("round", int32(currentState.GetRound())))
+		c.logger.Debug("queue found message for state",
+			zap.Int32("stage", currentState.Stage.Load()),
+			zap.Int32("seq", int32(currentState.GetHeight())),
+			zap.Int32("round", int32(currentState.GetRound())),
+		)
 	}
 
 	err := c.messageHandler(msg)

@@ -3,13 +3,15 @@ package controller
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
+
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
+
 	"github.com/bloxapp/ssv/protocol/v1/message"
 	"github.com/bloxapp/ssv/protocol/v1/qbft"
 	"github.com/bloxapp/ssv/protocol/v1/qbft/instance"
 	"github.com/bloxapp/ssv/protocol/v1/sync/changeround"
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
-	"strings"
 )
 
 // startInstanceWithOptions will start an iBFT instance with the provided options.
