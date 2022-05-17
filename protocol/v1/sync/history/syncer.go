@@ -48,6 +48,10 @@ func (s syncer) SyncRange(ctx context.Context, identifier message.Identifier, ha
 			s.logger.Warn("failed to extract sync msg", zap.Error(err))
 			continue
 		}
+		if sm == nil {
+			s.logger.Warn("sync message is nil")
+			continue
+		}
 
 	signedMsgLoop:
 		for _, signedMsg := range sm.Data {
