@@ -2,7 +2,9 @@ package controller
 
 import (
 	"context"
-	"github.com/bloxapp/ssv/protocol/v1/sync/history"
+	"github.com/bloxapp/ssv/protocol/v1/qbft/strategy"
+	"github.com/bloxapp/ssv/protocol/v1/qbft/strategy/fullnode"
+	"github.com/bloxapp/ssv/protocol/v1/qbft/strategy/node"
 	"go.uber.org/atomic"
 	"sync"
 	"time"
@@ -41,7 +43,7 @@ type Options struct {
 	SyncRateLimit  time.Duration
 	SigTimeout     time.Duration
 	ReadMode       bool
-	ForceHistory   bool
+	FullNode       bool
 }
 
 // Controller implements Controller interface
@@ -73,10 +75,12 @@ type Controller struct {
 	syncRateLimit time.Duration
 
 	// flags
-	readMode     bool
-	forceHistory bool
+	readMode bool
+	fullNode bool
 
 	q msgqueue.MsgQueue
+
+	strategy strategy.Decided
 }
 
 // New is the constructor of Controller
@@ -86,13 +90,13 @@ func New(opts Options) IController {
 
 	q, err := msgqueue.New(
 		logger.With(zap.String("who", "msg_q")),
-		msgqueue.WithIndexers(msgqueue.DefaultMsgIndexer(), msgqueue.SignedMsgIndexer(), msgqueue.SignedPostConsensusMsgIndexer()),
+		msgqueue.WithIndexers(msgqueue.DefaultMsgIndexer(), msgqueue.SignedMsgIndexer(), msgqueue.DecidedMsgIndexer(), msgqueue.SignedPostConsensusMsgIndexer()),
 	)
 	if err != nil {
 		// TODO: we should probably stop here, TBD
 		logger.Warn("could not setup msg queue properly", zap.Error(err))
 	}
-	ret := &Controller{
+	ctrl := &Controller{
 		ctx:            opts.Context,
 		ibftStorage:    opts.Storage,
 		logger:         logger,
@@ -111,49 +115,47 @@ func New(opts Options) IController {
 
 		syncRateLimit: opts.SyncRateLimit,
 
-		readMode:     opts.ReadMode,
-		forceHistory: opts.ForceHistory,
+		readMode: opts.ReadMode,
+		fullNode: opts.FullNode,
 
 		q: q,
 	}
 
+	// create strategy
+	if ctrl.isFullNode() {
+		ctrl.strategy = fullnode.NewFullNodeStrategy(logger, opts.Storage, opts.Network)
+	} else {
+		ctrl.strategy = node.NewRegularNodeStrategy(logger, opts.Storage, opts.Network)
+	}
+
 	// set flags
-	ret.initHandlers.Store(false)
-	ret.initSynced.Store(false)
-	return ret
+	ctrl.initHandlers.Store(false)
+	ctrl.initSynced.Store(false)
+
+	return ctrl
 }
 
 // OnFork called when fork occur.
 func (c *Controller) OnFork(forkVersion forksprotocol.ForkVersion) error {
 	// get new QBFT controller fork
 	c.fork = forksfactory.NewFork(forkVersion)
+	// update strategy
+	if c.isFullNode() {
+		c.strategy = fullnode.NewFullNodeStrategy(c.logger, c.ibftStorage, c.network)
+	} else {
+		c.strategy = node.NewRegularNodeStrategy(c.logger, c.ibftStorage, c.network)
+	}
 	return nil
 }
 
 func (c *Controller) syncDecided() error {
-	syncHistory := c.fork.VersionName() == "v0" // until the fork, need to keep saving history
-	if c.forceHistory {
-		syncHistory = true // only if force history is set to true
-	}
+	c.logger.Debug("syncing decided", zap.String("identifier", c.Identifier.String()))
 
-	h := history.New(c.logger, c.network, syncHistory)
-
-	handler := func(msg *message.SignedMessage) error {
-		err := c.fork.ValidateDecidedMsg(c.ValidatorShare).Run(msg)
-		if err != nil {
-			return errors.Wrap(err, "invalid msg")
-		}
-		// TODO: exit if already exist
-		return c.ibftStorage.SaveDecided(msg)
-	}
-
-	c.logger.Debug("syncing heights decided", zap.String("identifier", c.Identifier.String()))
-	highest, err := h.SyncDecided(c.ctx, c.Identifier, func(i message.Identifier) (*message.SignedMessage, error) {
-		return c.ibftStorage.GetLastDecided(i)
-	}, handler)
+	highest, err := c.strategy.Sync(c.ctx, c.Identifier, c.fork.ValidateDecidedMsg(c.ValidatorShare))
 	if err == nil && highest != nil {
 		err = c.ibftStorage.SaveLastDecided(highest)
 	}
+
 	return err
 }
 
@@ -163,12 +165,14 @@ func (c *Controller) Init() error {
 	if !c.initHandlers.Load() {
 		c.initHandlers.Store(true)
 		c.logger.Info("iBFT implementation init started")
-		go c.startQueueConsumer()
+		go c.startQueueConsumer(c.messageHandler)
 		ReportIBFTStatus(c.ValidatorShare.PublicKey.SerializeToHexStr(), false, false)
 		//c.logger.Debug("managed to setup iBFT handlers")
 	}
 
 	if !c.initSynced.Load() {
+		// warmup to avoid network errors
+		time.Sleep(500 * time.Millisecond)
 		minPeers := 1
 		c.logger.Debug("waiting for min peers...", zap.Int("min peers", minPeers))
 		if err := p2pprotocol.WaitForMinPeers(c.ctx, c.logger, c.network, c.ValidatorShare.PublicKey.Serialize(), minPeers, time.Millisecond*500); err != nil {
@@ -281,4 +285,16 @@ func (c *Controller) messageHandler(msg *message.SSVMessage) error {
 		panic("need to implement!")
 	}
 	return nil
+}
+
+func (c *Controller) isFullNode() bool {
+	isPostFork := c.fork.VersionName() != forksprotocol.V0ForkVersion.String()
+	if !isPostFork { // by default when pre fork, full sync is true
+		return true
+	}
+	// otherwise, checking flag
+	if c.fullNode {
+		return true
+	}
+	return false
 }

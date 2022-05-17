@@ -2,10 +2,12 @@ package changeround
 
 import (
 	"bytes"
+
+	"github.com/pkg/errors"
+
 	"github.com/bloxapp/ssv/protocol/v1/blockchain/beacon"
 	"github.com/bloxapp/ssv/protocol/v1/message"
 	"github.com/bloxapp/ssv/protocol/v1/qbft/pipelines"
-	"github.com/pkg/errors"
 )
 
 // validateJustification validates change round justifications
@@ -24,6 +26,9 @@ func Validate(share *beacon.Share, forkVersion string) pipelines.SignedMessagePi
 
 // Run implements pipeline.Pipeline interface
 func (p *validateJustification) Run(signedMessage *message.SignedMessage) error {
+	if signedMessage.Message.Data == nil {
+		return errors.New("change round justification msg is nil")
+	}
 	// TODO - change to normal prepare pipeline
 	data, err := signedMessage.Message.GetRoundChangeData()
 	if err != nil {
@@ -82,11 +87,13 @@ func (p *validateJustification) Run(signedMessage *message.SignedMessage) error 
 		return errors.Wrap(err, "change round could not get pubkey")
 	}
 	aggregated := pks.Aggregate()
-	err = signedMessage.GetSignature().Verify(signedMessage, message.PrimusTestnet, message.QBFTSigType, aggregated.Serialize(), p.forkVersion)
-	if err != nil {
-		return errors.Wrap(err, "change round could not verify signature")
-
+	for _, justification := range data.RoundChangeJustification {
+		err = justification.Signature.Verify(justification, message.PrimusTestnet, message.QBFTSigType, aggregated.Serialize(), p.forkVersion)
+		if err != nil {
+			return errors.Wrap(err, "change round could not verify signature")
+		}
 	}
+
 	return nil
 }
 

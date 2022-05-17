@@ -2,8 +2,10 @@ package qbft
 
 import (
 	"encoding/json"
-	"github.com/bloxapp/ssv/protocol/v1/message"
+
 	"go.uber.org/atomic"
+
+	"github.com/bloxapp/ssv/protocol/v1/message"
 )
 
 type RoundState int32
@@ -54,9 +56,9 @@ type State struct {
 type unsafeState struct {
 	Stage         int32
 	Identifier    message.Identifier
-	height        message.Height
+	Height        message.Height
 	InputValue    []byte
-	round         message.Round
+	Round         message.Round
 	PreparedRound message.Round
 	PreparedValue []byte
 }
@@ -66,9 +68,9 @@ func (s *State) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&unsafeState{
 		Stage:         s.Stage.Load(),
 		Identifier:    s.GetIdentifier(),
-		height:        s.GetHeight(),
+		Height:        s.GetHeight(),
 		InputValue:    s.GetInputValue(),
-		round:         s.GetRound(),
+		Round:         s.GetRound(),
 		PreparedRound: s.GetPreparedRound(),
 		PreparedValue: s.GetPreparedValue(),
 	})
@@ -83,9 +85,9 @@ func (s *State) UnmarshalJSON(data []byte) error {
 
 	s.Stage.Store(d.Stage)
 	s.Identifier.Store(d.Identifier)
-	s.Height.Store(d.height)
+	s.Height.Store(d.Height)
 	s.InputValue.Store(d.InputValue)
-	s.Round.Store(d.round)
+	s.Round.Store(d.Round)
 	s.PreparedRound.Store(d.PreparedRound)
 	s.PreparedValue.Store(d.PreparedValue)
 
@@ -93,18 +95,38 @@ func (s *State) UnmarshalJSON(data []byte) error {
 }
 
 func (s *State) GetHeight() message.Height {
-	height := s.Height.Load().(message.Height)
-	return height
+	if height, ok := s.Height.Load().(message.Height); ok {
+		return height
+	}
+
+	return message.Height(0)
+}
+
+func NewHeight(height message.Height) atomic.Value {
+	h := atomic.Value{}
+	h.Store(height)
+	return h
 }
 
 func (s *State) GetRound() message.Round {
-	round := s.Round.Load().(message.Round)
-	return round
+	if round, ok := s.Round.Load().(message.Round); ok {
+		return round
+	}
+	return message.Round(0)
+}
+
+func NewRound(round message.Round) atomic.Value {
+	value := atomic.Value{}
+	value.Store(round)
+	return value
 }
 
 func (s *State) GetPreparedRound() message.Round {
-	round := s.PreparedRound.Load().(message.Round)
-	return round
+	if round, ok := s.PreparedRound.Load().(message.Round); ok {
+		return round
+	}
+
+	return message.Round(0)
 }
 
 func (s *State) SetRound(newRound message.Round) {
@@ -112,18 +134,26 @@ func (s *State) SetRound(newRound message.Round) {
 }
 
 func (s *State) GetIdentifier() message.Identifier {
-	identifier := s.Identifier.Load().(message.Identifier)
-	return identifier
+	if identifier, ok := s.Identifier.Load().(message.Identifier); ok {
+		return identifier
+	}
+
+	return nil
 }
 
 func (s *State) GetInputValue() []byte {
-	inputValue := s.InputValue.Load().([]byte)
-	return inputValue
+	if inputValue, ok := s.InputValue.Load().([]byte); ok {
+		return inputValue
+	}
+	return nil
 }
 
 func (s *State) GetPreparedValue() []byte {
-	value := s.PreparedValue.Load().([]byte)
-	return value
+	if value, ok := s.PreparedValue.Load().([]byte); ok {
+		return value
+	}
+
+	return nil
 }
 
 // InstanceConfig is the configuration of the instance

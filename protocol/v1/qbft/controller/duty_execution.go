@@ -2,17 +2,20 @@ package controller
 
 import (
 	"encoding/hex"
+
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
+
 	beaconprotocol "github.com/bloxapp/ssv/protocol/v1/blockchain/beacon"
 	"github.com/bloxapp/ssv/protocol/v1/message"
 	"github.com/bloxapp/ssv/protocol/v1/qbft/msgqueue"
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 // ProcessSignatureMessage aggregate signature messages and broadcasting when quorum achieved
 func (c *Controller) ProcessSignatureMessage(msg *message.SignedPostConsensusMessage) error {
-	if c.signatureState.getState() != StateRunning { // TODO might need ot check only if timeout ? (:Niv)
-		return errors.Errorf("signature timer state is not running. state - %s", c.signatureState.getState().toString())
+	if c.signatureState.getState() != StateRunning {
+		c.logger.Warn("try to process signature message but timer state is not running. can't process message.", zap.String("state", c.signatureState.getState().toString()))
+		return nil
 	}
 
 	//	validate message
@@ -35,7 +38,6 @@ func (c *Controller) ProcessSignatureMessage(msg *message.SignedPostConsensusMes
 
 	logger.Info("collected valid signature", zap.String("sig", hex.EncodeToString(msg.Message.DutySignature)), zap.Any("msg", msg))
 
-	// 	verifyPartialSignature
 	if err := c.verifyPartialSignature(msg.Message.DutySignature, c.signatureState.root, msg.GetSigners()[0], c.ValidatorShare.Committee); err != nil { // TODO need to add sig to msg and not use this sig
 		c.logger.Error("received invalid signature", zap.Error(err))
 		return nil
@@ -48,7 +50,7 @@ func (c *Controller) ProcessSignatureMessage(msg *message.SignedPostConsensusMes
 		c.logger.Info("collected enough signature to reconstruct...", zap.Int("signatures", len(c.signatureState.signatures)))
 		c.signatureState.stopTimer()
 
-		// clean queue for messages, we don't need them anymore
+		// clean queue consensus messages, we don't need them anymore
 		c.q.Clean(msgqueue.SignedMsgCleaner(c.Identifier, c.signatureState.height))
 
 		err := c.broadcastSignature()

@@ -28,24 +28,33 @@ func (c *Controller) processDecidedMessage(msg *message.SignedMessage) error {
 		c.logger.Error("received invalid decided message", zap.Error(err), zap.Any("signer ids", msg.Signers))
 		return nil
 	}
-	logger := c.logger.With(zap.Uint64("seq number", uint64(msg.Message.Height)), zap.Any("signer ids", msg.Signers))
-
+	logger := c.logger.With(zap.String("who", "processDecided"),
+		//zap.Bool("is_full_sync", c.isFullNode()),
+		zap.Uint64("height", uint64(msg.Message.Height)),
+		zap.Any("signer ids", msg.Signers))
 	logger.Debug("received valid decided msg")
 
+	if valid, err := c.strategy.ValidateHeight(msg); err != nil {
+		return errors.Wrap(err, "failed to check msg height")
+	} else if !valid {
+		return nil // msg is too old, do nothing
+	}
+
 	// if we already have this in storage, pass
-	known, err := c.decidedMsgKnown(msg)
+	known, knownMsg, err := c.strategy.IsMsgKnown(msg)
 	if err != nil {
 		logger.Error("can't check if decided msg is known", zap.Error(err))
 		return nil
 	}
 	if known {
 		// if decided is known, check for a more complete message (more signers)
-		if ignore, _ := c.checkDecidedMessageSigners(msg); !ignore {
-			if err := c.ibftStorage.SaveDecided(msg); err != nil {
+		if ignore := c.checkDecidedMessageSigners(knownMsg, msg); !ignore {
+			if err := c.strategy.UpdateDecided(msg); err != nil {
 				logger.Error("can't update decided message", zap.Error(err))
 				return nil
 			}
 			logger.Debug("decided was updated")
+
 			qbft.ReportDecided(c.ValidatorShare.PublicKey.SerializeToHexStr(), msg)
 			return nil
 		}
@@ -54,6 +63,14 @@ func (c *Controller) processDecidedMessage(msg *message.SignedMessage) error {
 	}
 
 	qbft.ReportDecided(c.ValidatorShare.PublicKey.SerializeToHexStr(), msg)
+
+	if c.readMode {
+		if err := c.strategy.SaveDecided(msg); err != nil {
+			return errors.Wrap(err, "could not update decided message")
+		}
+		logger.Debug("decided was updated for controller with read only mode")
+		return nil
+	}
 
 	// decided for current instance
 	if c.forceDecideCurrentInstance(msg) {
@@ -97,33 +114,20 @@ func (c *Controller) highestKnownDecided() (*message.SignedMessage, error) {
 	return highestKnown, nil
 }
 
-func (c *Controller) decidedMsgKnown(msg *message.SignedMessage) (bool, error) {
-	msgs, err := c.ibftStorage.GetDecided(msg.Message.Identifier, msg.Message.Height, msg.Message.Height)
-	if err != nil {
-		return false, errors.Wrap(err, "could not get decided instance from storage")
-	}
-	return len(msgs) > 0, nil
-}
-
 // checkDecidedMessageSigners checks if signers of existing decided includes all signers of the newer message
-func (c *Controller) checkDecidedMessageSigners(msg *message.SignedMessage) (bool, error) {
-	decided, err := c.ibftStorage.GetDecided(msg.Message.Identifier, msg.Message.Height, msg.Message.Height)
-	if err != nil {
-		return false, errors.Wrap(err, "could not get decided instance from storage")
-	}
-	if len(decided) == 0 {
-		return false, nil
-	}
+func (c *Controller) checkDecidedMessageSigners(knownMsg *message.SignedMessage, msg *message.SignedMessage) bool {
 	// decided message should have at least 3 signers, so if the new decided has 4 signers -> override
-	if len(decided[0].Signers) < c.ValidatorShare.CommitteeSize() && len(msg.GetSigners()) > len(decided[0].Signers) {
-		return false, nil
+	if len(knownMsg.Signers) < c.ValidatorShare.CommitteeSize() && len(msg.GetSigners()) > len(knownMsg.Signers) {
+		return false
 	}
-	return true, nil
+	return true
 }
 
 // decidedForCurrentInstance returns true if msg has same seq number is current instance
 func (c *Controller) decidedForCurrentInstance(msg *message.SignedMessage) bool {
-	return c.currentInstance != nil && c.currentInstance.State().GetHeight() == msg.Message.Height
+	return c.currentInstance != nil &&
+		c.currentInstance.State() != nil &&
+		c.currentInstance.State().GetHeight() == msg.Message.Height
 }
 
 // decidedRequiresSync returns true if:
