@@ -1,6 +1,15 @@
 package tests
 
-type SpecTest struct {
-	Name          string
-	ExpectedError string
+type EncodingSpecTestType uint64
+
+const (
+	ConsensusDataType EncodingSpecTestType = iota
+	ShareDataType
+	SSVMsgDataType
+)
+
+type EncodingSpecTest struct {
+	Name     string
+	DataType EncodingSpecTestType
+	Data     []byte
 }
