@@ -2,7 +2,6 @@ package msgqueue
 
 import (
 	"fmt"
-	"github.com/bloxapp/ssv/utils/logex"
 	"strings"
 	"sync"
 
@@ -197,7 +196,7 @@ func DefaultMsgCleaner(mt message.MsgType, mid message.Identifier) Cleaner {
 		if parts[0] != mt.String() {
 			return false
 		}
-		if parts[2] != fmt.Sprintf("%x", mid) {
+		if parts[2] != mid.String() {
 			return false
 		}
 		// clean
@@ -217,10 +216,5 @@ func DefaultMsgIndexer() Indexer {
 
 // DefaultMsgIndex is the default msg index
 func DefaultMsgIndex(mt message.MsgType, mid message.Identifier) string {
-	var b strings.Builder
-	if _, err := fmt.Fprintf(&b, "/%s/id/%x", mt.String(), mid); err != nil {
-		logex.GetLogger().Warn("failed to write index", zap.Error(err))
-		return ""
-	}
-	return b.String()
+	return fmt.Sprintf("/%s/id/%s", mt.String(), mid.String())
 }

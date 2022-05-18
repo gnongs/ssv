@@ -3,8 +3,6 @@ package msgqueue
 import (
 	"fmt"
 	"github.com/bloxapp/ssv/protocol/v1/message"
-	"github.com/bloxapp/ssv/utils/logex"
-	"go.uber.org/zap"
 	"strconv"
 	"strings"
 )
@@ -21,7 +19,7 @@ func SignedMsgCleaner(mid message.Identifier, h message.Height) Cleaner {
 		if parts[0] != message.SSVConsensusMsgType.String() {
 			return false
 		}
-		if parts[2] != fmt.Sprintf("%x", mid) {
+		if parts[2] != mid.String() {
 			return false
 		}
 		if getIndexHeight(parts...) > h {
@@ -64,13 +62,7 @@ func SignedMsgIndexer() Indexer {
 func SignedMsgIndex(msgType message.MsgType, mid message.Identifier, h message.Height, cmt ...message.ConsensusMessageType) []string {
 	var res []string
 	for _, mt := range cmt {
-		var b strings.Builder
-		if _, err := fmt.Fprintf(&b, fmt.Sprintf("/%s/id/%s/height/%d/qbft_msg_type/%s", msgType.String(), mid.String(), h, mt.String())); err != nil {
-			logex.GetLogger().Warn("failed to write index", zap.Error(err))
-			continue
-		}
-		res = append(res, b.String())
-		//res = append(res, fmt.Sprintf("/%s/id/%s/height/%d/qbft_msg_type/%s", msgType.String(), mid.String(), h, mt.String()))
+		res = append(res, fmt.Sprintf("/%s/id/%s/height/%d/qbft_msg_type/%s", msgType.String(), mid.String(), h, mt.String()))
 	}
 	return res
 }
@@ -91,7 +83,7 @@ func DecidedMsgIndexer() Indexer {
 
 // DecidedMsgIndex indexes a decided message.SignedMessage by identifier, msg type
 func DecidedMsgIndex(mid message.Identifier) string {
-	return fmt.Sprintf("/%s/id/%x/qbft_msg_type/%s", message.SSVDecidedMsgType.String(), mid, message.CommitMsgType.String())
+	return fmt.Sprintf("/%s/id/%s/qbft_msg_type/%s", message.SSVDecidedMsgType.String(), mid.String(), message.CommitMsgType.String())
 }
 
 func getIndexHeight(idxParts ...string) message.Height {

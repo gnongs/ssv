@@ -20,7 +20,7 @@ func SignedPostConsensusMsgCleaner(mid message.Identifier, h message.Height) Cle
 		if parts[0] != message.SSVPostConsensusMsgType.String() {
 			return false
 		}
-		if parts[2] != fmt.Sprintf("%x", mid) {
+		if parts[2] != mid.String() {
 			return false
 		}
 		if getIndexHeight(parts...) > h {
@@ -53,11 +53,5 @@ func SignedPostConsensusMsgIndexer() Indexer {
 
 // SignedPostConsensusMsgIndex indexes a message.SignedPostConsensusMessage by identifier and height
 func SignedPostConsensusMsgIndex(mid message.Identifier, h message.Height) string {
-	var b strings.Builder
-	if _, err := fmt.Fprintf(&b, "/%s/id/%s/height/%d", message.SSVPostConsensusMsgType.String(), mid.String(), h); err != nil {
-		logex.GetLogger().Warn("failed to write index", zap.Error(err))
-		return ""
-	}
-	return b.String()
-	//return fmt.Sprintf("/%s/id/%s/height/%d", message.SSVPostConsensusMsgType.String(), mid.String(), h)
+	return fmt.Sprintf("/%s/id/%s/height/%d", message.SSVPostConsensusMsgType.String(), mid.String(), h)
 }
