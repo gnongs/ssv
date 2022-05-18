@@ -3,8 +3,6 @@ package msgqueue
 import (
 	"fmt"
 	"github.com/bloxapp/ssv/protocol/v1/message"
-	"github.com/bloxapp/ssv/utils/logex"
-	"go.uber.org/zap"
 	"strings"
 )
 
