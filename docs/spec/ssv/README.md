@@ -207,3 +207,4 @@ The [spec tests](./spectest) are a generated as a json file that can be run in a
 - [X] improve pre-consensus partial sigs to support signed roots which are not necessarily what the local node signed (example: node 1 signed randao/ selection proof root X but nodes 2,3,4 signed Y)
 - [X] pre and post consensus timeout redesign as 32 slot timeout can cause the next duty not to start (if it starts in less than 32 slots)
 - [ ] Move ConsensusData struct to ssv package
+- [ ] Remove? storage interface? do we use it?

@@ -2,6 +2,7 @@ package ssv
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
@@ -20,20 +21,25 @@ type State struct {
 	SignedProposal      *altair.SignedBeaconBlock
 	SignedAggregate     *spec.SignedAggregateAndProof
 	SignedSyncCommittee *altair.SyncCommitteeMessage
+	SignedContributions map[string]*altair.SignedContributionAndProof // maps contribution root to signed contribution
 
-	SelectionProofPartialSig *PartialSigContainer
-	RandaoPartialSig         *PartialSigContainer
-	PostConsensusPartialSig  *PartialSigContainer
+	SelectionProofPartialSig        *PartialSigContainer
+	RandaoPartialSig                *PartialSigContainer
+	ContributionProofs              *PartialSigContainer
+	ContributionSubCommitteeIndexes map[string]uint64 // maps contribution sig root to subcommittee index
+	PostConsensusPartialSig         *PartialSigContainer
 
 	Finished bool
 }
 
 func NewDutyExecutionState(quorum uint64) *State {
 	return &State{
-		SelectionProofPartialSig: NewPartialSigContainer(quorum),
-		RandaoPartialSig:         NewPartialSigContainer(quorum),
-		PostConsensusPartialSig:  NewPartialSigContainer(quorum),
-		Finished:                 false,
+		SelectionProofPartialSig:        NewPartialSigContainer(quorum),
+		RandaoPartialSig:                NewPartialSigContainer(quorum),
+		PostConsensusPartialSig:         NewPartialSigContainer(quorum),
+		ContributionProofs:              NewPartialSigContainer(quorum),
+		ContributionSubCommitteeIndexes: make(map[string]uint64),
+		Finished:                        false,
 	}
 }
 
@@ -55,6 +61,43 @@ func (pcs *State) ReconstructSelectionProofSig(root, validatorPubKey []byte) ([]
 		return nil, errors.Wrap(err, "could not reconstruct selection proof sig")
 	}
 	return signature, nil
+}
+
+// ReconstructContributionProofSig aggregates collected partial contribution proof sigs, reconstructs a valid sig and returns it
+func (pcs *State) ReconstructContributionProofSig(root, validatorPubKey []byte) ([]byte, uint64, error) {
+	// Reconstruct signatures
+	signature, err := pcs.ContributionProofs.ReconstructSignature(root, validatorPubKey)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "could not reconstruct contribution proof sig")
+	}
+
+	// find subcommittee index
+	index, found := pcs.ContributionSubCommitteeIndexes[hex.EncodeToString(root)]
+	if !found {
+		return nil, 0, errors.New("could not find subcommittee index")
+	}
+	return signature, index, nil
+}
+
+// ReconstructContributionSig aggregates collected partial contribution sigs, reconstructs a valid sig and returns it
+func (pcs *State) ReconstructContributionSig(root, validatorPubKey []byte) (*altair.SignedContributionAndProof, error) {
+
+	// Reconstruct signatures
+	signature, err := pcs.PostConsensusPartialSig.ReconstructSignature(root, validatorPubKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not reconstruct contribution sig")
+	}
+
+	// find SignedContributionAndProod
+	contrib, found := pcs.SignedContributions[hex.EncodeToString(root)]
+	if !found {
+		return nil, errors.New("could not find SignedContributionAndProod")
+	}
+
+	blsSig := spec.BLSSignature{}
+	copy(blsSig[:], signature)
+	contrib.Signature = blsSig
+	return contrib, nil
 }
 
 // ReconstructAttestationSig aggregates collected partial sigs, reconstructs a valid sig and returns an attestation obj with the reconstructed sig

@@ -21,15 +21,22 @@ func NewTestingKeyManager() types.KeyManager {
 		domain: types.PrimusTestnet,
 	}
 
+	ret.AddShare(Testing4SharesSet().SK)
 	for _, s := range Testing4SharesSet().Shares {
 		ret.AddShare(s)
 	}
+
+	ret.AddShare(Testing7SharesSet().SK)
 	for _, s := range Testing7SharesSet().Shares {
 		ret.AddShare(s)
 	}
+
+	ret.AddShare(Testing10SharesSet().SK)
 	for _, s := range Testing10SharesSet().Shares {
 		ret.AddShare(s)
 	}
+
+	ret.AddShare(Testing13SharesSet().SK)
 	for _, s := range Testing13SharesSet().Shares {
 		ret.AddShare(s)
 	}
@@ -143,6 +150,31 @@ func (km *testingKeyManager) SignSyncCommitteeBlockRoot(slot spec.Slot, root spe
 			BeaconBlockRoot: TestingSyncCommitteeBlockRoot,
 			Signature:       blsSig,
 		}, TestingSyncCommitteeBlockRoot[:], nil
+	}
+	return nil, nil, errors.New("pk not found")
+}
+
+func (km *testingKeyManager) SignContributionProof(slot spec.Slot, index uint64, pk []byte) (types.Signature, []byte, error) {
+	if k, found := km.keys[hex.EncodeToString(pk)]; found {
+		sig := k.SignByte(TestingContributionProofRoots[index][:])
+		blsSig := spec.BLSSignature{}
+		copy(blsSig[:], sig.Serialize())
+
+		return sig.Serialize(), TestingContributionProofRoots[index][:], nil
+	}
+	return nil, nil, errors.New("pk not found")
+}
+
+func (km *testingKeyManager) SignContribution(contribution *altair.ContributionAndProof, pk []byte) (*altair.SignedContributionAndProof, []byte, error) {
+	if k, found := km.keys[hex.EncodeToString(pk)]; found {
+		sig := k.SignByte(TestingContributionRoots[contribution.Contribution.SubcommitteeIndex])
+		blsSig := spec.BLSSignature{}
+		copy(blsSig[:], sig.Serialize())
+
+		return &altair.SignedContributionAndProof{
+			Message:   contribution,
+			Signature: blsSig,
+		}, TestingContributionRoots[contribution.Contribution.SubcommitteeIndex], nil
 	}
 	return nil, nil, errors.New("pk not found")
 }

@@ -26,6 +26,10 @@ var SyncCommitteeRunner = func(keySet *TestKeySet) *ssv.Runner {
 	return baseRunner(types.BNRoleSyncCommittee, ssv.SyncCommitteeValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork), keySet)
 }
 
+var SyncCommitteeContributionRunner = func(keySet *TestKeySet) *ssv.Runner {
+	return baseRunner(types.BNRoleSyncCommitteeContribution, ssv.SyncCommitteeContributionValueCheck(NewTestingKeyManager(), ssv.NowTestNetwork), keySet)
+}
+
 var baseRunner = func(role types.BeaconRole, valCheck qbft.ProposedValueCheck, keySet *TestKeySet) *ssv.Runner {
 	share := testShare(keySet)
 

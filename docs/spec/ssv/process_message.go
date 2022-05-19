@@ -1,6 +1,8 @@
 package ssv
 
 import (
+	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv/docs/spec/qbft"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/pkg/errors"
@@ -42,6 +44,10 @@ func (v *Validator) ProcessMessage(msg *types.SSVMessage) error {
 		if signedMsg.Type == SelectionProofPartialSig {
 			return v.processSelectionProofPartialSig(dutyRunner, signedMsg)
 		}
+		if signedMsg.Type == ContributionProofs {
+			return v.processContributionProofPartialSig(dutyRunner, signedMsg)
+		}
+
 		return v.processPostConsensusSig(dutyRunner, signedMsg)
 	default:
 		return errors.New("unknown msg")
@@ -80,7 +86,7 @@ func (v *Validator) processConsensusMsg(dutyRunner *Runner, msg *qbft.SignedMess
 		return errors.Wrap(err, "failed to decide duty at runner")
 	}
 
-	signedMsg, err := v.signPostConsensusMsg(PartialSignatureMessages{postConsensusMsg})
+	signedMsg, err := v.signPostConsensusMsg(postConsensusMsg)
 	if err != nil {
 		return errors.Wrap(err, "could not sign post consensus msg")
 	}
@@ -124,10 +130,6 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 			}
 			dutyRunner.State.Finished = true
 		case types.BNRoleProposer:
-			if len(roots) != 1 {
-				return errors.New("BNRoleAttester can only have 1 root")
-			}
-
 			blk, err := dutyRunner.State.ReconstructBeaconBlockSig(r, v.share.ValidatorPubKey)
 			if err != nil {
 				return errors.Wrap(err, "could not reconstruct post consensus sig")
@@ -137,10 +139,6 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 			}
 			dutyRunner.State.Finished = true
 		case types.BNRoleAggregator:
-			if len(roots) != 1 {
-				return errors.New("BNRoleAttester can only have 1 root")
-			}
-
 			msg, err := dutyRunner.State.ReconstructSignedAggregateSelectionProofSig(r, v.share.ValidatorPubKey)
 			if err != nil {
 				return errors.Wrap(err, "could not reconstruct post consensus sig")
@@ -150,16 +148,21 @@ func (v *Validator) processPostConsensusSig(dutyRunner *Runner, signedMsg *Signe
 			}
 			dutyRunner.State.Finished = true
 		case types.BNRoleSyncCommittee:
-			if len(roots) != 1 {
-				return errors.New("BNRoleAttester can only have 1 root")
-			}
-
 			msg, err := dutyRunner.State.ReconstructSyncCommitteeSig(r, v.share.ValidatorPubKey)
 			if err != nil {
 				return errors.Wrap(err, "could not reconstruct post consensus sig")
 			}
 			if err := v.beacon.SubmitSyncMessage(msg); err != nil {
 				return errors.Wrap(err, "could not submit to beacon chain reconstructed signed sync committee")
+			}
+			dutyRunner.State.Finished = true
+		case types.BNRoleSyncCommitteeContribution:
+			signedContrib, err := dutyRunner.State.ReconstructContributionSig(r, v.share.ValidatorPubKey)
+			if err != nil {
+				return errors.Wrap(err, "could not reconstruct contribution and proof sig")
+			}
+			if err := v.beacon.SubmitSignedContributionAndProof(signedContrib); err != nil {
+				return errors.Wrap(err, "could not submit to beacon chain reconstructed contribution and proof")
 			}
 			dutyRunner.State.Finished = true
 		default:
@@ -244,6 +247,60 @@ func (v *Validator) processSelectionProofPartialSig(dutyRunner *Runner, signedMs
 		if err := dutyRunner.Decide(input); err != nil {
 			return errors.Wrap(err, "can't start new duty runner instance for duty")
 		}
+	}
+
+	return nil
+}
+
+func (v *Validator) processContributionProofPartialSig(dutyRunner *Runner, signedMsg *SignedPartialSignatureMessage) error {
+	quorum, roots, err := dutyRunner.ProcessContributionProofsMessage(signedMsg)
+	if err != nil {
+		return errors.Wrap(err, "failed processing contribution proof message")
+	}
+
+	// quorum returns true only once (first time quorum achieved)
+	if !quorum {
+		return nil
+	}
+
+	// TODO - what happens if we get quorum multiple times?
+
+	duty := dutyRunner.CurrentDuty
+	input := &types.ConsensusData{
+		Duty:                      duty,
+		SyncCommitteeContribution: make(map[phase0.BLSSignature]*altair.SyncCommitteeContribution),
+	}
+	for _, r := range roots {
+		// reconstruct selection proof sig
+		sig, index, err := dutyRunner.State.ReconstructContributionProofSig(r, v.share.ValidatorPubKey)
+		if err != nil {
+			continue
+		}
+
+		aggregator, err := v.beacon.IsSyncCommitteeAggregator(sig)
+		if err != nil {
+			// can still continue, no need to fail
+			continue
+		}
+		if !aggregator {
+			continue
+		}
+
+		// fetch sync committee contribution
+		subnet, err := v.beacon.SyncCommitteeSubnetID(index)
+		contribution, err := v.beacon.GetSyncCommitteeContribution(duty.Slot, subnet, dutyRunner.CurrentDuty.PubKey)
+		if err != nil {
+			// can still continue, no need to fail
+			continue
+		}
+
+		blsSig := phase0.BLSSignature{}
+		copy(blsSig[:], sig)
+		input.SyncCommitteeContribution[blsSig] = contribution
+	}
+
+	if err := dutyRunner.Decide(input); err != nil {
+		return errors.Wrap(err, "can't start new duty runner instance for duty")
 	}
 
 	return nil

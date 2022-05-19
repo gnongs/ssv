@@ -16,6 +16,8 @@ func (r BeaconRole) String() string {
 		return "PROPOSER"
 	case BNRoleSyncCommittee:
 		return "SYNC_COMMITTEE"
+	case BNRoleSyncCommitteeContribution:
+		return "SYNC_COMMITTEE_CONTRIBUTION"
 	default:
 		return "UNDEFINED"
 	}
@@ -27,6 +29,7 @@ const (
 	BNRoleAggregator
 	BNRoleProposer
 	BNRoleSyncCommittee
+	BNRoleSyncCommitteeContribution
 )
 
 // Duty represent data regarding the duty type with the duty data

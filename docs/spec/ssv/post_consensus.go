@@ -1,6 +1,8 @@
 package ssv
 
 import (
+	"encoding/hex"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/bloxapp/ssv/docs/spec/types"
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
@@ -39,11 +41,8 @@ func (dr *Runner) ProcessPostConsensusMessage(signedMsg *SignedPartialSignatureM
 }
 
 // SignDutyPostConsensus sets the Decided duty and partially signs the Decided data, returns a PartialSignatureMessage to be broadcasted or error
-func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signer types.KeyManager) (*PartialSignatureMessage, error) {
-	ret := &PartialSignatureMessage{
-		Slot:    decidedValue.Duty.Slot,
-		Signers: []types.OperatorID{dr.Share.OperatorID},
-	}
+func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signer types.KeyManager) (PartialSignatureMessages, error) {
+	dr.State.DecidedValue = decidedValue
 
 	switch dr.BeaconRoleType {
 	case types.BNRoleAttester:
@@ -52,51 +51,95 @@ func (dr *Runner) SignDutyPostConsensus(decidedValue *types.ConsensusData, signe
 			return nil, errors.Wrap(err, "failed to sign attestation")
 		}
 
-		dr.State.DecidedValue = decidedValue
 		dr.State.SignedAttestation = signedAttestation
-
-		ret.SigningRoot = r
-		ret.PartialSignature = dr.State.SignedAttestation.Signature[:]
+		ret := &PartialSignatureMessage{
+			SigningRoot:      r,
+			PartialSignature: dr.State.SignedAttestation.Signature[:],
+			Slot:             decidedValue.Duty.Slot,
+			Signers:          []types.OperatorID{dr.Share.OperatorID},
+		}
 		dr.State.PostConsensusPartialSig.AddSignature(ret)
-		return ret, nil
+		return PartialSignatureMessages{
+			ret,
+		}, nil
 	case types.BNRoleProposer:
 		signedBlock, r, err := signer.SignBeaconBlock(decidedValue.BlockData, decidedValue.Duty, dr.Share.SharePubKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign block")
 		}
 
-		dr.State.DecidedValue = decidedValue
 		dr.State.SignedProposal = signedBlock
-
-		ret.SigningRoot = r
-		ret.PartialSignature = dr.State.SignedProposal.Signature[:]
+		ret := &PartialSignatureMessage{
+			SigningRoot:      r,
+			PartialSignature: dr.State.SignedProposal.Signature[:],
+			Slot:             decidedValue.Duty.Slot,
+			Signers:          []types.OperatorID{dr.Share.OperatorID},
+		}
 		dr.State.PostConsensusPartialSig.AddSignature(ret)
-		return ret, nil
+		return PartialSignatureMessages{
+			ret,
+		}, nil
 	case types.BNRoleAggregator:
 		signed, r, err := signer.SignAggregateAndProof(decidedValue.AggregateAndProof, decidedValue.Duty, dr.Share.SharePubKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign aggregate and proof")
 		}
 
-		dr.State.DecidedValue = decidedValue
 		dr.State.SignedAggregate = signed
 
-		ret.SigningRoot = r
-		ret.PartialSignature = dr.State.SignedAggregate.Signature[:]
+		ret := &PartialSignatureMessage{
+			SigningRoot:      r,
+			PartialSignature: dr.State.SignedAggregate.Signature[:],
+			Slot:             decidedValue.Duty.Slot,
+			Signers:          []types.OperatorID{dr.Share.OperatorID},
+		}
 		dr.State.PostConsensusPartialSig.AddSignature(ret)
-		return ret, nil
+		return PartialSignatureMessages{
+			ret,
+		}, nil
 	case types.BNRoleSyncCommittee:
 		signed, r, err := signer.SignSyncCommitteeBlockRoot(decidedValue.Duty.Slot, decidedValue.SyncCommitteeBlockRoot, decidedValue.Duty.ValidatorIndex, dr.Share.SharePubKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign aggregate and proof")
 		}
 
-		dr.State.DecidedValue = decidedValue
 		dr.State.SignedSyncCommittee = signed
 
-		ret.SigningRoot = r
-		ret.PartialSignature = dr.State.SignedSyncCommittee.Signature[:]
+		ret := &PartialSignatureMessage{
+			SigningRoot:      r,
+			PartialSignature: dr.State.SignedSyncCommittee.Signature[:],
+			Slot:             decidedValue.Duty.Slot,
+			Signers:          []types.OperatorID{dr.Share.OperatorID},
+		}
 		dr.State.PostConsensusPartialSig.AddSignature(ret)
+		return PartialSignatureMessages{
+			ret,
+		}, nil
+	case types.BNRoleSyncCommitteeContribution:
+		ret := PartialSignatureMessages{}
+		dr.State.SignedContributions = make(map[string]*altair.SignedContributionAndProof)
+		for proof, c := range decidedValue.SyncCommitteeContribution {
+			contribAndProof := &altair.ContributionAndProof{
+				AggregatorIndex: dr.CurrentDuty.ValidatorIndex,
+				Contribution:    c,
+				SelectionProof:  proof,
+			}
+			signed, r, err := signer.SignContribution(contribAndProof, dr.Share.SharePubKey)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to sign aggregate and proof")
+			}
+
+			dr.State.SignedContributions[hex.EncodeToString(r)] = signed
+
+			m := &PartialSignatureMessage{
+				SigningRoot:      r,
+				PartialSignature: signed.Signature[:],
+				Slot:             decidedValue.Duty.Slot,
+				Signers:          []types.OperatorID{dr.Share.OperatorID},
+			}
+			dr.State.PostConsensusPartialSig.AddSignature(m)
+			ret = append(ret, m)
+		}
 		return ret, nil
 	default:
 		return nil, errors.Errorf("unknown duty %s", decidedValue.Duty.Type.String())

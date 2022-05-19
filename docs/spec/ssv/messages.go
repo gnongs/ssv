@@ -18,6 +18,8 @@ const (
 	RandaoPartialSig
 	// SelectionProofPartialSig is a partial signature for aggregator selection proof
 	SelectionProofPartialSig
+	// ContributionProofs is the partial selection proofs for sync committee contributions (it's an array of sigs)
+	ContributionProofs
 )
 
 type PartialSignatureMessages []*PartialSignatureMessage
@@ -42,12 +44,17 @@ func (msgs PartialSignatureMessages) GetRoot() ([]byte, error) {
 	return ret[:], nil
 }
 
+type PartialSignatureMetaData struct {
+	ContributionSubCommitteeIndex uint64
+}
+
 // PartialSignatureMessage is a msg for partial beacon chain related signatures (like partial attestation, block, randao sigs)
 type PartialSignatureMessage struct {
 	Slot             spec.Slot // Slot represents the slot for which the partial BN signature is for
 	PartialSignature []byte    // The beacon chain partial Signature for a duty
 	SigningRoot      []byte    // the root signed in PartialSignature
 	Signers          []types.OperatorID
+	MetaData         *PartialSignatureMetaData
 }
 
 // Encode returns a msg encoded bytes or error
@@ -187,6 +194,10 @@ func (spcsm *SignedPartialSignatureMessage) Validate() error {
 	for _, m := range spcsm.Messages {
 		if err := m.Validate(); err != nil {
 			return errors.Wrap(err, "message invalid")
+		}
+
+		if spcsm.Type == ContributionProofs && m.MetaData == nil {
+			return errors.New("metadata nil for contribution proofs")
 		}
 	}
 	return nil

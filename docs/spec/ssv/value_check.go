@@ -71,3 +71,28 @@ func SyncCommitteeValueCheck(signer types.BeaconSigner, network BeaconNetwork) q
 		return nil
 	}
 }
+
+func SyncCommitteeContributionValueCheck(signer types.BeaconSigner, network BeaconNetwork) qbft.ProposedValueCheck {
+	return func(data []byte) error {
+		cd := &types.ConsensusData{}
+		if err := cd.Decode(data); err != nil {
+			return errors.Wrap(err, "failed decoding consensus data")
+		}
+
+		if err := dutyValueCheck(cd.Duty, network); err != nil {
+			return errors.Wrap(err, "duty invalid")
+		}
+
+		for _, c := range cd.SyncCommitteeContribution {
+			if c.Slot == 0 {
+				// TODO - can remove
+			}
+
+			// TODO check we have selection proof for contribution
+			// TODO check slot == duty slot
+			// TODO check beacon block root somehow? maybe all beacon block roots should be equal?
+
+		}
+		return nil
+	}
+}

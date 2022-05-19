@@ -25,8 +25,54 @@ func (v *Validator) StartDuty(duty *types.Duty) error {
 		return v.executeAggregatorDuty(duty, dutyRunner)
 	case types.BNRoleSyncCommittee:
 		return v.executeSyncCommitteeDuty(duty, dutyRunner)
+	case types.BNRoleSyncCommitteeContribution:
+		return v.executeSyncCommitteeContributionDuty(duty, dutyRunner)
 	default:
 		return errors.Errorf("duty type %s unkwon", duty.Type.String())
+	}
+	return nil
+}
+
+// executeSyncCommitteeContributionDuty steps:
+// 1) sign a partial contribution proof (for each subcommittee index) and wait for 2f+1 partial sigs from peers
+// 2) Reconstruct contribution proofs, check IsSyncCommitteeAggregator and start consensus on duty + contribution data
+// 3) Once consensus decides, sign partial contribution data (for each subcommittee) and broadcast
+// 4) collect 2f+1 partial sigs, reconstruct and broadcast valid SignedContributionAndProof (for each subcommittee) sig to the BN
+func (v *Validator) executeSyncCommitteeContributionDuty(duty *types.Duty, dutyRunner *Runner) error {
+	indexes, err := v.beacon.GetSyncSubcommitteeIndex(duty.Slot, duty.PubKey)
+	if err != nil {
+		return errors.Wrap(err, "failed fetching sync subcommittee indexes")
+	}
+
+	msgs, err := dutyRunner.SignSyncSubCommitteeContributionProof(duty.Slot, indexes, v.signer)
+	if err != nil {
+		return errors.Wrap(err, "could not sign contribution proofs for pre-consensus")
+	}
+
+	// package into signed partial sig
+	signature, err := v.signer.SignRoot(msgs, types.PartialSignatureType, v.share.SharePubKey)
+	if err != nil {
+		return errors.Wrap(err, "could not sign PartialSignatureMessage for contribution proofs")
+	}
+	signedPartialMsg := &SignedPartialSignatureMessage{
+		Type:      ContributionProofs,
+		Messages:  msgs,
+		Signature: signature,
+		Signers:   []types.OperatorID{v.share.OperatorID},
+	}
+
+	// broadcast
+	data, err := signedPartialMsg.Encode()
+	if err != nil {
+		return errors.Wrap(err, "failed to encode contribution proofs pre-consensus signature msg")
+	}
+	msgToBroadcast := &types.SSVMessage{
+		MsgType: types.SSVPartialSignatureMsgType,
+		MsgID:   types.NewMsgID(v.share.ValidatorPubKey, dutyRunner.BeaconRoleType),
+		Data:    data,
+	}
+	if err := v.network.Broadcast(msgToBroadcast); err != nil {
+		return errors.Wrap(err, "can't broadcast partial contribution proof sig")
 	}
 	return nil
 }
