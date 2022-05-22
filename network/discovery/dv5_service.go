@@ -12,16 +12,15 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"net"
-	"sync/atomic"
 	"time"
 )
 
 var (
 	defaultDiscoveryInterval = time.Second
-	publishENRTimeout        = time.Minute
+	//publishENRTimeout        = time.Minute
 
-	publishStateReady   = int32(0)
-	publishStatePending = int32(1)
+	publishStateReady = int32(0)
+	//publishStatePending = int32(1)
 )
 
 // NodeProvider is an interface for managing ENRs
@@ -113,8 +112,8 @@ func (dvs *DiscV5Service) Node(info peer.AddrInfo) (*enode.Node, error) {
 // Bootstrap start looking for new nodes
 // note that this function blocks
 func (dvs *DiscV5Service) Bootstrap(handler HandleNewPeer) error {
-	dvs.discover(dvs.ctx, handler, defaultDiscoveryInterval)
-	//dvs.limitNodeFilter, dvs.badNodeFilter)
+	dvs.discover(dvs.ctx, handler, defaultDiscoveryInterval,
+		dvs.limitNodeFilter) //, dvs.badNodeFilter)
 
 	return nil
 }
@@ -226,22 +225,22 @@ func (dvs *DiscV5Service) DeregisterSubnets(subnets ...int64) error {
 	return nil
 }
 
-// publishENR publishes the new ENR across the network
-func (dvs *DiscV5Service) publishENR() {
-	ctx, done := context.WithTimeout(dvs.ctx, publishENRTimeout)
-	defer done()
-	if !atomic.CompareAndSwapInt32(&dvs.publishState, publishStateReady, publishStatePending) {
-		// pending
-		return
-	}
-	defer atomic.StoreInt32(&dvs.publishState, publishStateReady)
-	dvs.discover(ctx, func(e PeerEvent) {
-		err := dvs.dv5Listener.Ping(e.Node)
-		if err != nil {
-			dvs.logger.Warn("could not ping node", zap.String("ENR", e.Node.String()), zap.Error(err))
-		}
-	}, time.Millisecond*100, dvs.badNodeFilter)
-}
+//// publishENR publishes the new ENR across the network
+//func (dvs *DiscV5Service) publishENR() {
+//	ctx, done := context.WithTimeout(dvs.ctx, publishENRTimeout)
+//	defer done()
+//	if !atomic.CompareAndSwapInt32(&dvs.publishState, publishStateReady, publishStatePending) {
+//		// pending
+//		return
+//	}
+//	defer atomic.StoreInt32(&dvs.publishState, publishStateReady)
+//	dvs.discover(ctx, func(e PeerEvent) {
+//		err := dvs.dv5Listener.Ping(e.Node)
+//		if err != nil {
+//			dvs.logger.Warn("could not ping node", zap.String("ENR", e.Node.String()), zap.Error(err))
+//		}
+//	}, time.Millisecond*100, dvs.badNodeFilter)
+//}
 
 // limitNodeFilter checks if limit exceeded
 func (dvs *DiscV5Service) limitNodeFilter(node *enode.Node) bool {
