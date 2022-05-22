@@ -40,30 +40,36 @@ func TestPreparedAggregatedMsg(t *testing.T) {
 	require.EqualError(t, err, "no prepare msgs")
 
 	// test valid aggregation
-	consensusMessage := &message.ConsensusMessage{
+	consensusMessage1 := &message.ConsensusMessage{
 		MsgType:    message.PrepareMsgType,
 		Round:      1,
 		Identifier: []byte("Lambda"),
-		Data:       []byte("value"),
+		Data:       prepareDataToBytes(&message.PrepareData{Data: []byte("value")}),
 	}
 
-	prepareData, err := consensusMessage.GetPrepareData()
+	prepareData, err := consensusMessage1.GetPrepareData()
 	require.NoError(t, err)
 
-	instance.PrepareMessages.AddMessage(SignMsg(t, 1, sks[1], consensusMessage), prepareData.Data)
-	instance.PrepareMessages.AddMessage(SignMsg(t, 2, sks[2], consensusMessage), prepareData.Data)
-	instance.PrepareMessages.AddMessage(SignMsg(t, 3, sks[3], consensusMessage), prepareData.Data)
+	instance.PrepareMessages.AddMessage(SignMsg(t, 1, sks[1], consensusMessage1), prepareData.Data)
+	instance.PrepareMessages.AddMessage(SignMsg(t, 2, sks[2], consensusMessage1), prepareData.Data)
+	instance.PrepareMessages.AddMessage(SignMsg(t, 3, sks[3], consensusMessage1), prepareData.Data)
 
 	// test aggregation
 	msg, err := instance.PreparedAggregatedMsg()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []uint64{1, 2, 3}, msg.Signers)
+	require.ElementsMatch(t, []message.OperatorID{1, 2, 3}, msg.Signers)
 
 	// test that doesn't aggregate different value
-	instance.PrepareMessages.AddMessage(SignMsg(t, 4, sks[4], consensusMessage), prepareData.Data)
+	consensusMessage2 := &message.ConsensusMessage{
+		MsgType:    message.PrepareMsgType,
+		Round:      1,
+		Identifier: []byte("Lambda"),
+		Data:       prepareDataToBytes(&message.PrepareData{Data: []byte("value2")}),
+	}
+	instance.PrepareMessages.AddMessage(SignMsg(t, 4, sks[4], consensusMessage2), prepareData.Data)
 	msg, err = instance.PreparedAggregatedMsg()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []uint64{1, 2, 3}, msg.Signers)
+	require.ElementsMatch(t, []message.OperatorID{1, 2, 3}, msg.Signers)
 }
 
 func TestPreparePipeline(t *testing.T) {
@@ -80,10 +86,11 @@ func TestPreparePipeline(t *testing.T) {
 	}
 
 	instance.state.Round.Store(message.Round(1))
-	instance.state.Identifier.Store([]byte(nil))
+	instance.state.Identifier.Store(message.Identifier(nil))
 	instance.state.Height.Store(message.Height(0))
 
 	instance.fork = testingFork(instance)
 	pipeline := instance.PrepareMsgPipeline()
-	require.EqualValues(t, "combination of: basic msg validation, type check, lambda, sequence, authorize, add prepare msg, if first pipeline non error, continue to second, ", pipeline.Name())
+	// TODO: fix bad-looking name
+	require.EqualValues(t, "combination of: combination of: basic msg validation, type check, lambda, sequence, authorize, , add prepare msg, if first pipeline non error, continue to second, ", pipeline.Name())
 }

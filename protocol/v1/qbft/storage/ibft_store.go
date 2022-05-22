@@ -22,14 +22,21 @@ type InstanceStore interface {
 	SaveCurrentInstance(identifier message.Identifier, state *qbft.State) error
 	// GetCurrentInstance returns the state for the current running (not yet decided) instance
 	GetCurrentInstance(identifier message.Identifier) (*qbft.State, bool, error)
+}
+
+// ChangeRoundStore manages change round data
+type ChangeRoundStore interface {
 	// GetLastChangeRoundMsg returns the latest broadcasted msg from the instance
 	GetLastChangeRoundMsg(identifier message.Identifier) (*message.SignedMessage, error)
 	// SaveLastChangeRoundMsg returns the latest broadcasted msg from the instance
-	SaveLastChangeRoundMsg(identifier message.Identifier, msg *message.SignedMessage) error
+	SaveLastChangeRoundMsg(msg *message.SignedMessage) error
+	// CleanLastChangeRound cleans last change round message of some validator, should be called upon controller init
+	CleanLastChangeRound(identifier message.Identifier)
 }
 
 // QBFTStore is the store used by QBFT components
 type QBFTStore interface {
 	DecidedMsgStore
 	InstanceStore
+	ChangeRoundStore
 }

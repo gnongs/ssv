@@ -1,4 +1,4 @@
-package v0
+package conversion
 
 import (
 	"encoding/hex"
@@ -240,7 +240,7 @@ func ToV0Message(msg *message.SSVMessage) (*network.Message, error) {
 			return nil, errors.Wrap(err, "could not decode consensus signed message")
 		}
 
-		sm, err := toSignedMessageV0(signedMsg, identifierV0)
+		sm, err := ToSignedMessageV0(signedMsg, identifierV0)
 		if err != nil {
 			return nil, err
 		}
@@ -281,7 +281,7 @@ func ToV0Message(msg *message.SSVMessage) (*network.Message, error) {
 		case message.StatusSuccess:
 			v0Msg.SyncMessage.SignedMessages = make([]*proto.SignedMessage, 0)
 			for _, smsg := range syncMsg.Data {
-				sm, err := toSignedMessageV0(smsg, identifierV0)
+				sm, err := ToSignedMessageV0(smsg, identifierV0)
 				if err != nil {
 					return nil, err
 				}
@@ -307,7 +307,8 @@ func ToV0Message(msg *message.SSVMessage) (*network.Message, error) {
 	return v0Msg, nil
 }
 
-func toSignedMessageV0(signedMsg *message.SignedMessage, identifierV0 []byte) (*proto.SignedMessage, error) {
+// ToSignedMessageV0 converts a signed message from v1 to v0
+func ToSignedMessageV0(signedMsg *message.SignedMessage, identifierV0 []byte) (*proto.SignedMessage, error) {
 	signedMsgV0 := &proto.SignedMessage{}
 	signedMsgV0.Message = &proto.Message{
 		Round:     uint64(signedMsg.Message.Round),
@@ -346,7 +347,38 @@ func toSignedMessageV0(signedMsg *message.SignedMessage, identifierV0 []byte) (*
 			return nil, err
 		}
 		if cr.GetPreparedValue() != nil && len(cr.GetPreparedValue()) > 0 {
-			signedMsgV0.Message.Value = cr.GetPreparedValue()
+			crV0 := proto.ChangeRoundData{
+				PreparedRound:    uint64(cr.GetPreparedRound()),
+				PreparedValue:    cr.GetPreparedValue(),
+				JustificationMsg: nil,
+				JustificationSig: nil,
+				SignerIds:        nil,
+			}
+			if len(cr.GetRoundChangeJustification()) > 0 {
+				m := cr.GetRoundChangeJustification()[0]
+				crV0.JustificationMsg = &proto.Message{
+					Type:      proto.RoundState_Prepare,
+					Round:     uint64(m.Message.Round),
+					Lambda:    []byte(format.IdentifierFormat(m.Message.Identifier.GetValidatorPK(), m.Message.Identifier.GetRoleType().String())),
+					SeqNumber: uint64(m.Message.Height),
+					Value:     m.Message.Data,
+				}
+
+				crV0.JustificationSig = m.Signature
+
+				var signers []uint64
+				for _, id := range m.Signers {
+					signers = append(signers, uint64(id))
+				}
+				crV0.SignerIds = signers
+			}
+
+			if encoded, err := json.Marshal(crV0); err == nil {
+				signedMsgV0.Message.Value = encoded
+			} else {
+				return nil, errors.Wrap(err, "failed to encode proto msg")
+			}
+
 		} else {
 			v := make(map[string]interface{})
 			marshaledV, err := json.Marshal(v)

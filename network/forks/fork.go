@@ -4,6 +4,7 @@ import (
 	"github.com/bloxapp/ssv/protocol/v1/message"
 	p2pprotocol "github.com/bloxapp/ssv/protocol/v1/p2p"
 	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/protocol"
 )
 
@@ -14,23 +15,33 @@ type Fork interface {
 	pubSubConfig
 	sync
 	nodeRecord
+	libp2pConfig
 }
 
 type nodeRecord interface {
-	// DecorateNode decorates the given node's record
+	// DecorateNode will enrich the local node record with more entries, according to current fork
 	DecorateNode(node *enode.LocalNode, args map[string]interface{}) error
 }
 
 type pubSubMapping interface {
+	// ValidatorTopicID maps the given validator public key to the corresponding pubsub topic
 	ValidatorTopicID(pk []byte) []string
 }
 
 type pubSubConfig interface {
+	// MsgID is the msgID function to use for pubsub
 	MsgID() MsgIDFunc
 }
 
+type libp2pConfig interface {
+	// AddOptions enables to inject libp2p options according to the given fork
+	AddOptions(opts []libp2p.Option) []libp2p.Option
+}
+
 type encoding interface {
+	// EncodeNetworkMsg encodes the given message
 	EncodeNetworkMsg(msg *message.SSVMessage) ([]byte, error)
+	// DecodeNetworkMsg decodes the given message
 	DecodeNetworkMsg(data []byte) (*message.SSVMessage, error)
 }
 

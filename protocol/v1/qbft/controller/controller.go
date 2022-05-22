@@ -90,7 +90,7 @@ func New(opts Options) IController {
 
 	q, err := msgqueue.New(
 		logger.With(zap.String("who", "msg_q")),
-		msgqueue.WithIndexers(msgqueue.DefaultMsgIndexer(), msgqueue.SignedMsgIndexer(), msgqueue.SignedPostConsensusMsgIndexer()),
+		msgqueue.WithIndexers(msgqueue.DefaultMsgIndexer(), msgqueue.SignedMsgIndexer(), msgqueue.DecidedMsgIndexer(), msgqueue.SignedPostConsensusMsgIndexer()),
 	)
 	if err != nil {
 		// TODO: we should probably stop here, TBD
@@ -165,7 +165,7 @@ func (c *Controller) Init() error {
 	if !c.initHandlers.Load() {
 		c.initHandlers.Store(true)
 		c.logger.Info("iBFT implementation init started")
-		go c.startQueueConsumer()
+		go c.startQueueConsumer(c.messageHandler)
 		ReportIBFTStatus(c.ValidatorShare.PublicKey.SerializeToHexStr(), false, false)
 		//c.logger.Debug("managed to setup iBFT handlers")
 	}
@@ -216,7 +216,9 @@ func (c *Controller) StartInstance(opts instance.ControllerStartInstanceOptions)
 
 	done := reportIBFTInstanceStart(c.ValidatorShare.PublicKey.SerializeToHexStr())
 
-	c.signatureState.height = opts.SeqNumber // update sig state once height determent
+	c.signatureState.height = opts.SeqNumber                         // update sig state once height determent
+	instanceOpts.ChangeRoundStore = c.ibftStorage                    // in order to set the last change round msg
+	instanceOpts.ChangeRoundStore.CleanLastChangeRound(c.Identifier) // clean previews last change round msg's (TODO place in instance?)
 	res, err = c.startInstanceWithOptions(instanceOpts, opts.Value)
 	defer func() {
 		done()

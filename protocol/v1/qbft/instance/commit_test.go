@@ -1,6 +1,7 @@
 package instance
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -54,17 +55,11 @@ func TestAggregatedMsg(t *testing.T) {
 		Identifier: []byte("Lambda"),
 		Data:       []byte("value"),
 	})
-	msgDiff := SignMsg(t, 4, sks[4], &message.ConsensusMessage{
-		MsgType:    message.CommitMsgType,
-		Round:      2,
-		Identifier: []byte("Lambda"),
-		Data:       []byte("value"),
-	})
 
 	tests := []struct {
 		name            string
 		msgs            []*message.SignedMessage
-		expectedSigners []uint64
+		expectedSigners []message.OperatorID
 		expectedError   string
 	}{
 		{
@@ -72,7 +67,7 @@ func TestAggregatedMsg(t *testing.T) {
 			[]*message.SignedMessage{
 				msg1, msg2, msg3,
 			},
-			[]uint64{1, 2, 3},
+			[]message.OperatorID{1, 2, 3},
 			"",
 		},
 		{
@@ -80,7 +75,7 @@ func TestAggregatedMsg(t *testing.T) {
 			[]*message.SignedMessage{
 				msg1, msg2,
 			},
-			[]uint64{1, 2},
+			[]message.OperatorID{1, 2},
 			"",
 		},
 		{
@@ -88,20 +83,14 @@ func TestAggregatedMsg(t *testing.T) {
 			[]*message.SignedMessage{
 				msg1,
 			},
-			[]uint64{1},
+			[]message.OperatorID{1},
 			"",
 		},
 		{
 			"no sigs return err",
 			[]*message.SignedMessage{},
-			[]uint64{},
+			[]message.OperatorID{},
 			"could not aggregate decided messages, no msgs",
-		},
-		{
-			"different msgs, can't aggregate",
-			[]*message.SignedMessage{msg1, msgDiff},
-			[]uint64{},
-			"could not aggregate message: can't aggregate different messages",
 		},
 	}
 
@@ -117,6 +106,7 @@ func TestAggregatedMsg(t *testing.T) {
 	}
 }
 
+// TODO(nkryuchkov): fix this test
 func TestCommittedAggregatedMsg(t *testing.T) {
 	sks, nodes := GenerateNodes(4)
 	instance := &Instance{
@@ -147,7 +137,7 @@ func TestCommittedAggregatedMsg(t *testing.T) {
 		MsgType:    message.CommitMsgType,
 		Round:      3,
 		Identifier: []byte("Lambda"),
-		Data:       []byte("value"),
+		Data:       commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 	}
 
 	commitData, err := consensusMessage.GetCommitData()
@@ -170,7 +160,7 @@ func TestCommittedAggregatedMsg(t *testing.T) {
 		MsgType:    message.CommitMsgType,
 		Round:      3,
 		Identifier: []byte("Lambda"),
-		Data:       []byte("value2"),
+		Data:       commitDataToBytes(&message.CommitData{Data: []byte("value2")}),
 	}
 
 	commitData, err = m.GetCommitData()
@@ -214,7 +204,7 @@ func TestProcessLateCommitMsg(t *testing.T) {
 
 	var sigs []*message.SignedMessage
 	for i := 1; i < 4; i++ {
-		sigs = append(sigs, SignMsg(t, uint64(i), sks[uint64(i)], &message.ConsensusMessage{
+		sigs = append(sigs, SignMsg(t, uint64(i), sks[message.OperatorID(i)], &message.ConsensusMessage{
 			Height:     2,
 			MsgType:    message.CommitMsgType,
 			Round:      3,
@@ -313,4 +303,9 @@ func AggregateMessages(sigs []*message.SignedMessage) (*message.SignedMessage, e
 	}
 
 	return decided, nil
+}
+
+func commitDataToBytes(input *message.CommitData) []byte {
+	ret, _ := json.Marshal(input)
+	return ret
 }

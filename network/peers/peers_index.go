@@ -209,8 +209,11 @@ func (pi *peersIndex) GC() {
 // Close closes peer index
 func (pi *peersIndex) Close() error {
 	pi.statesLock.Lock()
-	pi.states = nil
+	pi.states = make(map[string]nodeStateObj)
 	pi.statesLock.Unlock()
+	if err := pi.network.Peerstore().Close(); err != nil {
+		return errors.Wrap(err, "could not close peerstore")
+	}
 	return nil
 }
 

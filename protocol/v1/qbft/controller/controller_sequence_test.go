@@ -22,7 +22,7 @@ import (
 
 func testIBFTInstance(t *testing.T) *Controller {
 	ret := &Controller{
-		Identifier:   []byte("lambda_11"),
+		Identifier:   []byte("Identifier_11"),
 		initHandlers: atomic.Bool{},
 		initSynced:   atomic.Bool{},
 		// instances: make([]*Instance, 0),
@@ -35,6 +35,9 @@ func testIBFTInstance(t *testing.T) *Controller {
 func TestCanStartNewInstance(t *testing.T) {
 	uids := []message.OperatorID{message.OperatorID(1), message.OperatorID(2), message.OperatorID(3), message.OperatorID(4)}
 	sks, nodes := testingprotocol.GenerateBLSKeys(uids...)
+
+	height10 := atomic.Value{}
+	height10.Store(message.Height(10))
 
 	tests := []struct {
 		name            string
@@ -152,7 +155,7 @@ func TestCanStartNewInstance(t *testing.T) {
 			true,
 			true,
 			instance2.NewInstanceWithState(&qbft.State{
-				Height: 10,
+				Height: height10,
 			}),
 			fmt.Sprintf("current instance (%d) is still running", 10),
 		},

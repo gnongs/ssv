@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"testing"
@@ -18,6 +19,7 @@ import (
 	"github.com/bloxapp/ssv/protocol/v1/message"
 	protocolp2p "github.com/bloxapp/ssv/protocol/v1/p2p"
 	"github.com/bloxapp/ssv/protocol/v1/qbft"
+	forksfactory "github.com/bloxapp/ssv/protocol/v1/qbft/controller/forks/factory"
 	"github.com/bloxapp/ssv/protocol/v1/qbft/instance"
 	qbftstorage "github.com/bloxapp/ssv/protocol/v1/qbft/storage"
 	"github.com/bloxapp/ssv/protocol/v1/qbft/strategy/fullnode"
@@ -99,10 +101,11 @@ func (s *testStorage) GetLastChangeRoundMsg(identifier message.Identifier) (*mes
 	return nil, nil
 }
 
-// SaveLastChangeRoundMsg returns the latest broadcasted msg from the instance
-func (s *testStorage) SaveLastChangeRoundMsg(identifier message.Identifier, msg *message.SignedMessage) error {
+func (s *testStorage) SaveLastChangeRoundMsg(msg *message.SignedMessage) error {
 	return nil
 }
+
+func (s *testStorage) CleanLastChangeRound(identifier message.Identifier) {}
 
 func newHeight(height message.Height) atomic.Value {
 	res := atomic.Value{}
@@ -119,6 +122,13 @@ func newIdentifier(identity []byte) atomic.Value {
 func TestDecidedRequiresSync(t *testing.T) {
 	uids := []message.OperatorID{message.OperatorID(1), message.OperatorID(2), message.OperatorID(3), message.OperatorID(4)}
 	secretKeys, _ := testingprotocol.GenerateBLSKeys(uids...)
+
+	height0 := atomic.Value{}
+	height0.Store(message.Height(0))
+
+	height3 := atomic.Value{}
+	height3.Store(message.Height(3))
+
 	tests := []struct {
 		name            string
 		currentInstance instance.Instancer
@@ -131,15 +141,17 @@ func TestDecidedRequiresSync(t *testing.T) {
 		{
 			"decided from future, requires sync.",
 			instance.NewInstanceWithState(&qbft.State{
-				Height: 3,
+				Height: height3,
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  2,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  4,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			true,
 			"",
@@ -151,10 +163,12 @@ func TestDecidedRequiresSync(t *testing.T) {
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  2,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  4,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			true,
 			"",
@@ -166,10 +180,12 @@ func TestDecidedRequiresSync(t *testing.T) {
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  1,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  1,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			true,
 			"",
@@ -178,15 +194,17 @@ func TestDecidedRequiresSync(t *testing.T) {
 		{
 			"decided from far future, requires sync.",
 			instance.NewInstanceWithState(&qbft.State{
-				Height: 3,
+				Height: height3,
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  2,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  10,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			true,
 			"",
@@ -195,15 +213,17 @@ func TestDecidedRequiresSync(t *testing.T) {
 		{
 			"decided from past, doesn't requires sync.",
 			instance.NewInstanceWithState(&qbft.State{
-				Height: 3,
+				Height: height3,
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  2,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  1,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			false,
 			"",
@@ -212,15 +232,17 @@ func TestDecidedRequiresSync(t *testing.T) {
 		{
 			"decided for current",
 			instance.NewInstanceWithState(&qbft.State{
-				Height: 3,
+				Height: height3,
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  2,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  1,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			false,
 			"",
@@ -229,12 +251,13 @@ func TestDecidedRequiresSync(t *testing.T) {
 		{
 			"decided for seq 0",
 			instance.NewInstanceWithState(&qbft.State{
-				Height: 0,
+				Height: height0,
 			}),
 			nil,
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  0,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			false,
 			"",
@@ -264,6 +287,13 @@ func TestDecidedRequiresSync(t *testing.T) {
 func TestDecideIsCurrentInstance(t *testing.T) {
 	uids := []message.OperatorID{message.OperatorID(1), message.OperatorID(2), message.OperatorID(3), message.OperatorID(4)}
 	secretKeys, _ := testingprotocol.GenerateBLSKeys(uids...)
+
+	height1 := atomic.Value{}
+	height1.Store(message.Height(1))
+
+	height4 := atomic.Value{}
+	height4.Store(message.Height(4))
+
 	tests := []struct {
 		name            string
 		currentInstance instance.Instancer
@@ -273,11 +303,12 @@ func TestDecideIsCurrentInstance(t *testing.T) {
 		{
 			"current instance",
 			instance.NewInstanceWithState(&qbft.State{
-				Height: 1,
+				Height: height1,
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  1,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			true,
 		},
@@ -287,6 +318,7 @@ func TestDecideIsCurrentInstance(t *testing.T) {
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  1,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			false,
 		},
@@ -296,28 +328,31 @@ func TestDecideIsCurrentInstance(t *testing.T) {
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  1,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			false,
 		},
 		{
 			"current instance seq lower",
 			instance.NewInstanceWithState(&qbft.State{
-				Height: 1,
+				Height: height1,
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  2,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			false,
 		},
 		{
 			"current instance seq higher",
 			instance.NewInstanceWithState(&qbft.State{
-				Height: 4,
+				Height: height4,
 			}),
 			testingprotocol.SignMsg(t, secretKeys, []message.OperatorID{message.OperatorID(1)}, &message.ConsensusMessage{
 				MsgType: message.CommitMsgType,
 				Height:  2,
+				Data:    commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			false,
 		},
@@ -331,7 +366,7 @@ func TestDecideIsCurrentInstance(t *testing.T) {
 	}
 }
 
-func TestForceDecided(t *testing.T) { // TODo need to align with the new queue process
+func TestForceDecided(t *testing.T) {
 	uids := []message.OperatorID{message.OperatorID(1), message.OperatorID(2), message.OperatorID(3), message.OperatorID(4)}
 	sks, nodes := testingprotocol.GenerateBLSKeys(uids...)
 	pi, err := protocolp2p.GenPeerID()
@@ -353,12 +388,15 @@ func TestForceDecided(t *testing.T) { // TODo need to align with the new queue p
 		time.Sleep(time.Millisecond * 500) // wait for instance to start
 
 		signers := []message.OperatorID{message.OperatorID(1), message.OperatorID(2), message.OperatorID(3), message.OperatorID(4)}
+
+		encodedCommit, err := (&message.CommitData{Data: []byte("value")}).Encode()
+		require.NoError(t, err)
 		decidedMsg := testingprotocol.AggregateSign(t, sks, signers, &message.ConsensusMessage{
 			MsgType:    message.CommitMsgType,
 			Height:     message.Height(4),
 			Round:      message.Round(1),
-			Identifier: []byte("value"),
-			Data:       []byte("value"),
+			Identifier: identifier,
+			Data:       encodedCommit,
 		})
 
 		require.NoError(t, i1.(*Controller).processDecidedMessage(decidedMsg))
@@ -367,7 +405,7 @@ func TestForceDecided(t *testing.T) { // TODo need to align with the new queue p
 	res, err := i1.StartInstance(instance.ControllerStartInstanceOptions{
 		Logger:    zap.L(),
 		SeqNumber: 4,
-		Value:     []byte("value"),
+		Value:     commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 	})
 	require.NoError(t, err)
 	require.True(t, res.Decided)
@@ -378,6 +416,7 @@ func TestForceDecided(t *testing.T) { // TODo need to align with the new queue p
 	require.EqualValues(t, 4, highest.Message.Height)
 }
 
+// TODO(nkryuchkov): fix this test
 func TestSyncAfterDecided(t *testing.T) {
 	uids := []message.OperatorID{message.OperatorID(1), message.OperatorID(2), message.OperatorID(3), message.OperatorID(4)}
 	sks, nodes := testingprotocol.GenerateBLSKeys(uids...)
@@ -402,7 +441,7 @@ func TestSyncAfterDecided(t *testing.T) {
 		Height:     message.Height(10),
 		Round:      message.Round(3),
 		Identifier: identifier,
-		Data:       []byte("value"),
+		Data:       commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 	})
 
 	require.NoError(t, i1.(*Controller).processDecidedMessage(decidedMsg))
@@ -411,9 +450,10 @@ func TestSyncAfterDecided(t *testing.T) {
 	highest, err = i1.(*Controller).ibftStorage.GetLastDecided(identifier)
 	require.NotNil(t, highest)
 	require.NoError(t, err)
-	require.EqualValues(t, 10, highest.Message.Height)
+	require.EqualValues(t, message.Height(10), highest.Message.Height)
 }
 
+// TODO(nkryuchkov): fix this test
 func TestSyncFromScratchAfterDecided(t *testing.T) {
 	uids := []message.OperatorID{message.OperatorID(1), message.OperatorID(2), message.OperatorID(3), message.OperatorID(4)}
 	sks, nodes := testingprotocol.GenerateBLSKeys(uids...)
@@ -437,7 +477,7 @@ func TestSyncFromScratchAfterDecided(t *testing.T) {
 		Height:     message.Height(10),
 		Round:      message.Round(3),
 		Identifier: identifier,
-		Data:       []byte("value"),
+		Data:       commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 	})
 
 	require.NoError(t, i1.(*Controller).processDecidedMessage(decidedMsg))
@@ -470,7 +510,7 @@ func TestValidateDecidedMsg(t *testing.T) {
 				Height:     message.Height(11),
 				Round:      message.Round(3),
 				Identifier: identifier,
-				Data:       []byte("value"),
+				Data:       commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			nil,
 		},
@@ -481,7 +521,7 @@ func TestValidateDecidedMsg(t *testing.T) {
 				Height:     message.Height(11),
 				Round:      message.Round(3),
 				Identifier: identifier,
-				Data:       []byte("value"),
+				Data:       commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			errors.New("message type is wrong"),
 		},
@@ -492,9 +532,9 @@ func TestValidateDecidedMsg(t *testing.T) {
 				Height:     message.Height(11),
 				Round:      message.Round(3),
 				Identifier: identifier,
-				Data:       []byte("value"),
+				Data:       commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
-			errors.New("could not verify message signature"),
+			errors.New("failed to verify signature"),
 		},
 		{
 			"valid first decided",
@@ -503,7 +543,7 @@ func TestValidateDecidedMsg(t *testing.T) {
 				Height:     message.Height(0),
 				Round:      message.Round(3),
 				Identifier: identifier,
-				Data:       []byte("value"),
+				Data:       commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 			}),
 			nil,
 		},
@@ -531,16 +571,18 @@ func TestController_checkDecidedMessageSigners(t *testing.T) {
 	delete(skQuorum, 4)
 	identifier := []byte("Identifier_2")
 
-	incompleteDecided := testingprotocol.AggregateSign(t, skQuorum, uids, &message.ConsensusMessage{
+	incompleteDecided := testingprotocol.AggregateSign(t, skQuorum, uids[:3], &message.ConsensusMessage{
 		MsgType:    message.CommitMsgType,
 		Height:     message.Height(2),
 		Identifier: identifier[:],
+		Data:       commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 	})
 
 	completeDecided := testingprotocol.AggregateSign(t, secretKeys, uids, &message.ConsensusMessage{
 		MsgType:    message.CommitMsgType,
 		Height:     message.Height(2),
 		Identifier: identifier[:],
+		Data:       commitDataToBytes(&message.CommitData{Data: []byte("value")}),
 	})
 
 	share := &beaconprotocol.Share{
@@ -549,14 +591,22 @@ func TestController_checkDecidedMessageSigners(t *testing.T) {
 		Committee: nodes,
 	}
 
+	id := atomic.Value{}
+	id.Store(message.Identifier(identifier))
+
+	height := atomic.Value{}
+	height.Store(message.Height(2))
+
 	ctrl := Controller{
 		ValidatorShare: share,
 		currentInstance: instance.NewInstanceWithState(&qbft.State{
-			Identifier: identifier,
-			Height:     2,
+			Identifier: id,
+			Height:     height,
 		}),
 		ibftStorage: newTestStorage(nil),
 	}
+
+	ctrl.fork = forksfactory.NewFork(forksprotocol.V1ForkVersion)
 
 	if ctrl.isFullNode() {
 		ctrl.strategy = fullnode.NewFullNodeStrategy(zap.L(), ctrl.ibftStorage, nil)
@@ -566,16 +616,10 @@ func TestController_checkDecidedMessageSigners(t *testing.T) {
 
 	require.NoError(t, ctrl.ibftStorage.SaveDecided(incompleteDecided))
 
-	_, incompleteKnownMsg, err := ctrl.strategy.IsMsgKnown(incompleteDecided)
-	require.NoError(t, err)
-
-	_, completeKnownMsg, err := ctrl.strategy.IsMsgKnown(completeDecided)
-	require.NoError(t, err)
-
 	// check message with similar number of signers
-	require.True(t, ctrl.checkDecidedMessageSigners(incompleteKnownMsg, incompleteDecided))
+	require.True(t, ctrl.checkDecidedMessageSigners(incompleteDecided, incompleteDecided))
 	// check message with more signers
-	require.False(t, ctrl.checkDecidedMessageSigners(completeKnownMsg, completeDecided))
+	require.False(t, ctrl.checkDecidedMessageSigners(incompleteDecided, completeDecided))
 }
 
 func populatedIbft(
@@ -632,4 +676,9 @@ func (s *testSigner) SignIBFTMessage(message *message.ConsensusMessage, pk []byt
 
 func (s *testSigner) SignAttestation(data *spec.AttestationData, duty *beaconprotocol.Duty, pk []byte) (*spec.Attestation, []byte, error) {
 	return nil, nil, nil
+}
+
+func commitDataToBytes(input *message.CommitData) []byte {
+	ret, _ := json.Marshal(input)
+	return ret
 }
