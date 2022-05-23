@@ -11,6 +11,12 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	validatorStateInactive    int32 = 0
+	validatorStateSubscribing int32 = 1
+	validatorStateSubscribed  int32 = 2
+)
+
 // UseMessageRouter registers a message router to handle incoming messages
 func (n *p2pNetwork) UseMessageRouter(router network.MessageRouter) {
 	n.msgRouter = router
@@ -59,21 +65,42 @@ func (n *p2pNetwork) Subscribe(pk message.ValidatorPK) error {
 	if !n.isReady() {
 		return ErrNetworkIsNotReady
 	}
-
-	err := n.subscribe(pk)
-	if err == nil {
-		n.activeValidatorsLock.Lock()
-		pkHex := hex.EncodeToString(pk)
-		if !n.activeValidators[pkHex] {
-			n.activeValidators[pkHex] = true
-		}
-		n.activeValidatorsLock.Unlock()
+	pkHex := hex.EncodeToString(pk)
+	if !n.setValidatorStateSubscribing(pkHex) {
+		return nil
 	}
-
+	err := n.subscribe(pk)
+	if err != nil {
+		return err
+	}
+	n.setValidatorStateSubscribed(pkHex)
 	return nil
 }
 
-// subscribe subscribes to validator subnet
+// Unsubscribe unsubscribes from the validator subnet
+func (n *p2pNetwork) Unsubscribe(pk message.ValidatorPK) error {
+	if !n.isReady() {
+		return ErrNetworkIsNotReady
+	}
+	pkHex := hex.EncodeToString(pk)
+	if !n.canUnsubscribe(pkHex) {
+		return nil
+	}
+	topics := n.fork.ValidatorTopicID(pk)
+	for _, topic := range topics {
+		if topic == forksv1.UnknownSubnet {
+			return errors.New("unknown topic")
+		}
+		if err := n.topicsCtrl.Unsubscribe(topic, false); err != nil {
+			//return errors.Wrap(err, "could not broadcast message")
+			return err
+		}
+	}
+	n.clearValidatorState(pkHex)
+	return nil
+}
+
+// subscribe subscribes to validator topics, as defined in the fork
 func (n *p2pNetwork) subscribe(pk message.ValidatorPK) error {
 	topics := n.fork.ValidatorTopicID(pk)
 	for _, topic := range topics {
@@ -85,30 +112,60 @@ func (n *p2pNetwork) subscribe(pk message.ValidatorPK) error {
 			return err
 		}
 	}
-
 	return nil
 }
 
-// Unsubscribe unsubscribes from the validator subnet
-func (n *p2pNetwork) Unsubscribe(pk message.ValidatorPK) error {
-	if !n.isReady() {
-		return ErrNetworkIsNotReady
-	}
-	topics := n.fork.ValidatorTopicID(pk)
-	for _, topic := range topics {
-		if topic == forksv1.UnknownSubnet {
-			return errors.New("unknown topic")
-		}
-		if err := n.topicsCtrl.Unsubscribe(topic); err != nil {
-			//return errors.Wrap(err, "could not broadcast message")
-			return err
-		}
-	}
+// setValidatorStateSubscribing swaps the validator state to validatorStateSubscribing
+// if the current state is not subscribed or subscribing
+func (n *p2pNetwork) setValidatorStateSubscribing(pkHex string) bool {
 	n.activeValidatorsLock.Lock()
-	pkHex := hex.EncodeToString(pk)
+	defer n.activeValidatorsLock.Unlock()
+	currentState := n.activeValidators[pkHex]
+	switch currentState {
+	case validatorStateSubscribed, validatorStateSubscribing:
+		return false
+	default:
+		n.activeValidators[pkHex] = validatorStateSubscribing
+	}
+	return true
+}
+
+// setValidatorStateSubscribed swaps the validator state to validatorStateSubscribed
+// if currentState is subscribing
+func (n *p2pNetwork) setValidatorStateSubscribed(pkHex string) bool {
+	n.activeValidatorsLock.Lock()
+	defer n.activeValidatorsLock.Unlock()
+	currentState, ok := n.activeValidators[pkHex]
+	if !ok {
+		return false
+	}
+	switch currentState {
+	case validatorStateInactive, validatorStateSubscribed:
+		return false
+	default:
+		n.activeValidators[pkHex] = validatorStateSubscribed
+	}
+	return true
+}
+
+// canUnsubscribe checks we should unsubscribe from the given validator
+func (n *p2pNetwork) canUnsubscribe(pkHex string) bool {
+	n.activeValidatorsLock.Lock()
+	defer n.activeValidatorsLock.Unlock()
+
+	currentState, ok := n.activeValidators[pkHex]
+	if !ok {
+		return false
+	}
+	return currentState != validatorStateInactive
+}
+
+// clearValidatorState clears validator state
+func (n *p2pNetwork) clearValidatorState(pkHex string) {
+	n.activeValidatorsLock.Lock()
+	defer n.activeValidatorsLock.Unlock()
+
 	delete(n.activeValidators, pkHex)
-	n.activeValidatorsLock.Unlock()
-	return nil
 }
 
 // handleIncomingMessages reads messages from the given channel and calls the router, note that this function blocks.

@@ -15,7 +15,6 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -172,16 +171,16 @@ func baseTest(ctx context.Context, t *testing.T, peers []*P, pks []string, f for
 			wg.Add(1)
 			go func(p *P, pk string) {
 				defer wg.Done()
-				require.NoError(t, p.tm.Unsubscribe(validatorTopic(pk)))
+				require.NoError(t, p.tm.Unsubscribe(validatorTopic(pk), false))
 				go func(p *P) {
 					<-time.After(time.Millisecond)
-					require.NoError(t, p.tm.Unsubscribe(validatorTopic(pk)))
+					require.NoError(t, p.tm.Unsubscribe(validatorTopic(pk), false))
 				}(p)
 				wg.Add(1)
 				go func(p *P) {
 					defer wg.Done()
 					<-time.After(time.Millisecond * 50)
-					require.NoError(t, p.tm.Unsubscribe(validatorTopic(pk)))
+					require.NoError(t, p.tm.Unsubscribe(validatorTopic(pk), false))
 				}(p)
 			}(p, pks[i])
 		}
@@ -254,8 +253,8 @@ func newPeer(ctx context.Context, t *testing.T, msgValidator, msgID bool, fork f
 	require.NoError(t, err)
 
 	var p *P
-	logger := zaptest.NewLogger(t)
-	//logger := zap.L()
+	//logger := zaptest.NewLogger(t)
+	logger := zap.L()
 	var midHandler MsgIDHandler
 	if msgID {
 		midHandler = NewMsgIDHandler(logger, fork, 2*time.Minute)

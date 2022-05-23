@@ -42,7 +42,7 @@ func (f *onForkV1) NumOfOperators() int {
 	return 4
 }
 
-func (f *onForkV1) NumOfExporters() int {
+func (f *onForkV1) NumOfBootnodes() int {
 	return 0
 }
 
@@ -168,19 +168,19 @@ func (f *onForkV1) Execute(ctx *runner.ScenarioContext) error {
 
 	// forking
 	for i := uint64(1); i < uint64(f.NumOfOperators()); i++ {
-		wg.Add(2)
+		wg.Add(3)
 		go func(node network.P2PNetwork) {
 			defer wg.Done()
 			if err := node.(forksprotocol.ForkHandler).OnFork(forksprotocol.V1ForkVersion); err != nil {
-				f.logger.Fatal("could not fork network to v1", zap.Error(err))
+				f.logger.Panic("could not fork network to v1", zap.Error(err))
 			}
 			<-time.After(time.Second * 3)
 		}(ctx.LocalNet.Nodes[i-1])
-		go func(node validator.IValidator) {
+		go func(val validator.IValidator) {
 			defer wg.Done()
 			<-time.After(time.Millisecond * 10)
-			if err := node.OnFork(forksprotocol.V1ForkVersion); err != nil {
-				f.logger.Fatal("could not fork to v1", zap.Error(err))
+			if err := val.OnFork(forksprotocol.V1ForkVersion); err != nil {
+				f.logger.Panic("could not fork to v1", zap.Error(err))
 			}
 			<-time.After(time.Second * 3)
 		}(f.validators[i-1])
@@ -188,12 +188,17 @@ func (f *onForkV1) Execute(ctx *runner.ScenarioContext) error {
 			defer wg.Done()
 			<-time.After(time.Millisecond * 20)
 			if err := store.(forksprotocol.ForkHandler).OnFork(forksprotocol.V1ForkVersion); err != nil {
-				f.logger.Fatal("could not fork qbft store to v1", zap.Error(err))
+				f.logger.Panic("could not fork qbft store to v1", zap.Error(err))
 			}
 			<-time.After(time.Second * 3)
 		}(ctx.Stores[i-1])
 	}
 	wg.Wait()
+
+	f.logger.Debug("------ after fork, waiting 10 seconds...")
+	// waiting 10 sec after fork
+	<-time.After(time.Second * 10)
+	f.logger.Debug("------ starting instances")
 
 	// running instances post-fork
 	if err := f.startInstances(message.Height(7), message.Height(9)); err != nil {
@@ -204,20 +209,26 @@ func (f *onForkV1) Execute(ctx *runner.ScenarioContext) error {
 }
 
 func (f *onForkV1) PostExecution(ctx *runner.ScenarioContext) error {
-	//msgs, err := ctx.Stores[0].GetDecided(message.NewIdentifier(f.share.PublicKey.Serialize(), message.RoleTypeAttester), message.Height(0), message.Height(4))
-	//if err != nil {
-	//	return err
-	//}
-	//if len(msgs) < 4 {
-	//	return errors.New("node-0 didn't sync all messages")
-	//}
-	//f.logger.Debug("msgs", zap.Any("msgs", msgs))
-	//
+	expectedMsgCount := 9
+	msgs, err := ctx.Stores[0].GetDecided(message.NewIdentifier(f.share.PublicKey.Serialize(), message.RoleTypeAttester), message.Height(0), message.Height(expectedMsgCount))
+	if err != nil {
+		return err
+	}
+	f.logger.Debug("msgs count", zap.Int("len", len(msgs)))
+	if len(msgs) < expectedMsgCount {
+		return errors.New("node-0 didn't sync all messages")
+	}
+
 	msg, err := ctx.Stores[0].GetLastDecided(message.NewIdentifier(f.share.PublicKey.Serialize(), message.RoleTypeAttester))
 	if err != nil {
 		return err
 	}
-	f.logger.Debug("last decided", zap.Any("msg", msg))
+	if msg == nil {
+		return errors.New("could not find last decided")
+	}
+	if msg.Message.Height != message.Height(expectedMsgCount) {
+		return errors.Errorf("wrong msg height: %d", msg.Message.Height)
+	}
 
 	return nil
 }
@@ -233,7 +244,7 @@ func (f *onForkV1) startInstances(from, to message.Height) error {
 			wg.Add(1)
 			go func(node validator.IValidator, index uint64, seqNumber message.Height) {
 				if err := f.startNode(node, seqNumber); err != nil {
-					f.logger.Fatal("could not start node", zap.Error(err))
+					f.logger.Error("could not start node", zap.Error(err))
 				}
 				wg.Done()
 			}(f.validators[i-1], i, h)
