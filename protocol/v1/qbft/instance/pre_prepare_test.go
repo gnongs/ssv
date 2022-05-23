@@ -2,7 +2,6 @@ package instance
 
 import (
 	"encoding/json"
-	forksprotocol2 "github.com/bloxapp/ssv/protocol/forks"
 	"strconv"
 	"testing"
 	"time"
@@ -14,6 +13,7 @@ import (
 	"go.uber.org/zap/zaptest"
 
 	"github.com/bloxapp/ssv/ibft/proto"
+	forksprotocol2 "github.com/bloxapp/ssv/protocol/forks"
 	"github.com/bloxapp/ssv/protocol/v1/blockchain/beacon"
 	"github.com/bloxapp/ssv/protocol/v1/message"
 	protocolp2p "github.com/bloxapp/ssv/protocol/v1/p2p"
@@ -47,7 +47,7 @@ func TestJustifyPrePrepareAfterChangeRoundPrepared(t *testing.T) {
 		MsgType:    message.RoundChangeMsgType,
 		Round:      2,
 		Identifier: []byte("Lambda"),
-		Data: changeRoundDataToBytes(&message.RoundChangeData{
+		Data: changeRoundDataToBytes(t, &message.RoundChangeData{
 			Round:         1,
 			PreparedValue: value,
 		}),
@@ -114,7 +114,7 @@ func TestJustifyPrePrepareAfterChangeRoundNoPrepare(t *testing.T) {
 		MsgType:    message.RoundChangeMsgType,
 		Round:      2,
 		Identifier: []byte("Lambda"),
-		Data:       changeRoundDataToBytes(&message.RoundChangeData{}),
+		Data:       changeRoundDataToBytes(t, &message.RoundChangeData{}),
 	}
 
 	roundChangeData, err := consensusMessage.GetRoundChangeData()
@@ -148,7 +148,6 @@ func TestJustifyPrePrepareAfterChangeRoundNoPrepare(t *testing.T) {
 	})
 }
 
-// TODO(nkryuchkov): fix this test
 func TestUponPrePrepareHappyFlow(t *testing.T) {
 	secretKeys, nodes := GenerateNodes(4)
 	leader, err := deterministic.New(append([]byte{1, 2, 3, 2, 5, 6, 1, 1}, []byte(strconv.FormatUint(1, 10))...), 4)
@@ -188,7 +187,7 @@ func TestUponPrePrepareHappyFlow(t *testing.T) {
 		MsgType:    message.ProposalMsgType,
 		Round:      1,
 		Identifier: []byte("Lambda"),
-		Data:       proposalDataToBytes(&message.ProposalData{Data: []byte(time.Now().Weekday().String())}),
+		Data:       proposalDataToBytes(t, &message.ProposalData{Data: []byte(time.Now().Weekday().String())}),
 	}, forksprotocol2.V0ForkVersion.String())
 	require.NoError(t, instance.PrePrepareMsgPipeline().Run(msg))
 	msgs := instance.PrePrepareMessages.ReadOnlyMessagesByRound(1)
@@ -234,7 +233,7 @@ func TestInstance_JustifyPrePrepare(t *testing.T) {
 		MsgType:    message.RoundChangeMsgType,
 		Round:      2,
 		Identifier: []byte("lambdas"),
-		Data:       changeRoundDataToBytes(&message.RoundChangeData{}),
+		Data:       changeRoundDataToBytes(t, &message.RoundChangeData{}),
 	}
 	roundChangeData, err := msg.GetRoundChangeData()
 	require.NoError(t, err)
@@ -244,7 +243,7 @@ func TestInstance_JustifyPrePrepare(t *testing.T) {
 		MsgType:    message.RoundChangeMsgType,
 		Round:      2,
 		Identifier: []byte("lambdas"),
-		Data:       changeRoundDataToBytes(&message.RoundChangeData{}),
+		Data:       changeRoundDataToBytes(t, &message.RoundChangeData{}),
 	}
 	roundChangeData, err = msg.GetRoundChangeData()
 	require.NoError(t, err)
@@ -258,7 +257,7 @@ func TestInstance_JustifyPrePrepare(t *testing.T) {
 		MsgType:    message.RoundChangeMsgType,
 		Round:      2,
 		Identifier: []byte("lambdas"),
-		Data:       changeRoundDataToBytes(&message.RoundChangeData{}),
+		Data:       changeRoundDataToBytes(t, &message.RoundChangeData{}),
 	}
 	roundChangeData, err = msg.GetRoundChangeData()
 	require.NoError(t, err)
@@ -311,7 +310,8 @@ func (s *testSigner) SignAttestation(data *spec.AttestationData, duty *beacon.Du
 	return nil, nil, nil
 }
 
-func proposalDataToBytes(input *message.ProposalData) []byte {
-	ret, _ := json.Marshal(input)
+func proposalDataToBytes(t *testing.T, input *message.ProposalData) []byte {
+	ret, err := json.Marshal(input)
+	require.NoError(t, err)
 	return ret
 }
